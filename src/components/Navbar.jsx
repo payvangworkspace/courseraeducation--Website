@@ -2,7 +2,7 @@ import React from "react";
 
 /**
  * Navbar — shared across LandingPage, LessonsPage, FeaturesPage,
- * AlternativesPage and PricingPage.
+ * AlternativesPage, PricingPage and PaymentPage.
  *
  * All pages already load nav-related CSS (.ld-nav, .ld-nav-inner,
  * .ld-logo, .ld-nav-links, .ld-btn, .ld-nav-link--active, ...) via
@@ -13,12 +13,12 @@ import React from "react";
  * - brandName: text shown next to the logo mark (defaults match the
  *   original per-page BRAND_NAME constants).
  * - active: which nav link should get the "ld-nav-link--active" class
- *   ("Lessons" | "Features" | "Alternatives" | "Pricing" | undefined).
+ *   ("Lessons" | "Features" | "Alternatives" | "Pricing" | "Payment" | undefined).
  * - scrolled: toggles the "ld-nav--scrolled" state.
  * - ctaHref / ctaLabel: the right-hand CTA button.
  */
 
-const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing"];
+const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing", "Payment"];
 
 function navHref(l) {
   switch (l) {
@@ -30,6 +30,8 @@ function navHref(l) {
       return "/alternatives";
     case "Pricing":
       return "/pricing";
+    case "Payment":
+      return "/payment";
     default:
       return `/#${l.toLowerCase()}`;
   }

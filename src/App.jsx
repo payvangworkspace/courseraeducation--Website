@@ -4,6 +4,7 @@ import LessonsPage from "./components/LessonPage";
 import FeaturesPage from "./components/FeaturesPage";
 import AlternativesPage from "./components/AlternativePage";
 import PricingPage from "./components/PricingPage";
+import PaymentPage from "./components/PaymentPage";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/features" element={<FeaturesPage/>} />
         <Route path="/alternatives" element={<AlternativesPage/>} />
         <Route path="/pricing" element={<PricingPage/>} />
+        <Route path="/payment" element={<PaymentPage/>} />
       </Routes>
     </BrowserRouter>
   );
