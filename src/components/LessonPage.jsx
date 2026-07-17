@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Navbar from "./Navbar";
 
 /**
  * Lessons Page — /lessons — Light Theme
@@ -7,22 +8,6 @@ import React, { useEffect, useRef, useState } from "react";
  */
 
 const BRAND_NAME = "Coursera Education";
-const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing"];
-
-function navHref(l) {
-  switch (l) {
-    case "Lessons":
-      return "/lessons";
-    case "Features":
-      return "/features";
-    case "Alternatives":
-      return "/alternatives";
-    case "Pricing":
-      return "/pricing";
-    default:
-      return `/#${l.toLowerCase()}`;
-  }
-}
 
 const HERO_STATS = [
   { label: "Workshop Format", value: "Hands-on", sub: "Build real prototypes", sub2: "Labs designed around your stack" },
@@ -129,24 +114,7 @@ export default function LessonsPage() {
     <div className="ld-root">
       <style>{CSS}</style>
 
-      {/* NAV */}
-      <header className={`ld-nav ${scrolled ? "ld-nav--scrolled" : ""}`}>
-        <div className="ld-nav-inner">
-          <a className="ld-logo" href="/">
-            <span className="ld-logo-mark">◤</span> {BRAND_NAME}
-          </a>
-          <nav className="ld-nav-links">
-            {NAV_LINKS.map((l) => (
-              <a key={l} href={navHref(l)} className={l === "Lessons" ? "ld-nav-link--active" : ""}>
-                {l}
-              </a>
-            ))}
-          </nav>
-          <a className="ld-btn ld-btn--primary ld-btn--sm" href="#contact">
-            Get in Touch <span aria-hidden>→</span>
-          </a>
-        </div>
-      </header>
+      <Navbar brandName={BRAND_NAME} active="Lessons" scrolled={scrolled} />
 
       {/* HERO */}
       <section className="ld-hero ld-hero--lessons">

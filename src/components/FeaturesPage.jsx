@@ -1,27 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
+import Navbar from "./Navbar";
 
 /**
  * Features Page — /features
  * Single-file React component, plain CSS (no Tailwind, no CSS modules).
  * Shares the same visual language (colors, nav, footer, buttons) as LandingPage.jsx / LessonsPage.jsx.
  */
-
-const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing"];
-
-function navHref(l) {
-  switch (l) {
-    case "Lessons":
-      return "/lessons";
-    case "Features":
-      return "/features";
-    case "Alternatives":
-      return "/alternatives";
-    case "Pricing":
-      return "/pricing";
-    default:
-      return `/#${l.toLowerCase()}`;
-  }
-}
 
 const QUICK_STATS = [
   { title: "Cohorts", tag: "Live groups & schedules", desc: "Run cohorts, timelines and milestones" },
@@ -200,24 +184,7 @@ export default function FeaturesPage() {
     <div className="ld-root">
       <style>{CSS}</style>
 
-      {/* NAV */}
-      <header className={`ld-nav ${scrolled ? "ld-nav--scrolled" : ""}`}>
-        <div className="ld-nav-inner">
-          <a className="ld-logo" href="/">
-            <span className="ld-logo-mark">◤</span> Coursera Education
-          </a>
-          <nav className="ld-nav-links">
-            {NAV_LINKS.map((l) => (
-              <a key={l} href={navHref(l)} className={l === "Features" ? "ld-nav-link--active" : ""}>
-                {l}
-              </a>
-            ))}
-          </nav>
-          <a className="ld-btn ld-btn--primary ld-btn--sm" href="#contact">
-            Get in Touch <span aria-hidden>→</span>
-          </a>
-        </div>
-      </header>
+      <Navbar brandName="Coursera Education" active="Features" scrolled={scrolled} />
 
       {/* HERO */}
       <section className="ld-hero">
@@ -332,7 +299,7 @@ export default function FeaturesPage() {
           <Reveal delay={120} className="ld-compare-card ld-compare-card--good">
             <div className="ld-compare-head">
               <span className="ld-compare-badge ld-compare-badge--good">✓</span>
-              <h3>With Descomplica LMS</h3>
+              <h3>With Coursera Education LMS</h3>
             </div>
             <ul className="ld-compare-list">
               {DESCOMPLICA_POINTS.map((p) => (

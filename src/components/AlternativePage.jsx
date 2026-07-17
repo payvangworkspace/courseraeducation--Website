@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Navbar from "./Navbar";
 
 /**
  * Alternatives Page — /alternatives
@@ -6,8 +7,6 @@ import React, { useEffect, useRef, useState } from "react";
  * Shares the same visual language (colors, nav, footer, buttons) as
  * LandingPage.jsx and LessonsPage.jsx.
  */
-
-const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing"];
 
 const DIFFERENCE_CARDS = [
   {
@@ -293,36 +292,7 @@ export default function AlternativesPage() {
     <div className="ld-root">
       <style>{CSS}</style>
 
-      {/* NAV */}
-      <header className={`ld-nav ${scrolled ? "ld-nav--scrolled" : ""}`}>
-        <div className="ld-nav-inner">
-          <a className="ld-logo" href="/">
-            <span className="ld-logo-mark">◤</span> Coursera Education
-          </a>
-          <nav className="ld-nav-links">
-            {NAV_LINKS.map((l) => {
-              const href =
-                l === "Lessons"
-                  ? "/lessons"
-                  : l === "Features"
-                  ? "/features"
-                  : l === "Alternatives"
-                  ? "/alternatives"
-                  : l === "Pricing"
-                  ? "/pricing"
-                  : `/#${l.toLowerCase()}`;
-              return (
-                <a key={l} href={href} className={l === "Alternatives" ? "ld-nav-link--active" : ""}>
-                  {l}
-                </a>
-              );
-            })}
-          </nav>
-          <a className="ld-btn ld-btn--primary ld-btn--sm" href="#contact">
-            Get in Touch <span aria-hidden>→</span>
-          </a>
-        </div>
-      </header>
+      <Navbar brandName="Coursera Education" active="Alternatives" scrolled={scrolled} />
 
       {/* HERO */}
       <section className="ld-hero ld-hero--alt">
