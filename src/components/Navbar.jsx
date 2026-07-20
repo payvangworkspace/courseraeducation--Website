@@ -10,7 +10,7 @@ import React from "react";
  * to render the markup — no styles are duplicated here.
  *
  * Props:
- * - brandName: text shown next to the logo mark (defaults match the
+ * - brandName: used as the logo image's alt text (defaults match the
  *   original per-page BRAND_NAME constants).
  * - active: which nav link should get the "ld-nav-link--active" class
  *   ("Lessons" | "Features" | "Alternatives" | "Pricing" | "Payment" | undefined).
@@ -48,7 +48,12 @@ export default function Navbar({
     <header className={`ld-nav ${scrolled ? "ld-nav--scrolled" : ""}`}>
       <div className="ld-nav-inner">
         <a className="ld-logo" href="/">
-          <span className="ld-logo-mark">◤</span> {brandName}
+          <img
+            src="/logoCoursera.png"
+            alt={brandName}
+            className="ld-logo-img"
+            style={{ height: "56px", width: "auto" }}
+          />
         </a>
         <nav className="ld-nav-links">
           {NAV_LINKS.map((l) => (
