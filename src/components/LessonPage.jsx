@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar";
+import ContactModal from "./ContactModel";
 
 /**
  * Lessons Page — /lessons — Light Theme
@@ -103,6 +104,7 @@ function Reveal({ children, className = "", delay = 0 }) {
 
 export default function LessonsPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -110,11 +112,16 @@ export default function LessonsPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const openContact = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setContactOpen(true);
+  };
+
   return (
     <div className="ld-root">
       <style>{CSS}</style>
 
-      <Navbar brandName={BRAND_NAME} active="Lessons" scrolled={scrolled} />
+      <Navbar brandName={BRAND_NAME} active="Lessons" scrolled={scrolled} onCtaClick={openContact} />
 
       {/* HERO */}
       <section className="ld-hero ld-hero--lessons">
@@ -134,9 +141,9 @@ export default function LessonsPage() {
           </p>
 
           <div className="ld-hero-cta">
-            <a href="#contact" className="ld-btn ld-btn--primary">
+            <button type="button" className="ld-btn ld-btn--primary" onClick={openContact}>
               Get in Touch <span aria-hidden>→</span>
-            </a>
+            </button>
             <a href="#syllabus" className="ld-btn ld-btn--outline">
               Request Syllabus
             </a>
@@ -177,9 +184,9 @@ export default function LessonsPage() {
         </div>
 
         <Reveal className="ld-tracks-cta">
-          <a href="#contact" className="ld-btn ld-btn--dark">
+          <button type="button" className="ld-btn ld-btn--dark" onClick={openContact}>
             Get a custom training plan
-          </a>
+          </button>
           <a href="#syllabus" className="ld-btn ld-btn--outline">
             Request syllabus
           </a>
@@ -213,9 +220,9 @@ export default function LessonsPage() {
           <h2>Design Your Custom AI Training</h2>
           <p>Tell us your team, stack and goals — we&rsquo;ll prepare a tailored workshop plan.</p>
           <div className="ld-hero-cta ld-cta-buttons">
-            <a href="#contact" className="ld-btn ld-btn--primary">
+            <button type="button" className="ld-btn ld-btn--primary" onClick={openContact}>
               Get in Touch <span aria-hidden>→</span>
-            </a>
+            </button>
             <a href="#syllabus" className="ld-btn ld-btn--outline">
               Request Syllabus
             </a>
@@ -258,6 +265,8 @@ export default function LessonsPage() {
         </div>
         <div className="ld-footer-bottom">© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</div>
       </footer>
+
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }
@@ -302,9 +311,10 @@ const CSS = `
 .ld-nav-links a:hover { color: var(--text-0); }
 .ld-nav-link--active { color: var(--accent-orange) !important; background: rgba(122,23,53,0.08); border-color: rgba(122,23,53,0.30) !important; }
 
-.ld-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14.5px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease; }
+.ld-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14.5px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease; font-family: var(--font-body); }
 .ld-btn:hover { transform: translateY(-1px); }
 .ld-btn:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 3px; }
+.ld-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .ld-btn--sm { padding: 9px 16px; font-size: 13.5px; }
 .ld-btn--primary { background: var(--gradient); color: #ffffff; box-shadow: 0 10px 24px -8px rgba(122,23,53,0.45); }
 .ld-btn--outline { background: #ffffff; color: var(--text-0); border-color: var(--card-border); }
@@ -383,4 +393,22 @@ const CSS = `
 .ld-footer-note { font-size: 12px; color: var(--text-2); margin-top: 10px; }
 .ld-footer-bottom { max-width: 1180px; margin: 50px auto 0; padding-top: 24px; border-top: 1px solid var(--card-border); font-size: 12.5px; color: var(--text-2); text-align: center; }
 @media (max-width: 800px) { .ld-footer-grid { grid-template-columns: 1fr; gap: 34px; } }
+
+/* CONTACT MODAL */
+.ld-modal-overlay { position: fixed; inset: 0; background: rgba(36,20,23,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.ld-modal { position: relative; background: #ffffff; border-radius: var(--radius-lg); max-width: 480px; width: 100%; padding: 40px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
+.ld-modal-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--card-border); background: #fff; cursor: pointer; font-size: 14px; color: var(--text-1); }
+.ld-modal-close:hover { background: var(--bg-1); }
+.ld-modal-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 20px; }
+.ld-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-orange); display: inline-block; }
+.ld-modal h3 { font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--text-0); }
+.ld-modal-sub { color: var(--text-1); font-size: 14.5px; margin: 0 0 28px; }
+.ld-field { margin-bottom: 20px; }
+.ld-field label { display: block; font-size: 14px; font-weight: 600; color: var(--text-0); margin-bottom: 8px; }
+.ld-field input, .ld-field textarea { width: 100%; border: 1px solid var(--card-border); background: var(--bg-1); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; font-family: var(--font-body); color: var(--text-0); resize: vertical; }
+.ld-field textarea { min-height: 110px; }
+.ld-field input:focus, .ld-field textarea:focus { outline: 2px solid var(--accent-teal); outline-offset: 1px; }
+.ld-modal-submit { width: 100%; justify-content: center; margin-top: 6px; }
+.ld-modal-success { text-align: center; padding: 20px 0; }
+.ld-modal-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(22,163,74,0.12); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px; }
 `;
