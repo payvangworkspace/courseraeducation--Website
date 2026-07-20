@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Navbar from "./Navbar";
+import ContactModal from "./ContactModel";
 
 /**
  * Payment Page — Light Theme
@@ -111,6 +112,7 @@ export default function PaymentPage() {
   const [status, setStatus] = useState("idle"); // idle | processing | success | error
   const [errorMsg, setErrorMsg] = useState("");
   const [receipt, setReceipt] = useState(null);
+  const [contactOpen, setContactOpen] = useState(false);
 
   const subtotal = PLAN.seats * PLAN.pricePerSeat;
   const tax = useMemo(() => Math.round(subtotal * 0.08 * 100) / 100, [subtotal]);
@@ -128,6 +130,11 @@ export default function PaymentPage() {
 
   function updateField(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function openContact(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    setContactOpen(true);
   }
 
   async function handleSubmit(e) {
@@ -164,7 +171,7 @@ export default function PaymentPage() {
     <div className="ld-root">
       <style>{CSS}</style>
 
-      <Navbar brandName={BRAND_NAME} />
+      <Navbar brandName={BRAND_NAME} active="Payment" onCtaClick={openContact} />
 
       <section className="pay-section">
         <div className="pay-head">
@@ -357,6 +364,8 @@ export default function PaymentPage() {
       <footer className="ld-footer">
         <div className="ld-footer-bottom">© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</div>
       </footer>
+
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }
@@ -430,6 +439,7 @@ const CSS = `
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14.5px; text-decoration: none;
   border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  font-family: var(--font-body);
 }
 .ld-btn:hover { transform: translateY(-1px); }
 .ld-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
@@ -509,4 +519,21 @@ const CSS = `
 
 .ld-footer { padding: 40px 24px 30px; background: var(--bg-1); border-top: 1px solid var(--card-border); }
 .ld-footer-bottom { max-width: 1180px; margin: 0 auto; font-size: 12.5px; color: var(--text-2); text-align: center; }
+
+/* CONTACT MODAL */
+.ld-modal-overlay { position: fixed; inset: 0; background: rgba(36,20,23,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.ld-modal { position: relative; background: #ffffff; border-radius: var(--radius-lg); max-width: 480px; width: 100%; padding: 40px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
+.ld-modal-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--card-border); background: #fff; cursor: pointer; font-size: 14px; color: var(--text-1); }
+.ld-modal-close:hover { background: var(--bg-1); }
+.ld-modal-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 20px; }
+.ld-modal h3 { font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--text-0); }
+.ld-modal-sub { color: var(--text-1); font-size: 14.5px; margin: 0 0 28px; }
+.ld-field { margin-bottom: 20px; }
+.ld-field label { display: block; font-size: 14px; font-weight: 600; color: var(--text-0); margin-bottom: 8px; }
+.ld-field input, .ld-field textarea { width: 100%; border: 1px solid var(--card-border); background: var(--bg-1); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; font-family: var(--font-body); color: var(--text-0); resize: vertical; }
+.ld-field textarea { min-height: 110px; }
+.ld-field input:focus, .ld-field textarea:focus { outline: 2px solid var(--accent-teal); outline-offset: 1px; }
+.ld-modal-submit { width: 100%; justify-content: center; margin-top: 6px; }
+.ld-modal-success { text-align: center; padding: 20px 0; }
+.ld-modal-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(22,163,74,0.12); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px; }
 `;

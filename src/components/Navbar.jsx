@@ -16,6 +16,11 @@ import React from "react";
  *   ("Lessons" | "Features" | "Alternatives" | "Pricing" | "Payment" | undefined).
  * - scrolled: toggles the "ld-nav--scrolled" state.
  * - ctaHref / ctaLabel: the right-hand CTA button.
+ * - onCtaClick: optional handler. If provided, the CTA renders as a
+ *   <button> that calls this instead of navigating to ctaHref — used
+ *   by pages that want "Get in Touch" to open the contact modal
+ *   instead of jumping to a footer anchor. If omitted, the CTA falls
+ *   back to the original <a href={ctaHref}> behavior.
  */
 
 const NAV_LINKS = ["Lessons", "Features", "Alternatives", "Pricing", "Payment"];
@@ -43,6 +48,7 @@ export default function Navbar({
   scrolled = false,
   ctaHref = "#contact",
   ctaLabel = "Get in Touch",
+  onCtaClick,
 }) {
   return (
     <header className={`ld-nav ${scrolled ? "ld-nav--scrolled" : ""}`}>
@@ -62,9 +68,19 @@ export default function Navbar({
             </a>
           ))}
         </nav>
-        <a className="ld-btn ld-btn--primary ld-btn--sm" href={ctaHref}>
-          {ctaLabel} <span aria-hidden>→</span>
-        </a>
+        {onCtaClick ? (
+          <button
+            type="button"
+            className="ld-btn ld-btn--primary ld-btn--sm"
+            onClick={onCtaClick}
+          >
+            {ctaLabel} <span aria-hidden>→</span>
+          </button>
+        ) : (
+          <a className="ld-btn ld-btn--primary ld-btn--sm" href={ctaHref}>
+            {ctaLabel} <span aria-hidden>→</span>
+          </a>
+        )}
       </div>
     </header>
   );
