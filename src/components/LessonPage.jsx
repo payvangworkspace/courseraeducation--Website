@@ -241,15 +241,15 @@ export default function LessonsPage() {
               <span className="ld-logo-mark">◤</span> {BRAND_NAME}
             </a>
             <p className="ld-footer-desc">
-              Private, instructor-led AI training with a modern LMS. Learn fast with hands-on lessons, projects, and
-              real feedback.
+              Coursera Education & Training Computer Software
             </p>
+            <p className="ld-footer-desc">THE BINARY BY OMNIYAT, Office 1912-196</p>
+            <p className="ld-footer-desc">Business Bay</p>
+            <p className="ld-footer-desc">Dubai, United Arab Emirtates</p>
           </div>
           <div>
             <h4>Policies</h4>
-            <p className="ld-footer-desc">
-              Review our legal and privacy documents. You can also manage your cookie preferences anytime.
-            </p>
+            <p className="ld-footer-desc">Review our legal and privacy documents. You can also manage your cookie preferences anytime.</p>
             <ul className="ld-footer-links">
               <li><a href="#">Privacy Policy</a></li>
               <li><a href="#">Terms and Conditions</a></li>
@@ -259,7 +259,7 @@ export default function LessonsPage() {
           <div>
             <h4>Need help?</h4>
             <p className="ld-footer-desc">Email us for training guidance, scheduling, or any account questions.</p>
-            <a href="mailto:hello@brandname.com" className="ld-btn ld-btn--primary ld-btn--sm">Email Support</a>
+            <a href="mailto:Courseraeducationn@gmail.com" className="ld-btn ld-btn--primary ld-btn--sm">Email Support</a>
             <p className="ld-footer-note">Typical response time: 1–2 business days.</p>
           </div>
         </div>

@@ -1318,26 +1318,14 @@ export default function PricingPage() {
               <span className="ld-logo-mark">◤</span> {BRAND_NAME}
             </a>
             <p className="ld-footer-desc">
-              Private, instructor-led AI training with a modern LMS. Learn fast with hands-on lessons, projects, and
-              real feedback.
+              Coursera Education & Training Computer Software
             </p>
-            <div className="pr-address">
-              <span aria-hidden>📍</span>
-              <div>
-                <div>123 Business Bay, Suite 101</div>
-                <div>Dubai</div>
-                <div>United Arab Emirates</div>
-              </div>
-            </div>
+            <p className="ld-footer-desc">THE BINARY BY OMNIYAT, Office 1912-196</p>
+            <p className="ld-footer-desc">Business Bay</p>
+            <p className="ld-footer-desc">Dubai, United Arab Emirtates</p>
+
             <div className="pr-email-row">
-              <span aria-hidden>✉</span> hello@brandname.com
-            </div>
-            <div className="pr-payment-icons">
-              <span>iyzico</span>
-              <span>MasterCard</span>
-              <span>VISA</span>
-              <span>Amex</span>
-              <span>Troy</span>
+              <span aria-hidden>✉</span> Courseraeducationn@gmail.com
             </div>
           </div>
           <div>
@@ -1355,13 +1343,13 @@ export default function PricingPage() {
           <div>
             <h4>Need help?</h4>
             <p className="ld-footer-desc">Email us for training guidance, scheduling, or any account questions. We&rsquo;ll get back as soon as possible.</p>
-            <a href="mailto:hello@brandname.com" className="ld-btn ld-btn--email ld-btn--sm">Email Support</a>
+            <a href="mailto:Courseraeducationn@gmail.com" className="ld-btn ld-btn--email ld-btn--sm">Email Support</a>
             <p className="ld-footer-note">Typical response time: 1–2 business days.</p>
           </div>
         </div>
         <div className="ld-footer-bottom pr-footer-bottom">
           <span>© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</span>
-          <span>Contact: hello@brandname.com</span>
+          <span>Contact: Courseraeducationn@gmail.com</span>
         </div>
       </footer>
 
