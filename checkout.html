@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Inter, system-ui, sans-serif;
+      background: #FDF6EE;
+      color: #241417;
+    }
+    .card {
+      width: min(480px, 92vw);
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px;
+      border: 1px solid rgba(122, 31, 43, 0.12);
+      box-shadow: 0 8px 30px rgba(122, 31, 43, 0.08);
+      text-align: center;
+    }
+    h1 { color: #7A1F2B; margin: 0 0 10px; font-size: 22px; }
+    p { color: #6b5a56; line-height: 1.5; }
+    .amount { font-size: 28px; font-weight: 800; color: #7A1F2B; margin: 16px 0 24px; }
+    .expired { color: #7A1F2B; }
+    .muted { color: #9E8984; font-size: 13px; }
+    code { color: #7A1F2B; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="card" id="root">
+    <p class="muted">Loading payment details…</p>
+  </div>
+
+  <script>
+    (async function () {
+      const root = document.getElementById("root");
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("orderId") || "ORD0805269912";
+      // Optional: ?apiKey=YOUR_KEY  (or set window.CHECKOUT_API_KEY)
+      const apiKey = params.get("apiKey") || window.CHECKOUT_API_KEY || "";
+      const API = "https://api.courseraeducation.com/checkout/params/" + encodeURIComponent(orderId);
+      const AFS_RETURN = "https://api.courseraeducation.com/payinwebhook/afsReturn";
+
+      try {
+        const headers = {};
+        if (apiKey) {
+          headers.ZIPAPIKEY = apiKey;
+          headers["X-API-Key"] = apiKey;
+        }
+
+        const res = await fetch(API, { headers });
+        const json = await res.json();
+
+        if ((json.error || "").toLowerCase().includes("api key") || !apiKey && json.error) {
+          root.innerHTML =
+            "<h1>API Key Required</h1>" +
+            "<p>" + (json.error || "Missing API key") + "</p>" +
+            "<p class='muted'>Open with <code>?orderId=" + orderId + "&amp;apiKey=YOUR_KEY</code></p>";
+          return;
+        }
+
+        if (json.status === "fail" || /no longer available|expired/i.test(json.message || "")) {
+          root.innerHTML =
+            '<h1 class="expired">Payment Link Expired</h1>' +
+            "<p>" + (json.message || "This payment is no longer available") + "</p>" +
+            '<p class="muted">Order: ' + orderId + "</p>";
+          return;
+        }
+
+        if (json.status !== "success" || !json.data) {
+          root.innerHTML =
+            "<h1>Payment Unavailable</h1><p>" +
+            (json.message || json.error || "Unable to load payment") +
+            "</p>";
+          return;
+        }
+
+        const data = json.data;
+        const returnUrl = data.returnUrl && data.returnUrl !== "NA" ? data.returnUrl : AFS_RETURN;
+        const scriptSrc =
+          data.widgetScript ||
+          ("https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + encodeURIComponent(data.checkoutId));
+
+        root.innerHTML =
+          "<h1>Complete your payment</h1>" +
+          '<p class="muted">Order ' + data.orderId + "</p>" +
+          '<div class="amount">' + data.currency + " " + data.amount + "</div>" +
+          '<form action="' + returnUrl + '" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>';
+
+        const script = document.createElement("script");
+        script.src = scriptSrc;
+        script.async = true;
+        document.body.appendChild(script);
+      } catch (e) {
+        root.innerHTML = "<h1>Payment Unavailable</h1><p>Unable to load payment</p>";
+      }
+    })();
+  </script>
+</body>
+</html>

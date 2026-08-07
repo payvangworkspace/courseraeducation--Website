@@ -437,7 +437,6 @@ app.post('/payins/createCryptoOrder', (req, res) => res.json({ orderId: `CRYPTO-
 app.post('/payins/orderStatus', (req, res) => res.json({ status: 'SUCCESS' }));
 app.post('/payins/CheckOrderStatus', (req, res) => res.json({ status: 'SUCCESS' }));
 app.get('/payins/TestPayin', (req, res) => res.json({ status: 'Online' }));
-app.get('/checkout/params/:orderId', (req, res) => res.json({ orderId: req.params.orderId, amount: 4999.00 }));
 
 app.post('/payout/settings', (req, res) => res.json(payoutsList[0]));
 app.get('/payout/settings/:userId', (req, res) => res.json(payoutsList));
@@ -503,32 +502,37 @@ app.post('/payinwebhook/cryptoWebhook', (req, res) => res.json({ status: 'OK' })
 app.get('/payinwebhook/geideaReturn', (req, res) => res.send('Verified'));
 app.get('/payinwebhook/afsReturn', (req, res) => res.send('Verified'));
 
-// CHECKOUT PARAMS ENDPOINT WITH CORS BYPASS PROXY
+// CHECKOUT PARAMS — proxy live API (forwards success + expired/fail as-is)
 const checkoutParamsHandler = async (req, res) => {
   const { orderId } = req.params;
+  const apiKey = process.env.API_KEY || process.env.ZIPAPIKEY || process.env.VITE_API_KEY || '';
   try {
-    const remoteRes = await fetch(`https://api.courseraeducation.com/checkout/params/${orderId}`);
+    const remoteRes = await fetch(
+      `https://api.courseraeducation.com/checkout/params/${encodeURIComponent(orderId)}`,
+      {
+        headers: {
+          ...(apiKey
+            ? {
+                ZIPAPIKEY: apiKey,
+                'X-API-Key': apiKey,
+              }
+            : {}),
+          // Forward client key if browser already sent one
+          ...(req.headers.zipapikey ? { ZIPAPIKEY: req.headers.zipapikey } : {}),
+          ...(req.headers['x-api-key'] ? { 'X-API-Key': req.headers['x-api-key'] } : {}),
+        },
+      }
+    );
     const data = await remoteRes.json();
-    if (data && data.status === 'success') {
-      return res.json(data);
-    }
+    return res.status(remoteRes.status).json(data);
   } catch (e) {
     console.error('Remote checkout params fetch failed:', e.message);
+    return res.status(502).json({
+      status: 'fail',
+      source: 'Payout-service',
+      message: 'Unable to load payment',
+    });
   }
-
-  // Fallback data for test orders if remote API is unavailable or returns non-success
-  return res.json({
-    status: 'success',
-    data: {
-      orderId: orderId || 'ORD0805269910',
-      amount: '1,499.00',
-      currency: 'USD',
-      brands: 'VISA MASTER AMEX',
-      returnUrl: '/home',
-      aggregator: 'DEFAULT',
-      widgetScript: 'https://test.oppwa.com/v1/paymentWidgets.js?checkoutId=TEST'
-    }
-  });
 };
 app.get('/checkout/params/:orderId', checkoutParamsHandler);
 app.get('/api/checkout/params/:orderId', checkoutParamsHandler);

@@ -18,6 +18,7 @@ import AdminAddStudent from "./components/Adminaddstudent";
 import Studentcourses from "./components/Studentcourses";
 import StudentLesson from "./components/StudentLesson";
 import CheckoutPage from "./components/CheckoutPage";
+import GetPaymentLinkPage from "./components/GetPaymentLinkPage";
 import PaymentSuccess from "./components/PaymentSuccess";
 
 // PayVang Admin & Aggregator Pages (/home/*)
@@ -71,9 +72,10 @@ export default function App() {
         <Route path="/admin/add-student" element={<AdminAddStudent />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
 
-        {/* Checkout & Order Status */}
+        {/* Get Payment Link → redirects to /checkout/:orderId (card payment UI) */}
+        <Route path="/checkoutpage" element={<GetPaymentLinkPage />} />
+        <Route path="/get-payment-link" element={<GetPaymentLinkPage />} />
         <Route path="/checkoutpage/:orderId" element={<CheckoutPage />} />
-        <Route path="/checkoutpage" element={<CheckoutPage />} />
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         <Route path="/orderstatus" element={<PaymentSuccess />} />
 

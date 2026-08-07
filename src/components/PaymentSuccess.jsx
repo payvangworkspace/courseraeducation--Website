@@ -1,26 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./PaymentSuccess.css";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(10);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === 1) {
-          clearInterval(timer);
-          navigate("/dashboard"); // Change route if needed
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [navigate]);
 
   const order = {
     id: "ORD-87456291",
@@ -68,10 +52,6 @@ const PaymentSuccess = () => {
             <strong>{order.date}</strong>
           </div>
 
-        </div>
-
-        <div className="countdown">
-          Redirecting to dashboard in <strong>{countdown}</strong>s
         </div>
 
         <div className="button-group">

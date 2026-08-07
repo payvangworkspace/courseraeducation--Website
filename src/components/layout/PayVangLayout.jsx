@@ -86,7 +86,7 @@ export default function PayVangLayout({ children, title, subtitle }) {
     {
       title: 'PAYMENTS LINKS & PAYOUT',
       items: [
-        { label: 'Payments Links', href: '/home/payments-links', icon: <LinkIcon className="w-5 h-5" /> },
+        { label: 'Get Payment Link', href: '/home/payments-links', icon: <LinkIcon className="w-5 h-5" /> },
         { label: 'Payout', href: '/home/payout', icon: <ArrowUpRight className="w-5 h-5" /> }
       ]
     },
