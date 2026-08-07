@@ -40,7 +40,8 @@ export default function GetPaymentLinkPage() {
       }
 
       const orderId = res.data.orderId || DEFAULT_ORDER_ID;
-      navigate(`/checkout/${encodeURIComponent(orderId)}`);
+      // Open checkout page route — CheckoutPage will call /checkout/params/:orderId
+      navigate(`/checkoutpage/${encodeURIComponent(orderId)}`);
     } catch (err) {
       setError(err?.message || "Unable to get payment link");
       setLoading(false);

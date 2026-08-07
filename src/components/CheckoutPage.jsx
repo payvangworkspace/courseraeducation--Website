@@ -35,7 +35,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let active = true;
-    const targetOrderId = orderId || "ORD0805269912";
+    const targetOrderId = orderId ? decodeURIComponent(orderId).trim() : "";
 
     setLoading(true);
     setError(null);
@@ -44,6 +44,13 @@ export default function CheckoutPage() {
     setData(null);
     widgetLoaded.current = false;
 
+    if (!targetOrderId) {
+      setError("Order ID is missing from the URL");
+      setLoading(false);
+      return undefined;
+    }
+
+    // GET /checkout/params/:orderId  (same as curl from /checkoutpage/:orderId)
     paymentApi
       .getCheckoutParams(targetOrderId)
       .then((res) => {

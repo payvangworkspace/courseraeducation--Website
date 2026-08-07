@@ -1,1 +1,5 @@
+# Proxy checkout params API (must be above the SPA fallback)
+/checkout/params/*  https://api.courseraeducation.com/checkout/params/:splat  200
+
+# SPA fallback
 /*    /index.html   200

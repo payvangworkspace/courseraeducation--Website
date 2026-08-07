@@ -72,11 +72,11 @@ export default function App() {
         <Route path="/admin/add-student" element={<AdminAddStudent />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
 
-        {/* Get Payment Link → redirects to /checkout/:orderId (card payment UI) */}
-        <Route path="/checkoutpage" element={<GetPaymentLinkPage />} />
-        <Route path="/get-payment-link" element={<GetPaymentLinkPage />} />
+        {/* /checkoutpage/:orderId → loads checkout + calls /checkout/params/:orderId */}
         <Route path="/checkoutpage/:orderId" element={<CheckoutPage />} />
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
+        <Route path="/checkoutpage" element={<GetPaymentLinkPage />} />
+        <Route path="/get-payment-link" element={<GetPaymentLinkPage />} />
         <Route path="/orderstatus" element={<PaymentSuccess />} />
 
         {/* PayVang Admin & Payment Aggregator Portal Routes (/home/*) */}

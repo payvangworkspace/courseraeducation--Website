@@ -18,8 +18,28 @@ export const PAYMENT_ENDPOINTS = {
   GENERATE_REPORT: "/transaction/generateReport",
 
   // Checkout
-  CHECKOUT_PARAMS: (orderId) => `/checkout/params/${orderId}`,
+  CHECKOUT_PARAMS: (orderId) =>
+    `/checkout/params/${encodeURIComponent(String(orderId).trim())}`,
 };
+
+async function fetchCheckoutJson(url, headers) {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "*/*",
+      ...headers,
+    },
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  // If SPA HTML is returned (misconfigured proxy), treat as failure
+  if (contentType.includes("text/html")) {
+    throw new Error("Checkout API returned HTML instead of JSON");
+  }
+
+  const data = await response.json().catch(() => ({}));
+  return { response, data };
+}
 
 export const paymentApi = {
   createOrder: (body, options = {}) =>
@@ -49,57 +69,69 @@ export const paymentApi = {
   generateReport: (body, options = {}) =>
     apiClient.post(PAYMENT_ENDPOINTS.GENERATE_REPORT, body, options),
 
+  /**
+   * GET /checkout/params/:orderId
+   * Same-origin first (Vite/Netlify proxy), then absolute API BASE_URL.
+   */
   getCheckoutParams: async (orderId, options = {}) => {
+    if (!orderId) {
+      return {
+        status: "fail",
+        message: "Order ID is required",
+        source: "Payout-service",
+      };
+    }
+
     const path = PAYMENT_ENDPOINTS.CHECKOUT_PARAMS(orderId);
     const headers = {
       ...getApiKeyHeaders(),
       ...(options.headers || {}),
     };
 
-    // Prefer same-origin /checkout/params in DEV (Vite proxy → live API, avoids CORS).
-    // Always return JSON body so UI can handle success / fail / missing key.
-    const url =
-      typeof window !== "undefined" && import.meta.env.DEV
-        ? path
-        : `${BASE_URL}${path}`;
+    const candidates = [
+      // Same-origin — matches curl to localhost:3000/checkout/params/...
+      path,
+      // Direct live API fallback
+      `${BASE_URL || "https://api.courseraeducation.com"}${path}`,
+    ];
 
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers,
-      });
-      const data = await response.json().catch(() => ({}));
+    let lastError = null;
 
-      // Surface API key / auth errors clearly
-      if (data?.error || data?.status === "fail") {
-        return data;
-      }
-
-      if (!response.ok) {
-        return {
-          status: "fail",
-          error: data?.error || data?.message || `Request failed (${response.status})`,
-          source: data?.source || "Payout-service",
-          message: data?.message || data?.error || `Request failed (${response.status})`,
-        };
-      }
-
-      return data;
-    } catch (err) {
-      // Fallback through apiClient
+    for (const url of candidates) {
       try {
-        return await apiClient.get(path, undefined, {
-          auth: false,
-          ...options,
-          headers,
-        });
-      } catch (inner) {
-        if (inner?.data && typeof inner.data === "object") {
-          return inner.data;
+        const { response, data } = await fetchCheckoutJson(url, headers);
+
+        if (data?.error || data?.status === "fail" || data?.status === "success") {
+          return data;
         }
-        throw inner;
+
+        if (!response.ok) {
+          lastError = {
+            status: "fail",
+            error:
+              data?.error ||
+              data?.message ||
+              `Request failed (${response.status})`,
+            source: data?.source || "Payout-service",
+            message:
+              data?.message ||
+              data?.error ||
+              `Request failed (${response.status})`,
+          };
+          continue;
+        }
+
+        return data;
+      } catch (err) {
+        lastError = err;
       }
     }
+
+    if (lastError && typeof lastError === "object" && lastError.status) {
+      return lastError;
+    }
+
+    throw lastError || new Error("Unable to load checkout params");
   },
 };
 
