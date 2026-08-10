@@ -7,6 +7,7 @@ export const PAYMENT_ENDPOINTS = {
   // Payin
   CREATE_ORDER: "/payins/createOrder",
   CREATE_CRYPTO_ORDER: "/payins/createCryptoOrder",
+  CRYPTO_ORDER_STATUS: "/payins/OrderStatus",
   ORDER_STATUS: "/payins/payinOrderStatus",
   CHECK_ORDER_STATUS: "/payins/CheckOrderStatus",
   TEST_PAYIN: "/payins/TestPayin",
@@ -48,6 +49,9 @@ export const paymentApi = {
   createCryptoOrder: (body, options = {}) =>
     apiClient.post(PAYMENT_ENDPOINTS.CREATE_CRYPTO_ORDER, body, options),
 
+  checkCryptoOrderStatus: (body, options = {}) =>
+    apiClient.post(PAYMENT_ENDPOINTS.CRYPTO_ORDER_STATUS, body, options),
+
   payinOrderStatus: (body, options = {}) =>
     apiClient.post(PAYMENT_ENDPOINTS.ORDER_STATUS, body, options),
 
@@ -56,6 +60,7 @@ export const paymentApi = {
 
   testPayin: (options = {}) =>
     apiClient.get(PAYMENT_ENDPOINTS.TEST_PAYIN, undefined, options),
+
 
   getAllTransactions: (body, options = {}) =>
     apiClient.post(PAYMENT_ENDPOINTS.TRANSACTIONS, body, options),

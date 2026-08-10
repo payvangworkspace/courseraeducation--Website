@@ -433,10 +433,58 @@ app.post('/transaction/getPayinCryptoTxndetails', (req, res) => res.json([]));
 app.post('/transaction/generateReport', (req, res) => res.json({ reportUrl: 'https://payvang.com/reports/txn_2026.pdf' }));
 
 app.post('/payins/createOrder', (req, res) => res.json({ orderId: `ORD-${Date.now()}`, paymentUrl: `https://payvang.com/checkout/${Date.now()}` }));
-app.post('/payins/createCryptoOrder', (req, res) => res.json({ orderId: `CRYPTO-${Date.now()}` }));
+
+app.post('/payins/createCryptoOrder', (req, res) => {
+  const { merchantappid, merchanthash, merchantsecretid, mysecretdev } = req.headers;
+  const body = req.body || {};
+  const orderId = body.orderId || body.externalOrderId || `ORD${Date.now().toString().slice(-10)}`;
+  const fiatAmount = body.fiatAmount || "100";
+  const coinType = body.coinType || "USDT";
+  const emailId = body.emailId || "johndoe@gmail.com";
+
+  console.log('[Kubergates API] Received Headers:', { merchantappid, merchanthash, merchantsecretid, mysecretdev });
+
+  return res.json({
+    data: {
+      orderId: orderId,
+      amount: fiatAmount,
+      cryptoOrderId: `cmmn${Math.random().toString(36).substring(2, 12)}`,
+      coinType: coinType,
+      emailId: emailId,
+      paymentlink: `https://betaonramp.kubercrypto.io/pay/${Buffer.from(orderId).toString('base64')}`,
+      linkexpirytime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      statusCode: "201",
+      receivedHash: merchanthash || null,
+    },
+    message: "Order Data",
+    status: "success"
+  });
+});
+
+app.post('/payins/OrderStatus', (req, res) => {
+  const { merchantappid, merchanthash } = req.headers;
+  const { orderId } = req.body || {};
+  
+  return res.json({
+    data: {
+      cryptoOrderId: `cmn3g8s940014hwp90a10hj2n`,
+      orderId: orderId || "ORD0717169805",
+      cryptoAmount: "20.69",
+      merchantCharges: "1.09",
+      status: "SUCCESS",
+      token: "USDT",
+      network: "ethereum",
+      verifiedHash: merchanthash || null
+    },
+    message: "Verify Order",
+    status: "success"
+  });
+});
+
 app.post('/payins/orderStatus', (req, res) => res.json({ status: 'SUCCESS' }));
 app.post('/payins/CheckOrderStatus', (req, res) => res.json({ status: 'SUCCESS' }));
 app.get('/payins/TestPayin', (req, res) => res.json({ status: 'Online' }));
+
 
 app.post('/payout/settings', (req, res) => res.json(payoutsList[0]));
 app.get('/payout/settings/:userId', (req, res) => res.json(payoutsList));
@@ -490,7 +538,10 @@ app.get('/api/v1/metrics/hits/status', (req, res) => res.json({ '200': 480000, '
 app.post('/GetTestToken', (req, res) => res.json({ token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', tokenType: 'Bearer' }));
 app.post('/generate-token', (req, res) => res.json({ token: 'pvk_live_token_88291029381' }));
 app.post('/logoutuser', (req, res) => res.json({ message: 'User logged out' }));
-app.get('/apiauth/publicKey', (req, res) => res.json({ publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu\n-----END PUBLIC KEY-----' }));
+const VALID_RSA_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArWwKya5zEf5FgTPIYzRA\n5GdO0yrTjWDqfP7vlwUcwjMdGSY/8L2NQ35hRvXCji7T0QpANJ6+Tvk8zKPtuUi3\ntzNzIh5zzd/56zd85HL36GVOyB7v9i2xDxbgM7/pJfRepxP99sCG6dDYE/Q5Uk53\ntUOnSh7kb5HglYArqx36JJ4HyqhtKHNXYl6y3tT2Sv8uhOF4Ys3IDa4sD7OhyScw\nchSRThlA2GEoCNS9psLuF9wMdh6tixfcvzKC0jVqRhsHlyn/bcUUEcnvV5u2aKy4\ntPXXifiijPbO9AfKgx4f7hdIlCdMY+i9r+uBk6dTXfzbmOPst9J3w21sLv+HY3ta\naQIDAQAB\n-----END PUBLIC KEY-----`;
+
+app.get('/apiauth/publicKey', (req, res) => res.json({ publicKey: VALID_RSA_PUBLIC_KEY }));
+
 app.get('/TestUrl', (req, res) => res.json({ status: 'Zenith API Gateway Online' }));
 
 // WEBHOOKS

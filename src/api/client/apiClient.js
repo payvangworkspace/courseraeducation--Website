@@ -1,4 +1,5 @@
 import { BASE_URL } from "./baseUrl";
+import { generateMerchantHash, getCurrentUserEmail } from "../../utils/hashUtil";
 
 const TOKEN_KEY = "auth_token";
 const ROLE_KEY = "user_role";
@@ -81,6 +82,7 @@ async function parseResponse(response) {
 
 /**
  * Shared fetch wrapper used by all domain API files.
+ * Generates HMAC-SHA256 merchanthash and attaches Kubergates headers to every request.
  */
 export async function apiRequest(endpoint, options = {}) {
   const {
@@ -88,11 +90,99 @@ export async function apiRequest(endpoint, options = {}) {
     headers,
     body,
     auth = true,
+    merchantId,
+    orderId,
+    fiatAmount,
+    secretKey,
+    appId,
+    merchantSecretId,
     ...rest
   } = options;
 
   const url = buildUrl(endpoint, params);
   const token = auth ? getAuthToken() : "";
+
+  // Extract parameters for merchanthash: MerchantId + OrderId + fiatAmount
+  const parsedBody = body && typeof body === "object" && !(body instanceof FormData) ? body : {};
+  const activeMerchantId =
+    merchantId ||
+    parsedBody.merchantId ||
+    parsedBody.merchant_id ||
+    getCurrentUserEmail() ||
+    import.meta.env?.VITE_MERCHANT_ID ||
+    "merchantEmailId@gmail.com";
+  const activeOrderId =
+    orderId ||
+    parsedBody.orderId ||
+    parsedBody.externalOrderId ||
+    parsedBody.referenceId ||
+    "";
+  const activeFiatAmount =
+    fiatAmount !== undefined
+      ? String(fiatAmount)
+      : parsedBody.fiatAmount !== undefined
+      ? String(parsedBody.fiatAmount)
+      : parsedBody.amount !== undefined
+      ? String(parsedBody.amount)
+      : "";
+  const activeSecretKey =
+    secretKey ||
+    options.mysecretdev ||
+    import.meta.env?.VITE_SECRET_KEY ||
+    import.meta.env?.VITE_MYSECRETDEV ||
+    "YOUR_SECRET_KEY";
+  const activeAppId =
+    appId ||
+    options.merchantappid ||
+    parsedBody.appid ||
+    getCurrentUserEmail() ||
+    import.meta.env?.VITE_MERCHANT_APP_ID ||
+    "YOUR_MERCHANT_APP_ID";
+  const activeMerchantSecretId =
+    merchantSecretId ||
+    options.merchantsecretid ||
+    import.meta.env?.VITE_MERCHANT_SECRET_ID ||
+    "YOUR_MERCHANT_SECRET_ID";
+
+  // Generate HMAC-SHA256 hash using merchant secret key
+  const merchanthash = generateMerchantHash(
+    activeSecretKey,
+    activeMerchantId,
+    activeOrderId,
+    activeFiatAmount
+  );
+
+  const rawInput = `${activeMerchantId}${activeOrderId}${activeFiatAmount}`;
+
+  // Log hash and headers for EVERY request as requested
+  console.log(`[Kubergates Hash] ${options.method || "GET"} ${endpoint}`, {
+    endpoint,
+    merchanthash,
+    rawInput,
+    merchantId: activeMerchantId,
+    orderId: activeOrderId,
+    fiatAmount: activeFiatAmount,
+    secretKey: activeSecretKey,
+    appId: activeAppId,
+    merchantSecretId: activeMerchantSecretId,
+  });
+
+  const kubergatesHeaders = {
+    merchantappid: activeAppId,
+    merchanthash: merchanthash,
+    merchantsecretid: activeMerchantSecretId,
+    mysecretdev: activeSecretKey,
+  };
+
+  // Determine if Kubergates custom headers should be included in HTTP request
+  const isKubergatesEndpoint =
+    options.includeKubergatesHeaders ||
+    String(endpoint).includes("/payins") ||
+    String(endpoint).includes("/transaction") ||
+    String(endpoint).includes("/checkout") ||
+    String(endpoint).includes("/CryptoConfig") ||
+    String(endpoint).includes("/wallet") ||
+    String(endpoint).includes("/payout");
 
   const config = {
     ...rest,
@@ -101,6 +191,7 @@ export async function apiRequest(endpoint, options = {}) {
         ? { "Content-Type": "application/json" }
         : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(isKubergatesEndpoint ? kubergatesHeaders : {}),
       ...headers,
     },
   };
@@ -113,6 +204,8 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   const response = await fetch(url, config);
+
+
   const data = await parseResponse(response);
 
   if (!response.ok) {
@@ -128,6 +221,7 @@ export async function apiRequest(endpoint, options = {}) {
 
   return data;
 }
+
 
 export const apiClient = {
   get: (endpoint, params, options = {}) =>

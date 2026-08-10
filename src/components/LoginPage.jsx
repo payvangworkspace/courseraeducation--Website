@@ -4,10 +4,9 @@ import Navbar from "./Navbar";
 import ContactModal from "./ContactModel";
 import CryptoJS from "crypto-js";
 import { encryptRequestData, decryptResponse } from "../utils/encryptdecryptdata";
+import { authApi } from "../api/auth/index"; // TODO: adjust the import path to wherever authApi.js actually lives
 
 const BRAND_NAME = "Coursera Education"; // TODO: replace with your real product name
-const API_BASE = ""; // TODO: replace with your real API domain
-const API_KEY = "REPLACE_WITH_REAL_KEY"; // TODO: confirm header name + value from Swagger's Authorize dialog
 
 export default function LoginPage() {
 
@@ -17,164 +16,84 @@ export default function LoginPage() {
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
-  const [publicKey, setPublicKey] = useState(null);
-  const [errorPublic, setErrorPublic] = useState(false);
-  const [aesKeyState, setAesKeyState] = useState("");
   const isValid = form.email.includes("@") && form.password.length >= 6;
 
   function updateField(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-async function handleSubmit(e) {
-  e.preventDefault();
+  async function handleSubmit(e) {
+    e.preventDefault();
 
-  if (!isValid || status === "submitting") return;
+    if (!isValid || status === "submitting") return;
 
-  setStatus("submitting");
-  setErrorMsg("");
+    setStatus("submitting");
+    setErrorMsg("");
 
-  try {
-    // Get RSA public key from server
-    const resKey = await fetch(`${API_BASE}/apiauth/publicKey`);
-
-    if (!resKey.ok) {
-      throw new Error("Unable to fetch public key");
-    }
-
-    const publicKey = await resKey.text();
-
-    // Generate AES-128 key
-    const aesKeyWordArray = CryptoJS.lib.WordArray.random(16);
-    const aesKey = aesKeyWordArray.toString(CryptoJS.enc.Base64);
-
-    setAesKeyState(aesKey);
-
-    // Encrypt login payload
-    const encryptedBody = await encryptRequestData(
-      {
-        userName: form.email,
-        password: form.password,
-      },
-      publicKey,
-      aesKey
-    );
-
-    // Send request
-    const response = await fetch(`${API_BASE}/generate-token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": API_KEY,
-      },
-      body: encryptedBody,
-    });
-
-    // Server returns encrypted Base64 string, NOT JSON
-const encryptedResponse = await response.text();
-
-console.log("Encrypted server response:", encryptedResponse);
-
-if (!response.ok) {
-  throw new Error("Login failed");
-}
-
-// Decrypt encrypted response
-const decrypted = await decryptResponse(encryptedResponse, aesKey);
-
-
-    console.log("Decrypted Login Response:", decrypted);
-
-    const token = decrypted.token;
-    const role = decrypted.userRole; // e.g. "ADMIN", "USER", "MERCHANT"
-
-    if (form.remember) {
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("user_role", role);
-    } else {
-      sessionStorage.setItem("auth_token", token);
-      sessionStorage.setItem("user_role", role);
-    }
-
-    // Role-based redirect
-    switch (role) {
-      case "ADMIN":
-        navigate("/home");
-        break;
-      case "MERCHANT":
-        navigate("/home");
-        break;
-      case "USER":
-      default:
-        navigate("/dashboard");
-        break;
-    }
-  } catch (err) {
-    console.error(err);
-    localStorage.setItem("user_email", form.email);
-    navigate("/home");
-  } finally {
-    setStatus("idle");
-  }
-}
-
-
-  async function fetchServerPublicKey() {
-    // TODO: replace with the real endpoint that serves the RSA public key (PEM or JWK).
-    const res = await fetch(`${API_BASE}/apiauth/publicKey`);
-    const pem = await res.text();
-    return importRsaPublicKey(pem);
-  }
-
-  async function importRsaPublicKey(pem) {
-    const b64 = pem
-      .replace("-----BEGIN PUBLIC KEY-----", "")
-      .replace("-----END PUBLIC KEY-----", "")
-      .replace(/\s/g, "");
-    const binaryDer = base64ToArrayBuffer(b64);
-    return crypto.subtle.importKey(
-      "spki",
-      binaryDer,
-      { name: "RSA-OAEP", hash: "SHA-256" },
-      true,
-      ["encrypt"]
-    );
-  }
-  async function decryptServerResponse(encryptedBody, aesKey) {
-    // Assumes the raw response body IS the base64 AES-GCM blob
-    // (server returns `encservdata` directly per AuthenticateController).
-    const combined = base64ToArrayBuffer(
-      typeof encryptedBody === "string" ? encryptedBody : JSON.stringify(encryptedBody)
-    );
-    const iv = combined.slice(0, 12);
-    const ciphertext = combined.slice(12);
-    const decryptedBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: new Uint8Array(iv) },
-      aesKey,
-      ciphertext
-    );
-    return JSON.parse(new TextDecoder().decode(decryptedBuf));
-  }
-
-  function arrayBufferToBase64(buf) {
-    let binary = "";
-    const bytes = new Uint8Array(buf);
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary);
-  }
-
-  function base64ToArrayBuffer(base64) {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes.buffer;
-  }
-
-  async function safeJson(res) {
     try {
-      return await res.json();
-    } catch {
-      return null;
+      // 1. Get RSA public key from server via authApi
+      const keyRes = await authApi.getPublicKey();
+      // NOTE: apiClient's return shape is assumed to be axios-like (`res.data`)
+      // and to preserve this endpoint's raw text body (a PEM string), not parse it as JSON.
+      // If apiClient auto-parses JSON responses, this endpoint needs `responseType: "text"`
+      // (or an equivalent option) passed through in getPublicKey's `options`.
+      const publicKey = keyRes.data ?? keyRes;
+
+      // 2. Generate AES-128 key
+      const aesKeyWordArray = CryptoJS.lib.WordArray.random(16);
+      const aesKey = aesKeyWordArray.toString(CryptoJS.enc.Base64);
+
+      // 3. Encrypt login payload
+      const encryptedBody = await encryptRequestData(
+        {
+          userName: form.email,
+          password: form.password,
+        },
+        publicKey,
+        aesKey
+      );
+
+      // 4. Send login request via authApi
+      const tokenRes = await authApi.generateToken(encryptedBody);
+      // Same caveat as above: this endpoint returns an encrypted Base64 string,
+      // NOT JSON, so make sure apiClient doesn't try to JSON-parse it.
+      const encryptedResponse = tokenRes.data ?? tokenRes;
+
+      // 5. Decrypt encrypted response
+      const decrypted = await decryptResponse(encryptedResponse, aesKey);
+
+      const token = decrypted.token;
+      const role = decrypted.userRole; // e.g. "ADMIN", "USER", "MERCHANT"
+      const userEmail = form.email.trim();
+
+      if (form.remember) {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_role", role);
+        localStorage.setItem("user_email", userEmail);
+      } else {
+        sessionStorage.setItem("auth_token", token);
+        sessionStorage.setItem("user_role", role);
+        sessionStorage.setItem("user_email", userEmail);
+      }
+
+      // Role-based redirect
+      switch (role) {
+        case "ADMIN":
+          navigate("/home");
+          break;
+        case "MERCHANT":
+          navigate("/home");
+          break;
+        case "USER":
+        default:
+          navigate("/dashboard");
+          break;
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Login failed. Please check your credentials and try again.");
+    } finally {
+      setStatus("idle");
     }
   }
 

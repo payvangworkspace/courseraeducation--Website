@@ -439,10 +439,11 @@ export default function AlternativesPage() {
               Review our legal and privacy documents. You can also manage your cookie preferences anytime.
             </p>
             <ul className="ld-footer-links">
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms and Conditions</a></li>
-              <li><a href="#">Cancellation Policy</a></li>
+              <li><a href="/refund-policy">Return &amp; Refund Policy</a></li>
+              <li><a href="/cancellation-policy">Cancellation Policy</a></li>
+              <li><a href="/pricing">Pricing &amp; Terms</a></li>
             </ul>
+
           </div>
           <div>
             <h4>Need help?</h4>

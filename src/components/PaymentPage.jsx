@@ -354,8 +354,9 @@ export default function PaymentPage() {
               </button>
 
               <p className="pay-fine-print">
-                By paying you agree to our Terms and Cancellation Policy. This is a demo checkout — no real charge is made.
+                By paying you agree to our <a href="/refund-policy" style={{ color: "var(--accent-orange)", textDecoration: "underline" }}>Terms and Cancellation Policy</a>. This is a demo checkout — no real charge is made.
               </p>
+
             </form>
           </div>
         )}

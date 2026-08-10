@@ -20,6 +20,11 @@ import StudentLesson from "./components/StudentLesson";
 import CheckoutPage from "./components/CheckoutPage";
 import GetPaymentLinkPage from "./components/GetPaymentLinkPage";
 import PaymentSuccess from "./components/PaymentSuccess";
+import PaymentGatewayForm from "./components/PaymentGatewayForm";
+import ReturnRefundPolicyPage from "./components/ReturnRefundPolicyPage";
+import CoursesPage from "./components/CoursesPage";
+
+
 
 // PayVang Admin & Aggregator Pages (/home/*)
 import DashboardPage from "./pages/DashboardPage";
@@ -52,7 +57,9 @@ export default function App() {
       <Routes>
         {/* Coursera Education Main Website Routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/courses" element={<CoursesPage />} />
         <Route path="/lessons" element={<LessonsPage />} />
+
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/alternatives" element={<AlternativesPage />} />
         <Route path="/pricing" element={<PricingPage />} />
@@ -77,7 +84,17 @@ export default function App() {
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         <Route path="/checkoutpage" element={<GetPaymentLinkPage />} />
         <Route path="/get-payment-link" element={<GetPaymentLinkPage />} />
+        <Route path="/payment-gateway-form" element={<PaymentGatewayForm />} />
+        <Route path="/home/payment-gateway-form" element={<PaymentGatewayForm />} />
         <Route path="/orderstatus" element={<PaymentSuccess />} />
+
+        {/* Legal & Policy Routes */}
+        <Route path="/refund-policy" element={<ReturnRefundPolicyPage />} />
+        <Route path="/return-policy" element={<ReturnRefundPolicyPage />} />
+        <Route path="/cancellation-policy" element={<ReturnRefundPolicyPage />} />
+        <Route path="/return-and-refund-policy" element={<ReturnRefundPolicyPage />} />
+
+
 
         {/* PayVang Admin & Payment Aggregator Portal Routes (/home/*) */}
         <Route path="/home" element={<DashboardPage />} />
