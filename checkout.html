@@ -44,8 +44,9 @@
       const orderId = params.get("orderId") || "ORD0805269912";
       // Optional: ?apiKey=YOUR_KEY  (or set window.CHECKOUT_API_KEY)
       const apiKey = params.get("apiKey") || window.CHECKOUT_API_KEY || "";
-      const API = "https://api.courseraeducation.com/checkout/params/" + encodeURIComponent(orderId);
-      const AFS_RETURN = "https://api.courseraeducation.com/payinwebhook/afsReturn";
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const API = `${API_BASE_URL}/checkout/params/${encodeURIComponent(orderId)}`;
+      const AFS_RETURN = `${API_BASE_URL}/payinwebhook/afsReturn`;
 
       try {
         const headers = {};
