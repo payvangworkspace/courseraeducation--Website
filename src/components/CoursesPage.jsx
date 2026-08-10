@@ -301,8 +301,11 @@ export default function CoursesPage() {
           <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(2.2rem, 4.5vw, 3.4rem)", fontWeight: 800, margin: "0 0 16px 0", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             Explore Professional Courses
           </h1>
-          <p style={{ fontSize: "16px", color: "rgba(253, 246, 238, 0.85)", margin: "0 0 28px 0", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "16px", color: "rgba(253, 246, 238, 0.85)", margin: "0 0 12px 0", lineHeight: 1.6 }}>
             Master production-grade AI engineering, RAG pipelines, agentic orchestration, fine-tuning, and safety frameworks taught by industry experts.
+          </p>
+          <p style={{ fontSize: "14.5px", color: "#C99A3D", fontWeight: 600, margin: "0 0 28px 0" }}>
+            ✨ Note: All of these courses can also be customized to meet your specific team or project requirements.
           </p>
 
           {/* SEARCH BAR */}
@@ -341,6 +344,20 @@ export default function CoursesPage() {
 
       {/* MAIN CONTAINER */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 24px 80px" }}>
+
+        {/* CUSTOMIZATION ANNOUNCEMENT BANNER */}
+        <div style={{ backgroundColor: "#FAF2E8", border: "1px solid rgba(201, 154, 61, 0.4)", borderRadius: "16px", padding: "14px 24px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", boxShadow: "0 4px 16px rgba(122, 31, 43, 0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14.5px", color: "#7A1F2B" }}>
+            <Sparkles style={{ width: 18, height: 18, color: "#C99A3D", flexShrink: 0 }} />
+            <span>Looking for tailored content? <strong>All courses listed here can also be customized</strong> based on your team's specific requirements.</span>
+          </div>
+          <button
+            onClick={() => setContactOpen(true)}
+            style={{ backgroundColor: "#7A1F2B", color: "#ffffff", border: "none", borderRadius: "9999px", padding: "8px 20px", fontSize: "13px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            Contact for Custom Course
+          </button>
+        </div>
         
         {/* CATEGORY FILTER TABS */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", overflowX: "auto", paddingBottom: "16px", marginBottom: "36px" }} className="scrollbar-none">
