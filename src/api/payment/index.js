@@ -89,11 +89,8 @@ export const paymentApi = {
     };
 
     const candidates = [
-      // Same-origin — matches curl to localhost:3000/checkout/params/...
-      path,
-      // Direct live API fallback
       `${BASE_URL || "https://api.courseraeducation.com"}${path}`,
-    ];
+    ];  
 
     let lastError = null;
 
