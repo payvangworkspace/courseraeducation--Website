@@ -5,6 +5,7 @@ export {
   buildUrl,
   getAuthToken,
   setAuthToken,
+  saveAuthToken,
   clearAuthToken,
   unwrapList,
   default as client,

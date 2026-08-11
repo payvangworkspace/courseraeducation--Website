@@ -6,6 +6,7 @@ export {
   buildUrl,
   getAuthToken,
   setAuthToken,
+  saveAuthToken,
   clearAuthToken,
   unwrapList,
 } from "./client";

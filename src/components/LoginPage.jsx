@@ -1,21 +1,48 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import ContactModal from "./ContactModel";
 import CryptoJS from "crypto-js";
 import { encryptRequestData, decryptResponse } from "../utils/encryptdecryptdata";
-import { authApi } from "../api/auth/index"; // TODO: adjust the import path to wherever authApi.js actually lives
+import { authApi } from "../api/auth";
+import { saveAuthToken } from "../api";
 
-const BRAND_NAME = "Coursera Education"; // TODO: replace with your real product name
+const BRAND_NAME = "Coursera Education";
+
+function pickToken(payload) {
+  if (!payload) return "";
+  if (typeof payload === "string") return "";
+  return (
+    payload.token ||
+    payload.accessToken ||
+    payload.access_token ||
+    payload?.data?.token ||
+    payload?.data?.accessToken ||
+    ""
+  );
+}
+
+function pickField(payload, ...keys) {
+  if (!payload || typeof payload !== "object") return undefined;
+  for (const key of keys) {
+    if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
+      return payload[key];
+    }
+    if (payload.data && payload.data[key] !== undefined && payload.data[key] !== null) {
+      return payload.data[key];
+    }
+  }
+  return undefined;
+}
 
 export default function LoginPage() {
-
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "", remember: false });
+  const [form, setForm] = useState({ email: "", password: "", remember: true });
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
+
   const isValid = form.email.includes("@") && form.password.length >= 6;
 
   function updateField(field, value) {
@@ -24,83 +51,87 @@ export default function LoginPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     if (!isValid || status === "submitting") return;
 
     setStatus("submitting");
     setErrorMsg("");
 
+    const userEmail = form.email.trim();
+    const formData = {
+      userName: userEmail,
+      password: form.password,
+    };
+
     try {
-      const userEmail = form.email.trim();
-
-      console.log("[Login API] Initiating authentication for:", userEmail);
-
-      // 1. Get RSA public key from server via authApi with PayVang authentication headers
+      // 1) Public key
       const keyRes = await authApi.getPublicKey({
         merchantId: userEmail,
         includePayVangHeaders: true,
       });
-      const publicKey = keyRes.data ?? keyRes;
+      const publicKey = keyRes?.data ?? keyRes?.publicKey ?? keyRes;
+      if (!publicKey) throw new Error("Public key missing");
 
-      // 2. Generate AES-128 key
+      // 2) AES key (keep in local var — do not rely on React state timing)
       const aesKeyWordArray = CryptoJS.lib.WordArray.random(16);
-      const aesKey = aesKeyWordArray.toString(CryptoJS.enc.Base64);
+      const aesKeyBase64 = aesKeyWordArray.toString(CryptoJS.enc.Base64);
 
-      // 3. Encrypt login payload
-      const loginParams = {
-        userName: userEmail,
-        password: form.password,
-      };
-      console.log("[Login API] Parameters before encryption:", { userName: userEmail, password: "***" });
-
-      const encryptedBody = await encryptRequestData(
-        loginParams,
-        publicKey,
-        aesKey
-      );
-
-      console.log("[Login API] Encrypted payload to send:", encryptedBody);
-
-      // 4. Send login request via authApi with PayVang parameters & headers
-      const tokenRes = await authApi.generateToken(encryptedBody, {
+      // 3) Encrypt + POST /generate-token
+      const encData = await encryptRequestData(formData, publicKey, aesKeyBase64);
+      const tokenRes = await authApi.generateToken(encData, {
         merchantId: userEmail,
         includePayVangHeaders: true,
       });
-      const encryptedResponse = tokenRes.data ?? tokenRes;
 
-      // 5. Decrypt encrypted response
-      const decrypted = await decryptResponse(encryptedResponse, aesKey);
-
-      const token = decrypted.token;
-      const role = decrypted.userRole; // e.g. "ADMIN", "USER", "MERCHANT"
-
-      if (form.remember) {
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_role", role);
-        localStorage.setItem("user_email", userEmail);
-      } else {
-        sessionStorage.setItem("auth_token", token);
-        sessionStorage.setItem("user_role", role);
-        sessionStorage.setItem("user_email", userEmail);
+      if (tokenRes?.status === "fail") {
+        throw new Error(tokenRes?.message || "Login failed");
       }
 
-      // Role-based redirect
-      switch (role) {
-        case "ADMIN":
-          navigate("/home");
-          break;
-        case "MERCHANT":
-          navigate("/home");
-          break;
-        case "USER":
-        default:
-          navigate("/dashboard");
-          break;
+      // 4) Decrypt response with the same AES key used to encrypt
+      const encryptedPayload = tokenRes?.data ?? tokenRes;
+      const resp = await decryptResponse(encryptedPayload, aesKeyBase64);
+      console.log("[Login] decrypted response:", resp);
+
+      const token = pickToken(resp);
+      if (!token) {
+        throw new Error("Login failed. Token missing in server response.");
       }
+
+      const userRole = pickField(resp, "userRole", "role", "user_role") || "USER";
+      const email = pickField(resp, "email", "userName", "user_email") || userEmail;
+      const fullName = pickField(resp, "fullName", "name", "user_fullName") || "";
+      const verified = pickField(resp, "verified", "user_verified");
+      const payoutEnabledViaApp = pickField(resp, "payoutEnabledViaApp");
+
+      // 5) Persist before navigate (localStorage if Remember me, else sessionStorage)
+      const saved = saveAuthToken(
+        token,
+        userRole,
+        email,
+        fullName,
+        verified,
+        payoutEnabledViaApp,
+        { remember: form.remember }
+      );
+
+      if (!saved) {
+        throw new Error("Unable to save login session.");
+      }
+
+      console.log(
+        "[Login] saved to",
+        form.remember ? "localStorage" : "sessionStorage",
+        {
+          auth_token: token ? "(set)" : "(empty)",
+          user_role: userRole,
+          user_email: email,
+          user_fullName: fullName,
+        }
+      );
+
+      navigate("/home");
     } catch (err) {
-      console.error(err);
-      setErrorMsg("Login failed. Please check your credentials and try again.");
-    } finally {
+      console.error("[Login] failed:", err);
+      setErrorMsg(err?.message || "Login failed. Please check your credentials and try again.");
       setStatus("idle");
     }
   }

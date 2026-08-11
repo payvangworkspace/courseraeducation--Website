@@ -26,11 +26,56 @@ export function setAuthToken(token, { remember = true, role } = {}) {
   }
 }
 
+/** Persist login session fields (token, role, email, name, flags). */
+export function saveAuthToken(
+  token,
+  userRole,
+  email,
+  fullName,
+  verified,
+  payoutEnabledViaApp,
+  { remember = true } = {}
+) {
+  if (!token) return false;
+
+  const store = remember ? localStorage : sessionStorage;
+  const clear = remember ? sessionStorage : localStorage;
+
+  try {
+    store.setItem(TOKEN_KEY, String(token));
+    store.setItem(ROLE_KEY, String(userRole || ""));
+    store.setItem("user_email", String(email || ""));
+    store.setItem("user_fullName", String(fullName || ""));
+    store.setItem("user_verified", String(verified ?? ""));
+    store.setItem("payoutEnabledViaApp", String(payoutEnabledViaApp ?? ""));
+
+    clear.removeItem(TOKEN_KEY);
+    clear.removeItem(ROLE_KEY);
+    clear.removeItem("user_email");
+    clear.removeItem("user_fullName");
+    clear.removeItem("user_verified");
+    clear.removeItem("payoutEnabledViaApp");
+
+    // Verify write succeeded
+    return Boolean(store.getItem(TOKEN_KEY));
+  } catch (err) {
+    console.error("[saveAuthToken] failed:", err);
+    return false;
+  }
+}
+
 export function clearAuthToken() {
-  localStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(ROLE_KEY);
-  sessionStorage.removeItem(ROLE_KEY);
+  [
+    TOKEN_KEY,
+    ROLE_KEY,
+    "user_email",
+    "user_fullName",
+    "user_verified",
+    "payoutEnabledViaApp",
+  ].forEach((key) => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
 }
 
 /** Normalize list-like API responses into an array. */
