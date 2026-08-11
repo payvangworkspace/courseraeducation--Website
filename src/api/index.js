@@ -8,6 +8,7 @@ export {
   setAuthToken,
   saveAuthToken,
   clearAuthToken,
+  getSessionUser,
   unwrapList,
 } from "./client";
 

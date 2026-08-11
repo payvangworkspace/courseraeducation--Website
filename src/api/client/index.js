@@ -7,6 +7,7 @@ export {
   setAuthToken,
   saveAuthToken,
   clearAuthToken,
+  getSessionUser,
   unwrapList,
   default as client,
 } from "./apiClient";

@@ -29,12 +29,28 @@ import {
   Mail,
   Activity
 } from 'lucide-react';
-import { authApi, clearAuthToken } from '../../api';
+import { authApi, clearAuthToken, getSessionUser } from '../../api';
+
+function roleLabel(role) {
+  const r = String(role || '').toUpperCase();
+  if (r.includes('SUPER')) return 'Super Administrator';
+  if (r.includes('ADMIN')) return 'Administrator';
+  if (r.includes('MERCHANT')) return 'Merchant';
+  return r || 'User';
+}
+
+function initialsFrom(name, email) {
+  const source = (name || email || 'U').trim();
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
 
 export default function PayVangLayout({ children, title, subtitle }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const session = getSessionUser();
 
   const handleLogout = () => {
     authApi.logout({}).catch(() => {});
@@ -247,12 +263,16 @@ export default function PayVangLayout({ children, title, subtitle }) {
           <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(122,31,43,0.12)', marginTop: '8px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #7A1F2B 0%, #C99A3D 100%)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}>
-                AM
+                {initialsFrom(session.fullName, session.email)}
               </div>
               {!collapsed && (
                 <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#241417', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Alex Morgan</span>
-                  <span style={{ fontSize: '11px', color: '#9E8984', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Super Administrator</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#241417', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={session.email}>
+                    {session.fullName || session.email || 'User'}
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#9E8984', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {roleLabel(session.user_role)}
+                  </span>
                 </div>
               )}
             </div>

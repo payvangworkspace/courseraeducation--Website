@@ -88,6 +88,24 @@ export function clearAuthToken() {
   });
 }
 
+function readStore(key) {
+  return localStorage.getItem(key) || sessionStorage.getItem(key) || "";
+}
+
+/** Logged-in session fields saved at login. */
+export function getSessionUser() {
+  const payoutRaw = readStore("payoutEnabledViaApp");
+  return {
+    email: readStore("email"),
+    fullName: readStore("fullName"),
+    user_role: readStore(ROLE_KEY),
+    payoutEnabledViaApp:
+      payoutRaw === "" ? false : payoutRaw === "true" || payoutRaw === "1",
+    verified: readStore("verified"),
+    token: getAuthToken(),
+  };
+}
+
 /** Normalize list-like API responses into an array. */
 export function unwrapList(data) {
   if (Array.isArray(data)) return data;
@@ -169,7 +187,7 @@ export async function apiRequest(endpoint, options = {}) {
     merchantAppId,
     merchantSecretId,
     merchantHash,
-    includePayVangHeaders = true,
+    includePayVangHeaders,
     includeKubergatesHeaders,
     ...rest
   } = options;
@@ -261,29 +279,30 @@ export async function apiRequest(endpoint, options = {}) {
 
   // Print structured console log matching PayVang API documentation format
 
+  // Use a single casing only — HTTP headers are case-insensitive.
+  // Sending both merchantAppId + merchantappid causes "value, value" duplicates.
   const payVangHeaders = {
-    merchantAppId: activeAppId,
-    merchantSecretId: activeMerchantSecretId,
-    merchantHash: computedHash,
-    // Backward compatibility lowercase aliases:
     merchantappid: activeAppId,
     merchantsecretid: activeMerchantSecretId,
     merchanthash: computedHash,
     mysecretdev: activeSecretKey,
   };
 
-  // Determine if PayVang custom headers should be included in HTTP request
+  const path = String(endpoint);
+  const isPayVangPath =
+    path.includes("/payins") ||
+    path.includes("/transaction") ||
+    path.includes("/checkout") ||
+    path.includes("/CryptoConfig") ||
+    path.includes("/wallet") ||
+    path.includes("/payout");
+
+  // Default OFF for admin/user routes. Only attach for payment gateway paths
+  // (or when the caller explicitly opts in).
   const shouldAttachHeaders =
-    includePayVangHeaders ||
-    includeKubergatesHeaders ||
-    String(endpoint).includes("/payins") ||
-    String(endpoint).includes("/transaction") ||
-    String(endpoint).includes("/checkout") ||
-    String(endpoint).includes("/CryptoConfig") ||
-    String(endpoint).includes("/wallet") ||
-    String(endpoint).includes("/payout") ||
-    String(endpoint).includes("/generate-token") ||
-    String(endpoint).includes("/apiauth");
+    includePayVangHeaders === true ||
+    includeKubergatesHeaders === true ||
+    (includePayVangHeaders !== false && isPayVangPath);
 
   const config = {
     ...rest,

@@ -22,17 +22,42 @@ function pickToken(payload) {
   );
 }
 
+/** Walk top-level + nested data/user objects for a field. Allows false/0. */
 function pickField(payload, ...keys) {
   if (!payload || typeof payload !== "object") return undefined;
-  for (const key of keys) {
-    if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
-      return payload[key];
-    }
-    if (payload.data && payload.data[key] !== undefined && payload.data[key] !== null) {
-      return payload.data[key];
+
+  const sources = [payload, payload.data, payload.user, payload.data?.user].filter(
+    (s) => s && typeof s === "object"
+  );
+
+  for (const source of sources) {
+    for (const key of keys) {
+      if (source[key] !== undefined && source[key] !== null && source[key] !== "") {
+        return source[key];
+      }
+      // Allow boolean false / number 0
+      if (source[key] === false || source[key] === 0) {
+        return source[key];
+      }
     }
   }
   return undefined;
+}
+
+function pickRole(payload) {
+  const direct = pickField(payload, "userRole", "role", "user_role");
+  if (direct) return String(direct).toUpperCase();
+
+  const sources = [payload, payload?.data, payload?.user].filter(Boolean);
+  for (const source of sources) {
+    const roles = source.roles || source.authorities;
+    if (Array.isArray(roles) && roles.length) {
+      const first = roles[0];
+      if (typeof first === "string") return first.replace(/^ROLE_/, "").toUpperCase();
+      if (first?.authority) return String(first.authority).replace(/^ROLE_/, "").toUpperCase();
+    }
+  }
+  return "USER";
 }
 
 export default function LoginPage() {
@@ -96,13 +121,13 @@ export default function LoginPage() {
         throw new Error("Login failed. Token missing in server response.");
       }
 
-      const userRole = pickField(resp, "userRole", "role", "user_role") || "USER";
-      const email = pickField(resp, "email", "userName", "user_email") || userEmail;
+      const userRole = pickRole(resp);
+      const email = pickField(resp, "email", "userName", "user_email", "sub") || userEmail;
       const fullName = pickField(resp, "fullName", "name", "user_fullName") || "";
       const verified = pickField(resp, "verified", "user_verified");
-      const payoutEnabledViaApp = pickField(resp, "payoutEnabledViaApp");
+      const payoutEnabledViaApp = Boolean(pickField(resp, "payoutEnabledViaApp") ?? false);
 
-      // 5) Persist before navigate (localStorage if Remember me, else sessionStorage)
+      // 5) Persist session — keys: email, fullName, user_role, payoutEnabledViaApp
       const saved = saveAuthToken(
         token,
         userRole,
@@ -121,10 +146,10 @@ export default function LoginPage() {
         "[Login] saved to",
         form.remember ? "localStorage" : "sessionStorage",
         {
-          auth_token: token ? "(set)" : "(empty)",
-          user_role: userRole,
           email,
           fullName,
+          payoutEnabledViaApp,
+          user_role: userRole,
         }
       );
 

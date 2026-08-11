@@ -383,12 +383,17 @@ export default function SignupPage() {
     try {
       const body = await merchantApi.createMerchant(
         {
-          userId: form.email,
-          fullName: form.name,
+          userId: form.email.trim(),
+          fullName: form.name.trim(),
           contactNumber: form.contactNumber.trim(),
           password: form.password,
         },
-        { headers: getApiKeyHeaders(), auth: false }
+        {
+          auth: false,
+          includePayVangHeaders: false,
+          // Only attaches when VITE_API_KEY is a real key (placeholders are ignored)
+          headers: getApiKeyHeaders(),
+        }
       );
 
       if (body?.status === "fail" || body?.success === false) {
