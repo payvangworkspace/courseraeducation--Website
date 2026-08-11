@@ -12,16 +12,35 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
+      '/apiauth': {
+        target: 'https://api.courseraeducation.com',
         changeOrigin: true,
         secure: false,
       },
-      // Only proxy the API path — NOT /checkout/:orderId (that is the React page)
+      '/generate-token': {
+        target: 'https://api.courseraeducation.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/payins': {
+        target: 'https://api.courseraeducation.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/transaction': {
+        target: 'https://api.courseraeducation.com',
+        changeOrigin: true,
+        secure: false,
+      },
       '/checkout/params': {
         target: 'https://api.courseraeducation.com',
         changeOrigin: true,
-        secure: true,
+        secure: false,
+      },
+      '/api': {
+        target: 'https://api.courseraeducation.com',
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

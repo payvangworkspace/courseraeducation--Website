@@ -31,12 +31,15 @@ export default function LoginPage() {
     setErrorMsg("");
 
     try {
-      // 1. Get RSA public key from server via authApi
-      const keyRes = await authApi.getPublicKey();
-      // NOTE: apiClient's return shape is assumed to be axios-like (`res.data`)
-      // and to preserve this endpoint's raw text body (a PEM string), not parse it as JSON.
-      // If apiClient auto-parses JSON responses, this endpoint needs `responseType: "text"`
-      // (or an equivalent option) passed through in getPublicKey's `options`.
+      const userEmail = form.email.trim();
+
+      console.log("[Login API] Initiating authentication for:", userEmail);
+
+      // 1. Get RSA public key from server via authApi with PayVang authentication headers
+      const keyRes = await authApi.getPublicKey({
+        merchantId: userEmail,
+        includePayVangHeaders: true,
+      });
       const publicKey = keyRes.data ?? keyRes;
 
       // 2. Generate AES-128 key
@@ -44,19 +47,25 @@ export default function LoginPage() {
       const aesKey = aesKeyWordArray.toString(CryptoJS.enc.Base64);
 
       // 3. Encrypt login payload
+      const loginParams = {
+        userName: userEmail,
+        password: form.password,
+      };
+      console.log("[Login API] Parameters before encryption:", { userName: userEmail, password: "***" });
+
       const encryptedBody = await encryptRequestData(
-        {
-          userName: form.email,
-          password: form.password,
-        },
+        loginParams,
         publicKey,
         aesKey
       );
 
-      // 4. Send login request via authApi
-      const tokenRes = await authApi.generateToken(encryptedBody);
-      // Same caveat as above: this endpoint returns an encrypted Base64 string,
-      // NOT JSON, so make sure apiClient doesn't try to JSON-parse it.
+      console.log("[Login API] Encrypted payload to send:", encryptedBody);
+
+      // 4. Send login request via authApi with PayVang parameters & headers
+      const tokenRes = await authApi.generateToken(encryptedBody, {
+        merchantId: userEmail,
+        includePayVangHeaders: true,
+      });
       const encryptedResponse = tokenRes.data ?? tokenRes;
 
       // 5. Decrypt encrypted response
@@ -64,7 +73,6 @@ export default function LoginPage() {
 
       const token = decrypted.token;
       const role = decrypted.userRole; // e.g. "ADMIN", "USER", "MERCHANT"
-      const userEmail = form.email.trim();
 
       if (form.remember) {
         localStorage.setItem("auth_token", token);

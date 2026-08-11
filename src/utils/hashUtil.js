@@ -10,54 +10,65 @@ export function getCurrentUserEmail() {
 }
 
 /**
- * Kubergates Merchant Hash Generator
- * 
- * According to Kubergates Merchant API Documentation:
- * Hash Input Format: MerchantId + OrderId + fiatAmount
- * Example: merchantEmailId@gmail.comORD0717169805100
- * Encryption: HMAC-SHA256 using merchant's secret key (mysecretdev)
- * Output: Hexadecimal string (lower-case)
- * 
- * @param {string} secretKey - Secret Key (mysecretdev)
- * @param {string} merchantId - Merchant ID / Email
- * @param {string} orderId - Order ID
- * @param {string|number} fiatAmount - Fiat Amount
- * @returns {string} Hex-encoded HMAC-SHA256 merchanthash
- */
-export function generateMerchantHash(secretKey = "", merchantId = "", orderId = "", fiatAmount = "") {
-  const rawData = `${merchantId || ""}${orderId || ""}${fiatAmount !== undefined && fiatAmount !== null ? fiatAmount : ""}`;
-  const key = secretKey || "";
+  * PayVang Payment Gateway Merchant Hash Generator
+  * 
+  * According to PayVang API Documentation:
+  * Signature Creation:
+  * Plain Text: merchantId + orderId + payableAmount
+  * Example: devendra.kumar@zenithguard.inORD025111710302545177101
+  * Encryption: HMAC-SHA256 (256 BYTE) using merchantSecretId
+  * Output: Hexadecimal string (lower-case)
+  * 
+  * @param {string} merchantSecretId - Merchant Secret ID / Secret Key
+  * @param {string} merchantId - Merchant ID / Email
+  * @param {string} orderId - Order ID
+  * @param {string|number} payableAmount - Payable Amount / Fiat Amount
+  * @returns {string} Hex-encoded HMAC-SHA256 merchantHash
+  */
+export function generateMerchantHash(merchantSecretId = "", merchantId = "", orderId = "", payableAmount = "") {
+  const rawData = `${merchantId || ""}${orderId || ""}${payableAmount !== undefined && payableAmount !== null ? payableAmount : ""}`;
+  const key = merchantSecretId || "";
   const hash = CryptoJS.HmacSHA256(rawData, key);
   return hash.toString(CryptoJS.enc.Hex);
 }
 
 /**
- * Returns authentication headers required by Kubergates API for every request.
- * 
- * Authentication Headers:
- * - merchantappid: <YOUR_MERCHANT_APP_ID>
- * - merchanthash: <YOUR_MERCHANT_HASH>
- * - merchantsecretid: <YOUR_MERCHANT_SECRET_ID>
- * - mysecretdev: <YOUR_SECRET_KEY>
- * - Content-Type: application/json
- */
-export function getKubergatesHeaders({
-  secretKey = import.meta.env?.VITE_SECRET_KEY || import.meta.env?.VITE_MYSECRETDEV || "YOUR_SECRET_KEY",
-  merchantId = getCurrentUserEmail() || import.meta.env?.VITE_MERCHANT_ID || "merchantEmailId@gmail.com",
+  * Returns PayVang API authentication headers required for PayVang payment gateway API calls.
+  * 
+  * Required Headers:
+  * - merchantAppId: <YOUR_MERCHANT_APP_ID>
+  * - merchantSecretId: <YOUR_MERCHANT_SECRET_ID>
+  * - merchantHash: <YOUR_MERCHANT_HASH>
+  * - Content-Type: application/json
+  */
+export function getPayVangHeaders({
+  secretKey = import.meta.env?.VITE_SECRET_KEY || import.meta.env?.VITE_MYSECRETDEV || "zug3ZTeljmyx59DLURQYX4oSHm+vQiysLnFu4jsyvJg=",
+  merchantSecretId = import.meta.env?.VITE_MERCHANT_SECRET_ID || secretKey,
+  merchantId = getCurrentUserEmail() || import.meta.env?.VITE_MERCHANT_ID || "devendra.kumar@zenithguard.in",
   orderId = "",
-  fiatAmount = "",
-  appId = getCurrentUserEmail() || import.meta.env?.VITE_MERCHANT_APP_ID || "MERCHANT_APP_ID",
-  merchantSecretId = import.meta.env?.VITE_MERCHANT_SECRET_ID || "MERCHANT_SECRET_ID",
+  payableAmount = "",
+  fiatAmount = payableAmount,
+  appId = import.meta.env?.VITE_MERCHANT_APP_ID || "ZEpNiaTHy20250923123246158",
+  merchantAppId = appId,
 } = {}) {
-  const merchanthash = generateMerchantHash(secretKey, merchantId, orderId, fiatAmount);
+  const amount = payableAmount !== undefined && payableAmount !== "" ? payableAmount : fiatAmount;
+  const merchantHash = generateMerchantHash(merchantSecretId, merchantId, orderId, amount);
 
   return {
-    merchantappid: appId,
-    merchanthash: merchanthash,
+    merchantAppId: merchantAppId,
+    merchantSecretId: merchantSecretId,
+    merchantHash: merchantHash,
+    // Lowercase aliases for backward compatibility:
+    merchantappid: merchantAppId,
     merchantsecretid: merchantSecretId,
-    mysecretdev: secretKey,
+    merchanthash: merchantHash,
+    mysecretdev: merchantSecretId,
     "Content-Type": "application/json",
   };
+}
+
+export function getKubergatesHeaders(options) {
+  return getPayVangHeaders(options);
 }
 
 export default generateMerchantHash;

@@ -92,97 +92,153 @@ export async function apiRequest(endpoint, options = {}) {
     auth = true,
     merchantId,
     orderId,
+    payableAmount,
     fiatAmount,
+    amount,
     secretKey,
     appId,
+    merchantAppId,
     merchantSecretId,
+    merchantHash,
+    includePayVangHeaders = true,
+    includeKubergatesHeaders,
     ...rest
   } = options;
 
   const url = buildUrl(endpoint, params);
   const token = auth ? getAuthToken() : "";
 
-  // Extract parameters for merchanthash: MerchantId + OrderId + fiatAmount
+  // Extract parameters for merchantHash: merchantId + orderId + payableAmount
   const parsedBody = body && typeof body === "object" && !(body instanceof FormData) ? body : {};
+
   const activeMerchantId =
     merchantId ||
     parsedBody.merchantId ||
     parsedBody.merchant_id ||
+    parsedBody.userName ||
+    parsedBody.email ||
+    parsedBody.emailId ||
     getCurrentUserEmail() ||
     import.meta.env?.VITE_MERCHANT_ID ||
-    "merchantEmailId@gmail.com";
+    "devendra.kumar@zenithguard.in";
+
   const activeOrderId =
     orderId ||
     parsedBody.orderId ||
     parsedBody.externalOrderId ||
     parsedBody.referenceId ||
     "";
-  const activeFiatAmount =
-    fiatAmount !== undefined
-      ? String(fiatAmount)
+
+  const rawAmount =
+    payableAmount !== undefined
+      ? payableAmount
+      : fiatAmount !== undefined
+      ? fiatAmount
+      : amount !== undefined
+      ? amount
+      : parsedBody.payableAmount !== undefined
+      ? parsedBody.payableAmount
       : parsedBody.fiatAmount !== undefined
-      ? String(parsedBody.fiatAmount)
+      ? parsedBody.fiatAmount
       : parsedBody.amount !== undefined
-      ? String(parsedBody.amount)
+      ? parsedBody.amount
       : "";
+  const activePayableAmount = rawAmount !== undefined && rawAmount !== null ? String(rawAmount) : "";
+
   const activeSecretKey =
     secretKey ||
+    options.merchantSecretId ||
     options.mysecretdev ||
+    import.meta.env?.VITE_MERCHANT_SECRET_ID ||
     import.meta.env?.VITE_SECRET_KEY ||
     import.meta.env?.VITE_MYSECRETDEV ||
-    "YOUR_SECRET_KEY";
-  const activeAppId =
-    appId ||
-    options.merchantappid ||
-    parsedBody.appid ||
-    getCurrentUserEmail() ||
-    import.meta.env?.VITE_MERCHANT_APP_ID ||
-    "YOUR_MERCHANT_APP_ID";
+    "zug3ZTeljmyx59DLURQYX4oSHm+vQiysLnFu4jsyvJg=";
+
   const activeMerchantSecretId =
     merchantSecretId ||
     options.merchantsecretid ||
-    import.meta.env?.VITE_MERCHANT_SECRET_ID ||
-    "YOUR_MERCHANT_SECRET_ID";
+    activeSecretKey;
 
-  // Generate HMAC-SHA256 hash using merchant secret key
-  const merchanthash = generateMerchantHash(
-    activeSecretKey,
-    activeMerchantId,
-    activeOrderId,
-    activeFiatAmount
+  const activeAppId =
+    merchantAppId ||
+    appId ||
+    options.merchantappid ||
+    parsedBody.appid ||
+    parsedBody.merchantAppId ||
+    getCurrentUserEmail() ||
+    import.meta.env?.VITE_MERCHANT_APP_ID ||
+    "ZEpNiaTHy20250923123246158";
+
+  // Generate HMAC-SHA256 hash using merchantSecretId and (merchantId + orderId + payableAmount)
+  const computedHash =
+    merchantHash ||
+    generateMerchantHash(
+      activeMerchantSecretId,
+      activeMerchantId,
+      activeOrderId,
+      activePayableAmount
+    );
+
+  const rawInput = `${activeMerchantId}${activeOrderId}${activePayableAmount}`;
+
+  // Explicit console log of generated merchantHash and raw input
+  console.log(`[PayVang Hash]:`, computedHash);
+  console.log(`[PayVang Signature Raw Input]:`, rawInput);
+
+  // Format request body for logging
+  const hasBody = body !== undefined && body !== null;
+  const formattedBodyData = hasBody
+    ? typeof body === "string" || body instanceof FormData
+      ? body
+      : JSON.stringify(parsedBody, null, 2)
+    : undefined;
+
+  // Print structured console log matching PayVang API documentation format
+  console.log(
+    `==================== PAYVANG API REQUEST DOCUMENTATION REFERENCE ====================\n` +
+    `[Request Method & URL]: ${options.method || "GET"} ${url}\n` +
+    `[Generated Merchant Hash]: ${computedHash}\n` +
+    `[Signature Plain Text]: ${rawInput}\n` +
+    `[Headers Description]:\n` +
+    `  merchantAppId: "${activeAppId}"\n` +
+    `  merchantSecretId: "${activeMerchantSecretId}"\n` +
+    `  merchantHash: "${computedHash}"\n` +
+    `  Content-Type: "application/json"\n` +
+    `[Request Parameters / Body]:`,
+    hasBody ? parsedBody : "(No Body - GET Request)",
+    `\n[Sample cURL Reference]:\n` +
+    `curl --location '${url}' \\\n` +
+    `  --header 'merchantAppId: ${activeAppId}' \\\n` +
+    `  --header 'merchantSecretId: ${activeMerchantSecretId}' \\\n` +
+    `  --header 'merchantHash: ${computedHash}' \\\n` +
+    `  --header 'Content-Type: application/json'` +
+    (hasBody ? ` \\\n  --data-raw '${typeof body === "string" ? body : JSON.stringify(parsedBody, null, 2)}'` : ` \\\n  --data-raw '' # GET requests do not send a body payload\n`) +
+    `\n=====================================================================================`
   );
 
-  const rawInput = `${activeMerchantId}${activeOrderId}${activeFiatAmount}`;
-
-  // Log hash and headers for EVERY request as requested
-  console.log(`[Kubergates Hash] ${options.method || "GET"} ${endpoint}`, {
-    endpoint,
-    merchanthash,
-    rawInput,
-    merchantId: activeMerchantId,
-    orderId: activeOrderId,
-    fiatAmount: activeFiatAmount,
-    secretKey: activeSecretKey,
-    appId: activeAppId,
+  const payVangHeaders = {
+    merchantAppId: activeAppId,
     merchantSecretId: activeMerchantSecretId,
-  });
-
-  const kubergatesHeaders = {
+    merchantHash: computedHash,
+    // Backward compatibility lowercase aliases:
     merchantappid: activeAppId,
-    merchanthash: merchanthash,
     merchantsecretid: activeMerchantSecretId,
+    merchanthash: computedHash,
     mysecretdev: activeSecretKey,
   };
 
-  // Determine if Kubergates custom headers should be included in HTTP request
-  const isKubergatesEndpoint =
-    options.includeKubergatesHeaders ||
+  // Determine if PayVang custom headers should be included in HTTP request
+  const shouldAttachHeaders =
+    includePayVangHeaders ||
+    includeKubergatesHeaders ||
     String(endpoint).includes("/payins") ||
     String(endpoint).includes("/transaction") ||
     String(endpoint).includes("/checkout") ||
     String(endpoint).includes("/CryptoConfig") ||
     String(endpoint).includes("/wallet") ||
-    String(endpoint).includes("/payout");
+    String(endpoint).includes("/payout") ||
+    String(endpoint).includes("/generate-token") ||
+    String(endpoint).includes("/apiauth");
 
   const config = {
     ...rest,
@@ -191,7 +247,7 @@ export async function apiRequest(endpoint, options = {}) {
         ? { "Content-Type": "application/json" }
         : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(isKubergatesEndpoint ? kubergatesHeaders : {}),
+      ...(shouldAttachHeaders ? payVangHeaders : {}),
       ...headers,
     },
   };
