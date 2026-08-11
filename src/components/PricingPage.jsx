@@ -1,1052 +1,209 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import Navbar from "./Navbar";
-// import ContactModal from "./ContactModel";
-
-// /**
-//  * Pricing Page — /pricing — Light Theme
-//  * Single-file React component, plain CSS (no Tailwind, no CSS modules).
-//  * Shares the same visual language (colors, nav, footer, buttons) as LandingPage.jsx / LessonsPage.jsx.
-//  */
-
-// const BRAND_NAME = "Coursera Education";
-
-// const HERO_STATS = [
-//   { icon: "📅", label: "3 plans", value: "Monthly, 6-Month, Yearly", sub: "Pick the billing cycle that fits your team" },
-//   { icon: "💱", label: "USD & EUR", value: "dual currency", sub: "Prices shown in both currencies" },
-//   { icon: "🔁", label: "Flexible", value: "upgrade, downgrade or cancel", sub: "No long-term lock-in on the monthly plan" },
-// ];
-
-// const WHY_PLANS = [
-//   {
-//     icon: "📅",
-//     title: "Pick your billing rhythm",
-//     desc: "Monthly for flexibility, 6-Month or Yearly for savings — same full access either way.",
-//   },
-//   {
-//     icon: "⚖",
-//     title: "One price, every track",
-//     desc: "Prompt Engineering, RAG, Machine Learning, Agentic AI — all included in every plan.",
-//   },
-//   {
-//     icon: "💱",
-//     title: "USD or EUR, your choice",
-//     desc: "Every plan is priced in both currencies so you can bill in whichever works for you.",
-//   },
-//   {
-//     icon: "✅",
-//     title: "No hidden hourly meter",
-//     desc: "No time tracking, no surprise usage bills — just a flat rate for the billing period you choose.",
-//   },
-// ];
-
-// const WHATS_INCLUDED = [
-//   "Access to the " + BRAND_NAME + " LMS experience (tracks, lessons, checkpoints)",
-//   "Assignments & practical exercises (where available)",
-//   "Learning analytics (progress, completion, engagement)",
-//   "Certificates of completion (for eligible tracks)",
-//   "Email support for account and billing questions",
-// ];
-
-// const ADD_ONS = [
-//   {
-//     icon: "👥",
-//     title: "Instructor-led sessions",
-//     desc: "Live sessions, grading, and structured cohort governance (available as an add-on).",
-//   },
-//   {
-//     icon: "✨",
-//     title: "Custom curriculum design",
-//     desc: "Tailored learning path aligned to your team's tools and use cases (available as an add-on).",
-//   },
-//   {
-//     icon: "📄",
-//     title: "Assessments & reporting pack",
-//     desc: "Rubrics, pass thresholds, and exportable reporting templates (available as an add-on).",
-//   },
-//   {
-//     icon: "📅",
-//     title: "Program scheduling",
-//     desc: "Cohort planning, calendars, and milestone configuration (available as an add-on).",
-//   },
-// ];
-
-// const PLANS = [
-//   {
-//     id: "monthly",
-//     name: "Monthly",
-//     tagline: "Flexible, cancel anytime",
-//     usd: 49,
-//     eur: 45,
-//     period: "/ month",
-//     billedNote: "Billed every month",
-//     features: [
-//       "Full access to every training track",
-//       "Progress & completion analytics",
-//       "Certificates of completion",
-//       "Email support",
-//       "Cancel anytime",
-//     ],
-//   },
-//   {
-//     id: "sixmonth",
-//     name: "6-Month",
-//     tagline: "Save with a semi-annual plan",
-//     usd: 249,
-//     eur: 229,
-//     period: "/ 6 months",
-//     billedNote: "Billed once every 6 months",
-//     perMonthUsd: "41.50",
-//     perMonthEur: "38.17",
-//     badge: "Save ~15%",
-//     features: [
-//       "Everything in Monthly",
-//       "Priority email support",
-//       "Downloadable session summaries",
-//       "Locked-in rate for 6 months",
-//     ],
-//   },
-//   {
-//     id: "yearly",
-//     name: "Yearly",
-//     tagline: "Best value for committed teams",
-//     usd: 420,
-//     eur: 390,
-//     period: "/ year",
-//     billedNote: "Billed once a year",
-//     perMonthUsd: "35.00",
-//     perMonthEur: "32.50",
-//     badge: "Save ~28%",
-//     featured: true,
-//     features: [
-//       "Everything in 6-Month",
-//       "1 complimentary curriculum consultation",
-//       "Early access to new tracks",
-//       "Locked-in rate for the full year",
-//     ],
-//   },
-// ];
-
-// const FAQS = [
-//   {
-//     q: "How does pricing work?",
-//     a: "Choose a Monthly, 6-Month, or Yearly plan. Each plan gives full access to every " + BRAND_NAME + " track — the price only changes based on the billing cycle you pick, not which courses you use.",
-//   },
-//   {
-//     q: "Do you charge per user or per seat?",
-//     a: "Each plan covers one learner account. For multiple learners or a team rollout, contact us and we'll put together a volume arrangement.",
-//   },
-//   {
-//     q: "What currencies do you support?",
-//     a: "Every plan is shown in both USD and EUR. You can toggle between them on this page, and you'll be billed in the currency you select at checkout.",
-//   },
-//   {
-//     q: "Is the price different for different courses?",
-//     a: "No. Prompt Engineering, Machine Learning, RAG Design, Agentic AI — every track is included at the same plan price.",
-//   },
-//   {
-//     q: "What's the difference between Monthly, 6-Month, and Yearly?",
-//     a: "They're the same access with different billing frequency. Monthly is the most flexible; 6-Month and Yearly are billed upfront in exchange for a lower effective monthly rate.",
-//   },
-//   {
-//     q: "Do 6-Month and Yearly plans auto-renew?",
-//     a: "Yes, by default they renew at the end of the billing period. You can turn off auto-renew from your account at any time before the renewal date.",
-//   },
-//   {
-//     q: "Can I cancel anytime?",
-//     a: "The Monthly plan can be cancelled at any time and you won't be billed again. 6-Month and Yearly plans are billed upfront; cancelling stops future renewals but doesn't refund the current period.",
-//   },
-//   {
-//     q: "Can I switch between plans?",
-//     a: "Yes. You can upgrade to a longer billing cycle at any time, or move to a shorter one when your current period ends.",
-//   },
-//   {
-//     q: "Do you offer refunds?",
-//     a: "If there's a billing error, we'll review it and make it right. For general refund questions outside of an error, email us and we'll walk through the options.",
-//   },
-//   {
-//     q: "Is there a free trial?",
-//     a: "We can arrange a short trial or demo for teams evaluating " + BRAND_NAME + " — email us and we'll set it up.",
-//   },
-//   {
-//     q: "Can multiple people share one account?",
-//     a: "Plans are designed for one learner per account so progress and certificates stay accurate. For teams, we offer multi-seat arrangements — contact us for details.",
-//   },
-//   {
-//     q: "Do you offer team or volume pricing?",
-//     a: "Yes. For department or company-wide rollouts, email us with your team size and we'll propose a volume rate on top of the standard plans.",
-//   },
-//   {
-//     q: "What's included in every plan?",
-//     a: "All tracks and lessons, assignments where available, learning analytics, certificates of completion for eligible tracks, and email support.",
-//   },
-//   {
-//     q: "Are add-ons billed separately from the plan?",
-//     a: "Yes. Add-ons like instructor-led sessions, custom curriculum design, or assessment packs are quoted and billed separately from your Monthly, 6-Month, or Yearly plan.",
-//   },
-//   {
-//     q: "Do you provide invoices and receipts?",
-//     a: "Yes. Every payment generates an invoice and receipt you can access from your account.",
-//   },
-//   {
-//     q: "Which payment methods do you support?",
-//     a: "We typically support major cards and bank transfers in both USD and EUR. If you need a purchase order process, email us.",
-//   },
-//   {
-//     q: "Is our data private?",
-//     a: "Yes. We treat customer and learner data as private. If you need specific compliance requirements (e.g., retention rules, DPA), we can discuss and document them.",
-//   },
-//   {
-//     q: "Can we use " + BRAND_NAME + " for corporate training?",
-//     a: "Yes. " + BRAND_NAME + " is designed for private training, cohorts, and analytics — particularly useful for teams and organizations, with plans or volume pricing depending on size.",
-//   },
-//   {
-//     q: "Do you offer certifications?",
-//     a: "We provide completion certificates for eligible tracks on every plan. For deeper skills validation, ask about the assessments & reporting add-on.",
-//   },
-//   {
-//     q: "How do we get started?",
-//     a: "Pick the plan and currency that fit you, create an account, and start learning. For a private team rollout, email us and we'll help you plan it.",
-//   },
-// ];
-
-// function useReveal() {
-//   const ref = useRef(null);
-//   const [visible, setVisible] = useState(false);
-//   useEffect(() => {
-//     const el = ref.current;
-//     if (!el) return;
-//     const obs = new IntersectionObserver(
-//       ([entry]) => {
-//         if (entry.isIntersecting) {
-//           setVisible(true);
-//           obs.disconnect();
-//         }
-//       },
-//       { threshold: 0.15 }
-//     );
-//     obs.observe(el);
-//     return () => obs.disconnect();
-//   }, []);
-//   return [ref, visible];
-// }
-
-// function Reveal({ children, className = "", delay = 0 }) {
-//   const [ref, visible] = useReveal();
-//   return (
-//     <div
-//       ref={ref}
-//       className={`reveal ${visible ? "reveal-visible" : ""} ${className}`}
-//       style={{ transitionDelay: `${delay}ms` }}
-//     >
-//       {children}
-//     </div>
-//   );
-// }
-
-// function FaqItem({ index, item, isOpen, onToggle }) {
-//   return (
-//     <div className="pr-faq-item">
-//       <button className="pr-faq-head" onClick={() => onToggle(index)} aria-expanded={isOpen}>
-//         <span className="pr-faq-num">{String(index + 1).padStart(2, "0")}</span>
-//         <span className="pr-faq-q">{item.q}</span>
-//         <span className={`pr-faq-arrow ${isOpen ? "pr-faq-arrow--open" : ""}`} aria-hidden>
-//           ↑
-//         </span>
-//       </button>
-//       {isOpen && (
-//         <div className="pr-faq-body">
-//           <p>{item.a}</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default function PricingPage() {
-//   const [scrolled, setScrolled] = useState(false);
-//   const [openFaq, setOpenFaq] = useState(0);
-//   const [currency, setCurrency] = useState("usd");
-//   const [contactOpen, setContactOpen] = useState(false);
-
-//   useEffect(() => {
-//     const onScroll = () => setScrolled(window.scrollY > 12);
-//     window.addEventListener("scroll", onScroll);
-//     return () => window.removeEventListener("scroll", onScroll);
-//   }, []);
-
-//   const toggleFaq = (i) => setOpenFaq((cur) => (cur === i ? -1 : i));
-//   const symbol = currency === "usd" ? "$" : "€";
-
-//   const openContact = (e) => {
-//     if (e && e.preventDefault) e.preventDefault();
-//     setContactOpen(true);
-//   };
-
-//   return (
-//     <div className="ld-root">
-//       <style>{CSS}</style>
-
-//       <Navbar brandName={BRAND_NAME} active="Pricing" scrolled={scrolled} />
-
-//       {/* HERO */}
-//       <section className="ld-hero ld-hero--pricing">
-//         <div className="ld-hero-bg" aria-hidden="true" />
-//         <Reveal className="ld-hero-content">
-//           <div className="ld-pill">
-//             <span aria-hidden>$</span> Simple, Transparent Pricing
-//           </div>
-//           <h1 className="pr-hero-title">
-//             Plans that scale with you — <span className="pr-hero-title-accent">Monthly</span>,{" "}
-//             <span className="pr-hero-title-teal">6-Month</span> or Yearly
-//           </h1>
-//           <p className="ld-hero-sub pr-hero-sub">
-//             No hourly tracking, no seat tiers, no course tiers. Every track — Prompt Engineering, RAG, Machine
-//             Learning, Agentic AI — is included, priced in USD or EUR.
-//           </p>
-
-//           <div className="ld-hero-cta">
-//             <a href="#plans" className="ld-btn ld-btn--primary">
-//               See Plans <span aria-hidden>→</span>
-//             </a>
-//             <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-//               Get in Touch
-//             </button>
-//           </div>
-//         </Reveal>
-
-//         <div className="ld-grid ld-grid--3 ld-hero-stats">
-//           {HERO_STATS.map((s, i) => (
-//             <Reveal key={s.value} delay={i * 90} className="ld-hero-stat-card">
-//               <div className="pr-stat-icon">{s.icon}</div>
-//               <div className="ld-hero-stat-value">{s.label}</div>
-//               <div className="ld-hero-stat-sub">{s.value}</div>
-//               <div className="ld-hero-stat-sub2">{s.sub}</div>
-//             </Reveal>
-//           ))}
-//         </div>
-
-//         <Reveal className="pr-fair-billing" delay={200}>
-//           <span className="pr-warn-icon" aria-hidden>💱</span>
-//           <p>
-//             <strong>Currency note:</strong> prices are shown in USD and EUR for convenience. You'll be billed in the
-//             currency you select at checkout.
-//           </p>
-//         </Reveal>
-//       </section>
-
-//       {/* WHY PLANS */}
-//       <section className="ld-section" id="why-plans">
-//         <Reveal className="ld-section-head">
-//           <h2 className="ld-gradient-heading">Why plan-based pricing?</h2>
-//           <p>Flat, predictable billing that scales with your commitment — not with the clock.</p>
-//         </Reveal>
-
-//         <div className="ld-grid ld-grid--4">
-//           {WHY_PLANS.map((c, i) => (
-//             <Reveal key={c.title} delay={i * 80} className="pr-why-card">
-//               <div className="pr-why-icon">{c.icon}</div>
-//               <h3>{c.title}</h3>
-//               <p className="ld-card-desc">{c.desc}</p>
-//             </Reveal>
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* INCLUDED / ADD-ONS */}
-//       <section className="ld-section ld-section--dark" id="included">
-//         <div className="pr-included-grid">
-//           <Reveal className="pr-included-col">
-//             <h3 className="pr-col-heading">
-//               <span className="pr-tick-lg">✓</span> What&rsquo;s included
-//             </h3>
-//             <ul className="pr-included-list">
-//               {WHATS_INCLUDED.map((item) => (
-//                 <li key={item}>
-//                   <span className="pr-tick">✓</span> {item}
-//                 </li>
-//               ))}
-//             </ul>
-//             <div className="pr-private-note">
-//               <span aria-hidden>🔒</span>
-//               <p>
-//                 <strong>Private by design:</strong> your cohorts and learning data are not public. For compliance
-//                 requirements, contact us.
-//               </p>
-//             </div>
-//           </Reveal>
-
-//           <Reveal delay={100} className="pr-included-col">
-//             <h3 className="pr-col-heading">
-//               <span aria-hidden>✨</span> Optional add-ons
-//             </h3>
-//             <div className="pr-addon-list">
-//               {ADD_ONS.map((a) => (
-//                 <div key={a.title} className="pr-addon-card">
-//                   <div className="pr-addon-icon">{a.icon}</div>
-//                   <div>
-//                     <h4>{a.title}</h4>
-//                     <p className="ld-card-desc">{a.desc}</p>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//             <div className="pr-addon-buttons">
-//               <a href="#plans" className="ld-btn ld-btn--dark">
-//                 See Plans <span aria-hidden>→</span>
-//               </a>
-//               <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-//                 Request a program plan
-//               </button>
-//             </div>
-//           </Reveal>
-//         </div>
-
-//         {/* PLANS */}
-//         <Reveal className="pr-estimator" delay={150}>
-//           <div className="pr-plans-head" id="plans">
-//             <h3 className="pr-col-heading pr-estimator-title">Choose your plan</h3>
-//             <div className="pr-currency-toggle" role="group" aria-label="Currency">
-//               <button
-//                 type="button"
-//                 className={`pr-currency-btn ${currency === "usd" ? "pr-currency-btn--active" : ""}`}
-//                 onClick={() => setCurrency("usd")}
-//               >
-//                 USD ($)
-//               </button>
-//               <button
-//                 type="button"
-//                 className={`pr-currency-btn ${currency === "eur" ? "pr-currency-btn--active" : ""}`}
-//                 onClick={() => setCurrency("eur")}
-//               >
-//                 EUR (€)
-//               </button>
-//             </div>
-//           </div>
-
-//           <div className="ld-grid ld-grid--3">
-//             {PLANS.map((p) => {
-//               const price = currency === "usd" ? p.usd : p.eur;
-//               const perMonth = currency === "usd" ? p.perMonthUsd : p.perMonthEur;
-//               return (
-//                 <div key={p.id} className={`pr-plan-card ${p.featured ? "pr-plan-card--featured" : ""}`}>
-//                   {p.badge && <div className="pr-plan-badge">{p.badge}</div>}
-//                   <div className="pr-plan-name">{p.name}</div>
-//                   <div className="pr-plan-tagline">{p.tagline}</div>
-//                   <div className="pr-plan-price">
-//                     {symbol}
-//                     {price}
-//                     <span className="pr-plan-period">{p.period}</span>
-//                   </div>
-//                   {perMonth && (
-//                     <div className="pr-plan-permonth">
-//                       {symbol}
-//                       {perMonth}/mo equivalent
-//                     </div>
-//                   )}
-//                   <div className="pr-plan-billed">{p.billedNote}</div>
-//                   <ul className="pr-plan-features">
-//                     {p.features.map((f) => (
-//                       <li key={f}>
-//                         <span className="pr-tick">✓</span> {f}
-//                       </li>
-//                     ))}
-//                   </ul>
-//                   <a href="#start" className={`ld-btn ${p.featured ? "ld-btn--primary" : "ld-btn--outline"} pr-plan-cta`}>
-//                     Choose {p.name} <span aria-hidden>→</span>
-//                   </a>
-//                 </div>
-//               );
-//             })}
-//           </div>
-//           <div className="pr-estimator-footnote">
-//             <span aria-hidden>?</span>
-//             <p>
-//               Need something in between, or pricing for a larger team? Email{" "}
-//               <a href="mailto:hello@brandname.com">hello@brandname.com</a> and we&rsquo;ll put together a custom
-//               quote.
-//             </p>
-//           </div>
-//         </Reveal>
-//       </section>
-
-//       {/* FAQ */}
-//       <section className="ld-section pr-faq-section" id="faq">
-//         <Reveal className="ld-section-head">
-//           <h2 className="pr-faq-title">Pricing FAQ</h2>
-//           <p>Everything you need to know about plans, billing cycles, and currency.</p>
-//         </Reveal>
-
-//         <div className="pr-faq-list">
-//           {FAQS.map((item, i) => (
-//             <FaqItem key={item.q} index={i} item={item} isOpen={openFaq === i} onToggle={toggleFaq} />
-//           ))}
-//         </div>
-
-//         <Reveal className="pr-custom-rollout" delay={100}>
-//           <div className="pr-rollout-icon">⟳</div>
-//           <h3>Need a custom training rollout?</h3>
-//           <p>Tell us your team size, target skills, and timeline. We&rsquo;ll recommend a plan mix and currency setup that fits.</p>
-//           <div className="ld-hero-cta">
-//             <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-//               Email Us
-//             </button>
-//             <a href="#plans" className="ld-btn ld-btn--dark">
-//               See Plans <span aria-hidden>→</span>
-//             </a>
-//           </div>
-//         </Reveal>
-//       </section>
-
-//       {/* CTA */}
-//       <section className="ld-cta" id="start">
-//         <Reveal className="ld-cta-inner">
-//           <h2>Start learning today</h2>
-//           <p>
-//             Create an account and choose a Monthly, 6-Month, or Yearly plan, priced in USD or EUR — full access to
-//             every track either way.
-//           </p>
-//           <div className="ld-hero-cta ld-cta-buttons">
-//             <a href="#plans" className="ld-btn ld-btn--primary">
-//               See Plans <span aria-hidden>→</span>
-//             </a>
-//             <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-//               Get in Touch
-//             </button>
-//           </div>
-//           <div className="ld-cta-note">
-//             <span className="ld-check">✓</span> Tailor-made curriculum &nbsp;•&nbsp; Hands-on labs &nbsp;•&nbsp; Delivered as workshops
-//           </div>
-//         </Reveal>
-//       </section>
-
-//       {/* FOOTER */}
-//       <footer className="ld-footer" id="contact">
-//         <div className="ld-footer-grid">
-//           <div>
-//             <a className="ld-logo" href="/">
-//               <span className="ld-logo-mark">◤</span> {BRAND_NAME}
-//             </a>
-//             <p className="ld-footer-desc">
-//               Private, instructor-led AI training with a modern LMS. Learn fast with hands-on lessons, projects, and
-//               real feedback.
-//             </p>
-//             <div className="pr-address">
-//               <span aria-hidden>📍</span>
-//               <div>
-//                 <div>123 Business Bay, Suite 101</div>
-//                 <div>Dubai</div>
-//                 <div>United Arab Emirates</div>
-//               </div>
-//             </div>
-//             <div className="pr-email-row">
-//               <span aria-hidden>✉</span> hello@brandname.com
-//             </div>
-//             <div className="pr-payment-icons">
-//               <span>iyzico</span>
-//               <span>MasterCard</span>
-//               <span>VISA</span>
-//               <span>Amex</span>
-//               <span>Troy</span>
-//             </div>
-//           </div>
-//           <div>
-//             <h4>Policies</h4>
-//             <p className="ld-footer-desc">
-//               Review our legal and privacy documents. You can also manage your cookie preferences anytime.
-//             </p>
-//             <ul className="ld-footer-links">
-//               <li><a href="#">Privacy Policy</a></li>
-//               <li><a href="#">Terms and Conditions</a></li>
-//               <li><a href="#">Cancellation Policy</a></li>
-//               <li><a href="#">Cookie Settings</a></li>
-//             </ul>
-//           </div>
-//           <div>
-//             <h4>Need help?</h4>
-//             <p className="ld-footer-desc">Email us for training guidance, scheduling, or any account questions. We&rsquo;ll get back as soon as possible.</p>
-//             <a href="mailto:hello@brandname.com" className="ld-btn ld-btn--email ld-btn--sm">Email Support</a>
-//             <p className="ld-footer-note">Typical response time: 1–2 business days.</p>
-//           </div>
-//         </div>
-//         <div className="ld-footer-bottom pr-footer-bottom">
-//           <span>© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</span>
-//           <span>Contact: hello@brandname.com</span>
-//         </div>
-//       </footer>
-
-//       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
-//     </div>
-//   );
-// }
-
-// const CSS = `
-// :root {
-//   --bg-0: #ffffff;
-//   --bg-1: #f9f0e7;
-//   --bg-2: #f3e2d0;
-//   --card: #ffffff;
-//   --card-border: rgba(122,23,53,0.12);
-//   --text-0: #241417;
-//   --text-1: #6b5a56;
-//   --text-2: #a3908b;
-//   --accent-orange: #7a1735;
-//   --accent-teal: #c1922f;
-//   --accent-green: #16a34a;
-//   --gradient: linear-gradient(90deg, var(--accent-orange), var(--accent-teal));
-//   --radius-lg: 22px;
-//   --radius-md: 16px;
-//   --shadow-sm: 0 1px 2px rgba(36,20,23,0.04);
-//   --shadow-md: 0 14px 34px -18px rgba(36,20,23,0.20);
-//   --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-//   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-// }
-
-// .ld-root { background: var(--bg-0); color: var(--text-0); font-family: var(--font-body); overflow-x: hidden; line-height: 1.5; }
-// .ld-root * { box-sizing: border-box; }
-
-// .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
-// .reveal-visible { opacity: 1; transform: translateY(0); }
-// @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
-
-// /* NAV */
-// .ld-nav { position: sticky; top: 0; z-index: 50; padding: 18px 24px; transition: background .3s ease, padding .3s ease; }
-// .ld-nav--scrolled { padding: 10px 24px; background: rgba(255,255,255,0.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--card-border); }
-// .ld-nav-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid var(--card-border); border-radius: 999px; padding: 10px 14px 10px 20px; box-shadow: var(--shadow-sm); }
-// .ld-logo { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; color: var(--text-0); text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 15px; }
-// .ld-logo-mark { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 18px; }
-// .ld-nav-links { display: flex; gap: 8px; }
-// .ld-nav-links a { color: var(--text-1); text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 8px 16px; border-radius: 999px; transition: color .2s ease, background .2s ease, border-color .2s ease; border: 1px solid transparent; }
-// .ld-nav-links a:hover { color: var(--text-0); }
-// .ld-nav-link--active { color: var(--accent-orange) !important; background: rgba(122,23,53,0.08); border-color: rgba(122,23,53,0.30) !important; }
-
-// .ld-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14.5px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease; font-family: var(--font-body); }
-// .ld-btn:hover { transform: translateY(-1px); }
-// .ld-btn:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 3px; }
-// .ld-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-// .ld-btn--sm { padding: 9px 16px; font-size: 13.5px; }
-// .ld-btn--primary { background: var(--gradient); color: #ffffff; box-shadow: 0 10px 24px -8px rgba(122,23,53,0.45); }
-// .ld-btn--outline { background: #ffffff; color: var(--text-0); border-color: var(--card-border); }
-// .ld-btn--outline:hover { background: var(--bg-1); }
-// .ld-btn--dark { background: var(--text-0); color: #ffffff; }
-// .ld-btn--dark:hover { background: #3a2226; }
-// .ld-btn--email { background: var(--accent-orange); color: #fff; }
-// .ld-btn--email:hover { background: #5f1329; }
-
-// /* HERO */
-// .ld-hero { position: relative; padding: 90px 24px 60px; max-width: 1180px; margin: 0 auto; text-align: center; }
-// .ld-hero-bg { position: absolute; inset: -10% -20% auto -20%; height: 520px; background: radial-gradient(60% 60% at 30% 20%, rgba(122,23,53,0.12), transparent 70%), radial-gradient(50% 50% at 75% 10%, rgba(193,146,47,0.16), transparent 70%); filter: blur(10px); pointer-events: none; z-index: 0; }
-// .ld-hero-content { position: relative; z-index: 1; }
-// .ld-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 26px; }
-
-// .pr-hero-title { font-family: var(--font-display); font-size: clamp(2rem, 4.6vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 20px; color: var(--text-0); }
-// .pr-hero-title-accent { color: var(--accent-orange); }
-// .pr-hero-title-teal { color: var(--accent-teal); }
-// .pr-hero-sub { max-width: 720px; }
-
-// .ld-hero-sub { font-size: clamp(1rem, 1.6vw, 1.2rem); color: var(--text-1); max-width: 680px; margin: 0 auto 36px; }
-// .ld-hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-
-// .ld-hero-stats { margin-top: 60px; position: relative; z-index: 1; }
-// .ld-hero-stat-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 24px; text-align: center; box-shadow: var(--shadow-sm); }
-// .pr-stat-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 18px; margin: 0 auto 18px; }
-// .ld-hero-stat-label { font-size: 12.5px; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-// .ld-hero-stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-bottom: 8px; color: var(--accent-orange); }
-// .ld-hero-stat-sub { font-size: 15px; color: var(--text-1); }
-// .ld-hero-stat-sub2 { font-size: 13px; color: var(--text-2); margin-top: 6px; }
-
-// .pr-fair-billing { margin-top: 28px; display: flex; align-items: flex-start; gap: 12px; text-align: left; background: rgba(122,23,53,0.06); border: 1px solid rgba(122,23,53,0.22); border-radius: var(--radius-md); padding: 18px 22px; }
-// .pr-warn-icon { color: var(--accent-orange); font-size: 16px; margin-top: 2px; }
-// .pr-fair-billing p { margin: 0; color: var(--text-1); font-size: 14px; }
-// .pr-fair-billing strong { color: var(--text-0); }
-
-// /* SECTIONS */
-// .ld-section { max-width: 1180px; margin: 0 auto; padding: 96px 24px; }
-// .ld-section--dark { max-width: 100%; background: var(--bg-1); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); }
-// .ld-section--dark > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
-// .ld-section-head { text-align: center; max-width: 680px; margin: 0 auto 56px; }
-// .ld-gradient-heading { font-family: var(--font-display); font-size: clamp(1.9rem, 3.6vw, 2.8rem); font-weight: 700; margin: 0 0 16px; letter-spacing: -0.01em; color: var(--text-0); }
-// .ld-section-head p { color: var(--text-1); font-size: 16.5px; }
-
-// .ld-grid { display: grid; gap: 22px; }
-// .ld-grid--4 { grid-template-columns: repeat(4, 1fr); }
-// .ld-grid--3 { grid-template-columns: repeat(3, 1fr); }
-// @media (max-width: 980px) { .ld-grid--4, .ld-grid--3 { grid-template-columns: repeat(2, 1fr); } }
-// @media (max-width: 620px) { .ld-grid--4, .ld-grid--3 { grid-template-columns: 1fr; } .ld-nav-links { display: none; } }
-
-// /* Why-plans cards */
-// .pr-why-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 26px; box-shadow: var(--shadow-sm); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
-// .pr-why-card:hover { transform: translateY(-3px); border-color: rgba(122,23,53,0.28); box-shadow: var(--shadow-md); }
-// .pr-why-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 18px; }
-// .pr-why-card h3 { font-family: var(--font-display); font-size: 18px; margin: 0 0 8px; }
-// .ld-card-desc { color: var(--text-1); font-size: 14px; margin: 0; }
-
-// /* Included / Add-ons */
-// .pr-included-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; margin-bottom: 70px; }
-// @media (max-width: 900px) { .pr-included-grid { grid-template-columns: 1fr; } }
-// .pr-included-col { background: transparent; }
-// .pr-col-heading { font-family: var(--font-display); font-size: 22px; display: flex; align-items: center; gap: 10px; margin: 0 0 26px; color: var(--text-0); }
-// .pr-tick-lg { color: var(--accent-green); }
-// .pr-included-list { list-style: none; margin: 0 0 26px; padding: 0; display: flex; flex-direction: column; gap: 18px; }
-// .pr-included-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--text-1); }
-// .pr-tick { color: var(--accent-green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-// .pr-private-note { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px 20px; background: var(--card); }
-// .pr-private-note p { margin: 0; font-size: 14px; color: var(--text-1); }
-// .pr-private-note strong { color: var(--text-0); }
-
-// .pr-addon-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
-// .pr-addon-card { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 20px 22px; background: var(--card); box-shadow: var(--shadow-sm); }
-// .pr-addon-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
-// .pr-addon-card h4 { font-size: 15.5px; margin: 0 0 6px; color: var(--text-0); }
-// .pr-addon-buttons { display: flex; gap: 14px; flex-wrap: wrap; }
-
-// /* Plans */
-// .pr-estimator { border-top: 1px solid var(--card-border); padding-top: 60px; }
-// .pr-estimator-title { text-align: left; margin-bottom: 0; }
-// .pr-plans-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; margin-bottom: 30px; }
-// .pr-currency-toggle { display: inline-flex; border: 1px solid var(--card-border); border-radius: 999px; background: var(--card); padding: 4px; }
-// .pr-currency-btn { border: none; background: transparent; padding: 8px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--text-1); cursor: pointer; transition: background .2s ease, color .2s ease; }
-// .pr-currency-btn--active { background: var(--gradient); color: #ffffff; }
-
-// .pr-plan-card { position: relative; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 26px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
-// .pr-plan-card--featured { border-color: var(--accent-orange); box-shadow: var(--shadow-md); }
-// .pr-plan-badge { position: absolute; top: -13px; right: 24px; background: var(--gradient); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; }
-// .pr-plan-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-0); }
-// .pr-plan-tagline { font-size: 13.5px; color: var(--text-2); margin: 4px 0 20px; }
-// .pr-plan-price { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--accent-orange); display: flex; align-items: baseline; gap: 6px; }
-// .pr-plan-period { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--text-2); }
-// .pr-plan-permonth { font-size: 13px; color: var(--text-1); margin-top: 6px; }
-// .pr-plan-billed { font-size: 12.5px; color: var(--text-2); margin-top: 4px; margin-bottom: 20px; }
-// .pr-plan-features { list-style: none; margin: 0 0 26px; padding: 0; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-// .pr-plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--text-1); }
-// .pr-plan-cta { justify-content: center; width: 100%; }
-
-// .pr-estimator-footnote { display: flex; gap: 12px; align-items: flex-start; margin-top: 26px; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px 22px; background: #ffffff; }
-// .pr-estimator-footnote p { margin: 0; font-size: 13.5px; color: var(--text-2); }
-// .pr-estimator-footnote a { color: var(--accent-orange); text-decoration: none; }
-
-// /* FAQ */
-// .pr-faq-section { padding-top: 90px; }
-// .pr-faq-title { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin: 0 0 16px; color: var(--text-0); }
-// .pr-faq-list { display: flex; flex-direction: column; gap: 18px; max-width: 900px; margin: 0 auto 60px; }
-// .pr-faq-item { border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; box-shadow: var(--shadow-sm); }
-// .pr-faq-head { width: 100%; display: flex; align-items: center; gap: 20px; text-align: left; background: transparent; border: none; color: var(--text-0); cursor: pointer; padding: 26px 28px; font-family: var(--font-body); }
-// .pr-faq-num { font-family: var(--font-display); font-size: 13px; color: var(--text-2); border: 1px solid var(--card-border); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-// .pr-faq-q { flex: 1; font-size: 17px; font-weight: 600; }
-// .pr-faq-arrow { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; transition: transform .25s ease; flex-shrink: 0; color: var(--text-1); }
-// .pr-faq-arrow--open { transform: rotate(180deg); }
-// .pr-faq-body { padding: 0 28px 26px 76px; }
-// .pr-faq-body p { margin: 0; color: var(--text-1); font-size: 15px; line-height: 1.65; }
-
-// /* Custom rollout box */
-// .pr-custom-rollout { max-width: 900px; margin: 0 auto; text-align: center; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--card); padding: 56px 40px; box-shadow: var(--shadow-sm); }
-// .pr-rollout-icon { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; font-size: 20px; background: var(--bg-1); }
-// .pr-custom-rollout h3 { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 14px; color: var(--text-0); }
-// .pr-custom-rollout p { color: var(--text-1); font-size: 15.5px; margin: 0 0 28px; max-width: 560px; margin-left: auto; margin-right: auto; }
-
-// /* CTA */
-// .ld-cta { padding: 100px 24px; text-align: center; background: var(--bg-1); border-top: 1px solid var(--card-border); }
-// .ld-cta-inner { max-width: 620px; margin: 0 auto; }
-// .ld-cta h2 { font-family: var(--font-display); font-size: clamp(1.9rem, 3.4vw, 2.6rem); margin: 0 0 14px; color: var(--text-0); }
-// .ld-cta p { color: var(--text-1); font-size: 16.5px; margin-bottom: 34px; }
-// .ld-cta-buttons { margin-bottom: 20px; }
-// .ld-cta-note { font-size: 13px; color: var(--text-2); display: flex; align-items: center; justify-content: center; gap: 6px; }
-// .ld-check { color: var(--accent-orange); font-weight: 700; font-size: 12px; }
-
-// /* FOOTER */
-// .ld-footer { padding: 70px 24px 30px; background: var(--bg-1); border-top: 1px solid var(--card-border); }
-// .ld-footer-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 50px; }
-// .ld-footer h4 { font-size: 14px; margin: 0 0 12px; color: var(--text-0); }
-// .ld-footer-desc { color: var(--text-2); font-size: 13.5px; line-height: 1.6; margin: 12px 0; }
-// .ld-footer-links { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
-// .ld-footer-links a { color: var(--text-1); text-decoration: none; font-size: 13.5px; }
-// .ld-footer-links a:hover { color: var(--text-0); }
-// .ld-footer-note { font-size: 12px; color: var(--text-2); margin-top: 10px; }
-// .ld-footer-bottom { max-width: 1180px; margin: 50px auto 0; padding-top: 24px; border-top: 1px solid var(--card-border); font-size: 12.5px; color: var(--text-2); text-align: center; }
-// .pr-footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; text-align: left; }
-// @media (max-width: 800px) { .ld-footer-grid { grid-template-columns: 1fr; gap: 34px; } .pr-footer-bottom { flex-direction: column; } }
-
-// .pr-address { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-1); margin: 16px 0 10px; }
-// .pr-email-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-1); margin-bottom: 18px; }
-// .pr-payment-icons { display: flex; gap: 14px; flex-wrap: wrap; }
-// .pr-payment-icons span { font-size: 12px; color: var(--text-2); border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 10px; }
-
-// /* CONTACT MODAL */
-// .ld-modal-overlay { position: fixed; inset: 0; background: rgba(36,20,23,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-// .ld-modal { position: relative; background: #ffffff; border-radius: var(--radius-lg); max-width: 480px; width: 100%; padding: 40px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
-// .ld-modal-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--card-border); background: #fff; cursor: pointer; font-size: 14px; color: var(--text-1); }
-// .ld-modal-close:hover { background: var(--bg-1); }
-// .ld-modal-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 20px; }
-// .ld-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-orange); display: inline-block; }
-// .ld-modal h3 { font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--text-0); }
-// .ld-modal-sub { color: var(--text-1); font-size: 14.5px; margin: 0 0 28px; }
-// .ld-field { margin-bottom: 20px; }
-// .ld-field label { display: block; font-size: 14px; font-weight: 600; color: var(--text-0); margin-bottom: 8px; }
-// .ld-field input, .ld-field textarea { width: 100%; border: 1px solid var(--card-border); background: var(--bg-1); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; font-family: var(--font-body); color: var(--text-0); resize: vertical; }
-// .ld-field textarea { min-height: 110px; }
-// .ld-field input:focus, .ld-field textarea:focus { outline: 2px solid var(--accent-teal); outline-offset: 1px; }
-// .ld-modal-submit { width: 100%; justify-content: center; margin-top: 6px; }
-// .ld-modal-success { text-align: center; padding: 20px 0; }
-// .ld-modal-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(22,163,74,0.12); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px; }
-// `;
-
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import ContactModal from "./ContactModel";
+import { CheckCircle, Sparkles, Zap, ArrowRight, ShieldCheck, HelpCircle, BookOpen, Layers, Award, Users } from "lucide-react";
 
 /**
- * Pricing Page — /pricing — Light Theme
- * Single-file React component, plain CSS (no Tailwind, no CSS modules).
- * Shares the same visual language (colors, nav, footer, buttons) as LandingPage.jsx / LessonsPage.jsx.
+ * Pricing Page — /pricing — Light Luxury Theme
+ * Single-file React component aligned with Coursera Education branding.
+ * Features $1000-$2000 USD pricing structure, USD/AED currency toggling,
+ * 3 pricing tiers, Special Combo Bundles, feature comparison, and FAQs.
  */
 
 const BRAND_NAME = "Coursera Education";
 
 const HERO_STATS = [
-  { icon: "📅", label: "3 plans", value: "Monthly, 6-Month, Yearly", sub: "Pick the billing cycle that fits your team" },
-  { icon: "💱", label: "USD & EUR", value: "dual currency", sub: "Prices shown in both currencies" },
-  { icon: "🔁", label: "Flexible", value: "upgrade, downgrade or cancel", sub: "No long-term lock-in on the monthly plan" },
+  { icon: "🎯", label: "24 Practical Tracks", value: "$1,000 – $2,000 USD", sub: "Production AI engineering, RAG & agentic systems" },
+  { icon: "💱", label: "Dual Currency", value: "USD ($) & AED", sub: "Transparent pricing with zero hidden fees" },
+  { icon: "⚡", label: "Master Bundles", value: "Save Up To 94%", sub: "Bundle multiple tracks or get an All-Access Pass" },
 ];
 
 const WHY_PLANS = [
   {
-    icon: "📅",
-    title: "Pick your billing rhythm",
-    desc: "Monthly for flexibility, 6-Month or Yearly for savings — same full access either way.",
+    icon: "🎓",
+    title: "Production-Grade AI Engineering",
+    desc: "Every track is built for real-world deployment — from Pydantic directives and vLLM hosting to LangGraph multi-agent systems.",
   },
   {
-    icon: "⚖",
-    title: "One price, every track",
-    desc: "Prompt Engineering, RAG, Machine Learning, Agentic AI — all included in every plan.",
+    icon: "✨",
+    title: "100% Customizable Content",
+    desc: "All courses and bundles can be tailored to align directly with your enterprise stack, data rules, and team objectives.",
   },
   {
     icon: "💱",
-    title: "USD or EUR, your choice",
-    desc: "Every plan is priced in both currencies so you can bill in whichever works for you.",
+    title: "Transparent Dual Currency",
+    desc: "Toggle seamlessly between USD ($) and AED (د.إ) with clear billing in whichever currency fits your organization.",
   },
   {
-    icon: "✅",
-    title: "No hidden hourly meter",
-    desc: "No time tracking, no surprise usage bills — just a flat rate for the billing period you choose.",
+    icon: "♾️",
+    title: "Lifetime Access & Updates",
+    desc: "No time limits or surprise monthly meters. Enjoy continuous model updates, code repo access, and completion certificates.",
   },
 ];
 
 const WHATS_INCLUDED = [
-  "Access to the " + BRAND_NAME + " LMS experience (tracks, lessons, checkpoints)",
-  "Assignments & practical exercises (where available)",
-  "Learning analytics (progress, completion, engagement)",
-  "Certificates of completion (for eligible tracks)",
-  "Email support for account and billing questions",
+  "Full lifetime access to interactive LMS lessons, code sandboxes & checkpoints",
+  "Production capstone projects & downloadable GitHub code repositories",
+  "Detailed learning analytics & skill progress tracking",
+  "Official Verifiable Certificate of Completion for every completed track",
+  "Direct 1-on-1 instructor email & priority Q&A support",
+  "Free access to model architecture updates & prompt optimization packs",
 ];
 
 const ADD_ONS = [
   {
     icon: "👥",
-    title: "Instructor-led sessions",
-    desc: "Live sessions, grading, and structured cohort governance (available as an add-on).",
+    title: "Dedicated Team Cohorts & Live Workshops",
+    desc: "Live instructor-led sessions, team code reviews, and weekly office hours for enterprise engineering teams.",
   },
   {
     icon: "✨",
-    title: "Custom curriculum design",
-    desc: "Tailored learning path aligned to your team's tools and use cases (available as an add-on).",
+    title: "Custom Enterprise Curriculum Design",
+    desc: "Tailored learning paths customized around your company's proprietary data pipelines and tech stack.",
   },
   {
     icon: "📄",
-    title: "Assessments & reporting pack",
-    desc: "Rubrics, pass thresholds, and exportable reporting templates (available as an add-on).",
+    title: "Enterprise Assessment & Reporting Pack",
+    desc: "Custom grading rubrics, pass threshold benchmarks, and exportable team competency reports.",
   },
   {
-    icon: "📅",
-    title: "Program scheduling",
-    desc: "Cohort planning, calendars, and milestone configuration (available as an add-on).",
+    icon: "🛡️",
+    title: "Private On-Premise & Data Privacy Deployment",
+    desc: "Deploy course sandboxes behind your corporate VPN with strict data residency and HIPAA/GDPR compliance.",
   },
 ];
 
 const PLANS = [
   {
-    id: "monthly",
-    name: "Monthly",
-    tagline: "Flexible, cancel anytime",
-    usd: 49,
-    eur: 45,
-    period: "/ month",
-    billedNote: "Billed every month",
+    id: "single-course",
+    name: "Single Track Pass",
+    tagline: "Ideal for individual engineers focusing on a specific AI domain",
+    usd: 1199,
+    aed: 4400,
+    period: " / course",
+    billedNote: "One-time payment • Lifetime access",
+    badge: "STANDARD TRACK",
+    badgeColor: "#6b5a56",
     features: [
-      "Full access to every training track",
-      "Progress & completion analytics",
-      "Certificates of completion",
-      "Email support",
-      "Cancel anytime",
+      "Full lifetime access to 1 chosen course track",
+      "All modules, coding labs & capstone projects",
+      "Official Certificate of Completion",
+      "Direct instructor Q&A support",
+      "100% customizable curriculum option",
     ],
   },
   {
-    id: "sixmonth",
-    name: "6-Month",
-    tagline: "Save with a semi-annual plan",
-    usd: 249,
-    eur: 229,
-    period: "/ 6 months",
-    billedNote: "Billed once every 6 months",
-    perMonthUsd: "41.50",
-    perMonthEur: "38.17",
-    badge: "Save ~15%",
-    features: [
-      "Everything in Monthly",
-      "Priority email support",
-      "Downloadable session summaries",
-      "Locked-in rate for 6 months",
-    ],
-  },
-  {
-    id: "yearly",
-    name: "Yearly",
-    tagline: "Best value for committed teams",
-    usd: 420,
-    eur: 390,
-    period: "/ year",
-    billedNote: "Billed once a year",
-    perMonthUsd: "35.00",
-    perMonthEur: "32.50",
-    badge: "Save ~28%",
+    id: "master-bundle",
+    name: "Full-Stack Master Bundle",
+    tagline: "Best value for mastering 3 complementary AI specialization tracks",
+    usd: 1899,
+    aed: 6969,
+    period: " / bundle",
+    billedNote: "One-time payment • Lifetime access to 3 tracks",
+    badge: "SAVE UP TO 62%",
+    badgeColor: "#7A1F2B",
     featured: true,
     features: [
-      "Everything in 6-Month",
-      "1 complimentary curriculum consultation",
-      "Early access to new tracks",
-      "Locked-in rate for the full year",
+      "Full access to 3 specialized AI tracks of choice",
+      "Over 25+ modules & hands-on capstone projects",
+      "Priority 1-on-1 mentor code reviews",
+      "Production deployment code templates & repositories",
+      "Lifetime access & completion certificates for all 3 tracks",
     ],
   },
+  {
+    id: "all-access-pass",
+    name: "All-Access Enterprise Pass",
+    tagline: "Unlimited access to all 24 tracks & future 2026 releases",
+    usd: 1999,
+    aed: 7336,
+    period: " / year",
+    billedNote: "Billed annually • Unlimited access to everything",
+    perMonthUsd: "166.58",
+    perMonthAed: "611.33",
+    badge: "SAVE 94% • ULTIMATE PASS",
+    badgeColor: "#2563EB",
+    features: [
+      "Unlimited access to ALL 24 current & future course tracks",
+      "Unlimited access to ALL 6 Master Combo Bundles",
+      "Direct 1-on-1 Senior AI Engineering mentorship",
+      "Custom team curriculum alignment & multi-seat management",
+      "Private VIP Discord channel & live monthly Q&A workshops",
+    ],
+  },
+];
+
+const COMBO_SUMMARY = [
+  { name: "Full-Stack AI Architect Master Bundle", priceUSD: 1999, originalUSD: 4547, savings: "56% OFF", icon: "🔥" },
+  { name: "Enterprise AI Safety & Governance Suite", priceUSD: 1699, originalUSD: 3697, savings: "54% OFF", icon: "🛡️" },
+  { name: "Deep Learning & LLM Fine-Tuning Pro Bundle", priceUSD: 1899, originalUSD: 5047, savings: "62% OFF", icon: "⚡" },
+  { name: "All-Access Enterprise Learning Pass", priceUSD: 1999, originalUSD: 36000, savings: "94% OFF", icon: "🌟" },
+  { name: "Neural Search & Knowledge Graph Bundle", priceUSD: 1799, originalUSD: 4457, savings: "60% OFF", icon: "🕸️" },
+  { name: "Edge AI & Multimodal Vision Suite", priceUSD: 1849, originalUSD: 4547, savings: "59% OFF", icon: "📱" },
 ];
 
 const FAQS = [
   {
-    q: "How does pricing work?",
-    a: "Choose a Monthly, 6-Month, or Yearly plan. Each plan gives full access to every " + BRAND_NAME + " track — the price only changes based on the billing cycle you pick, not which courses you use.",
+    q: "How much do individual courses cost?",
+    a: "Every individual course track is priced between $1,000 USD and $2,000 USD (e.g., $1,099 – $1,899 USD / 4,033 – 6,969 AED). All pricing is transparent with no hidden subscription fees.",
   },
   {
-    q: "Do you charge per user or per seat?",
-    a: "Each plan covers one learner account. For multiple learners or a team rollout, contact us and we'll put together a volume arrangement.",
+    q: "What is included in a Special Combo Offer?",
+    a: "Special Combo Offers bundle 3 complementary tracks together at a deep discount (saving up to 62% off individual prices). For example, the Full-Stack AI Architect Bundle includes Prompt Engineering, Enterprise RAG, and Agentic AI for just $1,999 USD.",
   },
   {
-    q: "What currencies do you support?",
-    a: "Every plan is shown in both USD and EUR. You can toggle between them on this page, and you'll be billed in the currency you select at checkout.",
+    q: "What currencies are accepted?",
+    a: "We support USD ($) and AED (د.إ) natively across all checkouts. You can switch between currencies anytime using the toggle button on this page.",
   },
   {
-    q: "Is the price different for different courses?",
-    a: "No. Prompt Engineering, Machine Learning, RAG Design, Agentic AI — every track is included at the same plan price.",
+    q: "Can courses be customized for our enterprise team?",
+    a: "Yes! Every single course and bundle can be customized based on your organization's specific tech stack, security protocols, and target use cases. Click 'Get in Touch' to request a customized program.",
   },
   {
-    q: "What's the difference between Monthly, 6-Month, and Yearly?",
-    a: "They're the same access with different billing frequency. Monthly is the most flexible; 6-Month and Yearly are billed upfront in exchange for a lower effective monthly rate.",
+    q: "What is the All-Access Enterprise Pass?",
+    a: "The All-Access Pass gives your team unlimited access to all 24 professional AI engineering courses and all 6 Master Combo Bundles for $1,999 USD / year, complete with 1-on-1 mentorship and priority code reviews.",
   },
   {
-    q: "Do 6-Month and Yearly plans auto-renew?",
-    a: "Yes, by default they renew at the end of the billing period. You can turn off auto-renew from your account at any time before the renewal date.",
+    q: "Will I receive an official certificate?",
+    a: "Yes. Every student who completes a course track or master bundle receives a verifiable digital Certificate of Completion to showcase on LinkedIn or resume credentials.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "The Monthly plan can be cancelled at any time and you won't be billed again. 6-Month and Yearly plans are billed upfront; cancelling stops future renewals but doesn't refund the current period.",
-  },
-  {
-    q: "Can I switch between plans?",
-    a: "Yes. You can upgrade to a longer billing cycle at any time, or move to a shorter one when your current period ends.",
-  },
-  {
-    q: "Do you offer refunds?",
-    a: "If there's a billing error, we'll review it and make it right. For general refund questions outside of an error, email us and we'll walk through the options.",
-  },
-  {
-    q: "Is there a free trial?",
-    a: "We can arrange a short trial or demo for teams evaluating " + BRAND_NAME + " — email us and we'll set it up.",
-  },
-  {
-    q: "Can multiple people share one account?",
-    a: "Plans are designed for one learner per account so progress and certificates stay accurate. For teams, we offer multi-seat arrangements — contact us for details.",
-  },
-  {
-    q: "Do you offer team or volume pricing?",
-    a: "Yes. For department or company-wide rollouts, email us with your team size and we'll propose a volume rate on top of the standard plans.",
-  },
-  {
-    q: "What's included in every plan?",
-    a: "All tracks and lessons, assignments where available, learning analytics, certificates of completion for eligible tracks, and email support.",
-  },
-  {
-    q: "Are add-ons billed separately from the plan?",
-    a: "Yes. Add-ons like instructor-led sessions, custom curriculum design, or assessment packs are quoted and billed separately from your Monthly, 6-Month, or Yearly plan.",
-  },
-  {
-    q: "Do you provide invoices and receipts?",
-    a: "Yes. Every payment generates an invoice and receipt you can access from your account.",
-  },
-  {
-    q: "Which payment methods do you support?",
-    a: "We typically support major cards and bank transfers in both USD and EUR. If you need a purchase order process, email us.",
-  },
-  {
-    q: "Is our data private?",
-    a: "Yes. We treat customer and learner data as private. If you need specific compliance requirements (e.g., retention rules, DPA), we can discuss and document them.",
-  },
-  {
-    q: "Can we use " + BRAND_NAME + " for corporate training?",
-    a: "Yes. " + BRAND_NAME + " is designed for private training, cohorts, and analytics — particularly useful for teams and organizations, with plans or volume pricing depending on size.",
-  },
-  {
-    q: "Do you offer certifications?",
-    a: "We provide completion certificates for eligible tracks on every plan. For deeper skills validation, ask about the assessments & reporting add-on.",
-  },
-  {
-    q: "How do we get started?",
-    a: "Pick the plan and currency that fit you, create an account, and start learning. For a private team rollout, email us and we'll help you plan it.",
+    q: "Do you offer multi-seat team volume discounts?",
+    a: "Yes. For corporate rollouts of 5 or more engineers, we offer multi-seat enterprise licensing. Contact us at Courseraeducationn@gmail.com for a custom volume proposal.",
   },
 ];
 
-function useReveal() {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, visible];
-}
-
-function Reveal({ children, className = "", delay = 0 }) {
-  const [ref, visible] = useReveal();
-  return (
-    <div
-      ref={ref}
-      className={`reveal ${visible ? "reveal-visible" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function FaqItem({ index, item, isOpen, onToggle }) {
   return (
-    <div className="pr-faq-item">
-      <button className="pr-faq-head" onClick={() => onToggle(index)} aria-expanded={isOpen}>
-        <span className="pr-faq-num">{String(index + 1).padStart(2, "0")}</span>
-        <span className="pr-faq-q">{item.q}</span>
-        <span className={`pr-faq-arrow ${isOpen ? "pr-faq-arrow--open" : ""}`} aria-hidden>
-          ↑
+    <div style={{ backgroundColor: "#ffffff", border: "1px solid rgba(122, 31, 43, 0.12)", borderRadius: "18px", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+      <button
+        onClick={() => onToggle(index)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+          textAlign: "left",
+          background: "none",
+          border: "none",
+          padding: "20px 24px",
+          cursor: "pointer",
+          color: "#241417",
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
+        <span style={{ fontSize: "13px", fontWeight: 800, color: "#C99A3D", border: "1px solid rgba(201, 154, 61, 0.3)", borderRadius: "50%", width: "30px", height: "30px", display: "flex", alignItems: "center", justifyCenter: "center", flexShrink: 0, justifyContent: "center" }}>
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span style={{ flex: 1, fontSize: "16.5px", fontWeight: 700, color: "#7A1F2B" }}>{item.q}</span>
+        <span style={{ fontSize: "18px", transition: "transform 0.25s ease", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", color: "#7A1F2B" }}>
+          ↓
         </span>
       </button>
       {isOpen && (
-        <div className="pr-faq-body">
-          <p>{item.a}</p>
+        <div style={{ padding: "0 24px 22px 70px", color: "#6b5a56", fontSize: "15px", lineHeight: 1.65 }}>
+          {item.a}
         </div>
       )}
     </div>
@@ -1054,300 +211,392 @@ function FaqItem({ index, item, isOpen, onToggle }) {
 }
 
 export default function PricingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [openFaq, setOpenFaq] = useState(0);
+  const navigate = useNavigate();
   const [currency, setCurrency] = useState("usd");
+  const [openFaq, setOpenFaq] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const toggleFaq = (i) => setOpenFaq((cur) => (cur === i ? -1 : i));
-  const symbol = currency === "usd" ? "$" : "€";
+  const isUsd = currency === "usd";
+  const symbol = isUsd ? "$" : "AED ";
 
-  const openContact = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    setContactOpen(true);
+  const handleSelectPlan = (plan) => {
+    navigate("/courses");
   };
 
   return (
-    <div className="ld-root">
-      <style>{CSS}</style>
+    <div style={{ backgroundColor: "#FDF6EE", color: "#241417", minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <Navbar brandName={BRAND_NAME} active="Pricing" onCtaClick={() => setContactOpen(true)} />
 
-      <Navbar brandName={BRAND_NAME} active="Pricing" scrolled={scrolled} onCtaClick={openContact} />
-
-      {/* HERO */}
-      <section className="ld-hero ld-hero--pricing">
-        <div className="ld-hero-bg" aria-hidden="true" />
-        <Reveal className="ld-hero-content">
-          <div className="ld-pill">
-            <span aria-hidden>$</span> Simple, Transparent Pricing
+      {/* HERO SECTION */}
+      <section style={{ background: "linear-gradient(135deg, #241417 0%, #3D141C 60%, #7A1F2B 100%)", color: "#ffffff", padding: "75px 24px 60px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.08, backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+        <div style={{ maxWidth: "880px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "rgba(201, 154, 61, 0.18)", border: "1px solid rgba(201, 154, 61, 0.35)", borderRadius: "9999px", padding: "6px 20px", fontSize: "13px", fontWeight: 700, color: "#C99A3D", marginBottom: "22px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <Sparkles style={{ width: 16, height: 16 }} />
+            TRANSPARENT ENTERPRISE PRICING
           </div>
-          <h1 className="pr-hero-title">
-            Plans that scale with you — <span className="pr-hero-title-accent">Monthly</span>,{" "}
-            <span className="pr-hero-title-teal">6-Month</span> or Yearly
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 800, margin: "0 0 18px 0", letterSpacing: "-0.02em", lineHeight: 1.15, color: "#ffffff" }}>
+            Investment Plans <span style={{ background: "linear-gradient(90deg, #FDF6EE 0%, #F5D07F 50%, #C99A3D 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Built for Real Impact</span>
           </h1>
-          <p className="ld-hero-sub pr-hero-sub">
-            No hourly tracking, no seat tiers, no course tiers. Every track — Prompt Engineering, RAG, Machine
-            Learning, Agentic AI — is included, priced in USD or EUR.
+          <p style={{ fontSize: "16.5px", color: "rgba(253, 246, 238, 0.88)", margin: "0 0 28px 0", lineHeight: 1.6, maxWidth: "760px", marginLeft: "auto", marginRight: "auto" }}>
+            Choose individual course tracks ($1,000–$2,000 USD), save up to 62% with our Special Combo Master Bundles, or get unlimited access with the All-Access Pass.
           </p>
 
-          <div className="ld-hero-cta">
-            <a href="#plans" className="ld-btn ld-btn--primary">
-              See Plans <span aria-hidden>→</span>
-            </a>
-            <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-              Get in Touch
+          <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => navigate("/courses")}
+              style={{ backgroundColor: "#C99A3D", color: "#241417", border: "none", borderRadius: "9999px", padding: "14px 28px", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(201, 154, 61, 0.3)", display: "inline-flex", alignItems: "center", gap: "8px" }}
+            >
+              Explore All Courses <ArrowRight style={{ width: 16, height: 16 }} />
+            </button>
+            <button
+              onClick={() => setContactOpen(true)}
+              style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "9999px", padding: "14px 28px", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Get Custom Proposal
             </button>
           </div>
-        </Reveal>
+        </div>
 
-        <div className="ld-grid ld-grid--3 ld-hero-stats">
+        {/* HERO STATS */}
+        <div style={{ maxWidth: "1150px", margin: "50px auto 0", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px", position: "relative", zIndex: 1 }}>
           {HERO_STATS.map((s, i) => (
-            <Reveal key={s.value} delay={i * 90} className="ld-hero-stat-card">
-              <div className="pr-stat-icon">{s.icon}</div>
-              <div className="ld-hero-stat-value">{s.label}</div>
-              <div className="ld-hero-stat-sub">{s.value}</div>
-              <div className="ld-hero-stat-sub2">{s.sub}</div>
-            </Reveal>
-          ))}
-        </div>
-
-        <Reveal className="pr-fair-billing" delay={200}>
-          <span className="pr-warn-icon" aria-hidden>💱</span>
-          <p>
-            <strong>Currency note:</strong> prices are shown in USD and EUR for convenience. You'll be billed in the
-            currency you select at checkout.
-          </p>
-        </Reveal>
-      </section>
-
-      {/* WHY PLANS */}
-      <section className="ld-section" id="why-plans">
-        <Reveal className="ld-section-head">
-          <h2 className="ld-gradient-heading">Why plan-based pricing?</h2>
-          <p>Flat, predictable billing that scales with your commitment — not with the clock.</p>
-        </Reveal>
-
-        <div className="ld-grid ld-grid--4">
-          {WHY_PLANS.map((c, i) => (
-            <Reveal key={c.title} delay={i * 80} className="pr-why-card">
-              <div className="pr-why-icon">{c.icon}</div>
-              <h3>{c.title}</h3>
-              <p className="ld-card-desc">{c.desc}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* INCLUDED / ADD-ONS */}
-      <section className="ld-section ld-section--dark" id="included">
-        <div className="pr-included-grid">
-          <Reveal className="pr-included-col">
-            <h3 className="pr-col-heading">
-              <span className="pr-tick-lg">✓</span> What&rsquo;s included
-            </h3>
-            <ul className="pr-included-list">
-              {WHATS_INCLUDED.map((item) => (
-                <li key={item}>
-                  <span className="pr-tick">✓</span> {item}
-                </li>
-              ))}
-            </ul>
-            <div className="pr-private-note">
-              <span aria-hidden>🔒</span>
-              <p>
-                <strong>Private by design:</strong> your cohorts and learning data are not public. For compliance
-                requirements, contact us.
-              </p>
+            <div key={i} style={{ backgroundColor: "rgba(255, 255, 255, 0.07)", backdropFilter: "blur(10px)", border: "1px solid rgba(255, 255, 255, 0.15)", borderRadius: "20px", padding: "24px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: "28px", marginBottom: "8px" }}>{s.icon}</div>
+              <div style={{ fontSize: "12px", color: "#C99A3D", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>{s.label}</div>
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "20px", fontWeight: 800, color: "#ffffff", marginBottom: "4px" }}>{s.value}</div>
+              <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,0.7)" }}>{s.sub}</div>
             </div>
-          </Reveal>
+          ))}
+        </div>
+      </section>
 
-          <Reveal delay={100} className="pr-included-col">
-            <h3 className="pr-col-heading">
-              <span aria-hidden>✨</span> Optional add-ons
-            </h3>
-            <div className="pr-addon-list">
-              {ADD_ONS.map((a) => (
-                <div key={a.title} className="pr-addon-card">
-                  <div className="pr-addon-icon">{a.icon}</div>
+      {/* MAIN CONTENT AREA */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px 24px 90px" }}>
+
+        {/* CURRENCY TOGGLE & SECTION HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", marginBottom: "36px" }}>
+          <div>
+            <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#C99A3D", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Select Tier</span>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "30px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
+              Choose Your Learning Pass
+            </h2>
+          </div>
+
+          <div style={{ display: "inline-flex", backgroundColor: "#ffffff", border: "1.5px solid rgba(201, 154, 61, 0.35)", borderRadius: "9999px", padding: "5px", boxShadow: "0 4px 14px rgba(122,31,43,0.05)" }}>
+            <button
+              onClick={() => setCurrency("usd")}
+              style={{
+                padding: "8px 22px",
+                borderRadius: "9999px",
+                fontSize: "13.5px",
+                fontWeight: 800,
+                border: "none",
+                backgroundColor: isUsd ? "#7A1F2B" : "transparent",
+                color: isUsd ? "#ffffff" : "#6b5a56",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              USD ($)
+            </button>
+            <button
+              onClick={() => setCurrency("aed")}
+              style={{
+                padding: "8px 22px",
+                borderRadius: "9999px",
+                fontSize: "13.5px",
+                fontWeight: 800,
+                border: "none",
+                backgroundColor: !isUsd ? "#7A1F2B" : "transparent",
+                color: !isUsd ? "#ffffff" : "#6b5a56",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              AED (د.إ)
+            </button>
+          </div>
+        </div>
+
+        {/* PRICING TIER CARDS GRID */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "30px", marginBottom: "80px" }}>
+          {PLANS.map((plan) => {
+            const displayPrice = isUsd ? plan.usd.toLocaleString() : plan.aed.toLocaleString();
+            const perMonth = isUsd ? plan.perMonthUsd : plan.perMonthAed;
+            return (
+              <div
+                key={plan.id}
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "28px",
+                  border: plan.featured ? "2px solid #7A1F2B" : "1.5px solid rgba(201, 154, 61, 0.35)",
+                  boxShadow: plan.featured ? "0 16px 40px rgba(122, 31, 43, 0.14)" : "0 10px 32px rgba(122, 31, 43, 0.06)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  position: "relative",
+                  overflow: "hidden"
+                }}
+              >
+                {/* BADGE */}
+                <div style={{ padding: "24px 28px 18px", backgroundColor: plan.featured ? "#FAF2E8" : "#ffffff", borderBottom: "1px solid rgba(122, 31, 43, 0.08)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                    <span style={{ backgroundColor: plan.badgeColor, color: "#ffffff", fontSize: "11px", fontWeight: 800, textTransform: "uppercase", padding: "5px 14px", borderRadius: "9999px", letterSpacing: "0.05em" }}>
+                      {plan.badge}
+                    </span>
+                    {plan.featured && (
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#7A1F2B", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <Zap style={{ width: 14, height: 14, color: "#C99A3D" }} /> MOST POPULAR
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 6px 0" }}>
+                    {plan.name}
+                  </h3>
+                  <p style={{ fontSize: "13.5px", color: "#6b5a56", margin: 0, lineHeight: 1.45 }}>
+                    {plan.tagline}
+                  </p>
+                </div>
+
+                {/* PRICING BODY */}
+                <div style={{ padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
-                    <h4>{a.title}</h4>
-                    <p className="ld-card-desc">{a.desc}</p>
+                    <div style={{ marginBottom: "22px" }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "36px", fontWeight: 800, color: "#7A1F2B" }}>
+                          {symbol}{displayPrice}
+                        </span>
+                        <span style={{ fontSize: "14px", color: "#9E8984", fontWeight: 600 }}>{plan.period}</span>
+                      </div>
+                      {perMonth && (
+                        <div style={{ fontSize: "13px", color: "#16A34A", fontWeight: 700, marginTop: "4px" }}>
+                          Equivalent to {symbol}{perMonth}/month
+                        </div>
+                      )}
+                      <div style={{ fontSize: "12.5px", color: "#6b5a56", marginTop: "4px" }}>{plan.billedNote}</div>
+                    </div>
+
+                    {/* FEATURES LIST */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 800, color: "#9E8984", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>Features &amp; Benefits:</span>
+                      {plan.features.map((feat, idx) => (
+                        <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13.5px", color: "#241417", fontWeight: 600, lineHeight: 1.4 }}>
+                          <CheckCircle style={{ width: 16, height: 16, color: "#C99A3D", flexShrink: 0, marginTop: "1px" }} />
+                          <span>{feat}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleSelectPlan(plan)}
+                    style={{
+                      width: "100%",
+                      background: plan.featured ? "linear-gradient(135deg, #7A1F2B 0%, #4A101A 100%)" : "#FAF2E8",
+                      color: plan.featured ? "#ffffff" : "#7A1F2B",
+                      border: plan.featured ? "none" : "1.5px solid rgba(122, 31, 43, 0.2)",
+                      borderRadius: "14px",
+                      padding: "14px",
+                      fontSize: "14.5px",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      boxShadow: plan.featured ? "0 6px 18px rgba(122, 31, 43, 0.25)" : "none"
+                    }}
+                  >
+                    Select Plan <ArrowRight style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* SPECIAL COMBO OFFERS SHOWCASE BANNER */}
+        <div style={{ backgroundColor: "#FAF2E8", border: "2px solid rgba(201, 154, 61, 0.4)", borderRadius: "28px", padding: "40px 32px", marginBottom: "80px", boxShadow: "0 10px 30px rgba(122,31,43,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "28px" }}>
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "#7A1F2B", color: "#ffffff", borderRadius: "9999px", padding: "4px 14px", fontSize: "11.5px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+                <Zap style={{ width: 14, height: 14, color: "#C99A3D" }} /> SPECIAL BUNDLES
+              </div>
+              <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "26px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
+                Featured Special Combo Offers
+              </h3>
+            </div>
+            <button
+              onClick={() => navigate("/courses")}
+              style={{ backgroundColor: "#7A1F2B", color: "#ffffff", border: "none", borderRadius: "9999px", padding: "10px 22px", fontSize: "13.5px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              View All 6 Bundles on Courses Page <ArrowRight style={{ width: 15, height: 15 }} />
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+            {COMBO_SUMMARY.map((combo, idx) => (
+              <div key={idx} style={{ backgroundColor: "#ffffff", borderRadius: "18px", padding: "20px", border: "1px solid rgba(122, 31, 43, 0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "22px" }}>{combo.icon}</span>
+                  <span style={{ backgroundColor: "rgba(22, 163, 74, 0.12)", color: "#16A34A", fontSize: "11px", fontWeight: 800, padding: "3px 10px", borderRadius: "6px" }}>
+                    {combo.savings}
+                  </span>
+                </div>
+                <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "15.5px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 10px 0", lineHeight: 1.3 }}>
+                  {combo.name}
+                </h4>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", color: "#9E8984", textDecoration: "line-through" }}>${combo.originalUSD.toLocaleString()}</span>
+                  <span style={{ fontSize: "20px", fontWeight: 800, color: "#7A1F2B" }}>${combo.priceUSD.toLocaleString()}</span>
+                  <span style={{ fontSize: "11.5px", color: "#9E8984" }}>USD</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* WHY PLAN PRICING GRID */}
+        <div style={{ marginBottom: "80px" }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "28px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 8px 0" }}>
+              Why Engineers &amp; Teams Choose Coursera Education
+            </h2>
+            <p style={{ fontSize: "15px", color: "#6b5a56", margin: 0 }}>Practical hands-on learning designed for immediate production deployment.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px" }}>
+            {WHY_PLANS.map((c, i) => (
+              <div key={i} style={{ backgroundColor: "#ffffff", borderRadius: "20px", padding: "26px 22px", border: "1px solid rgba(122, 31, 43, 0.12)", boxShadow: "0 4px 16px rgba(122,31,43,0.03)" }}>
+                <div style={{ fontSize: "28px", marginBottom: "14px" }}>{c.icon}</div>
+                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "18px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 8px 0" }}>{c.title}</h3>
+                <p style={{ fontSize: "13.5px", color: "#6b5a56", margin: 0, lineHeight: 1.5 }}>{c.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* INCLUDED & ADD-ONS DUAL COLUMN */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "36px", marginBottom: "80px" }}>
+          {/* WHAT'S INCLUDED */}
+          <div style={{ backgroundColor: "#ffffff", borderRadius: "24px", padding: "32px 28px", border: "1px solid rgba(122, 31, 43, 0.12)", boxShadow: "0 6px 20px rgba(122,31,43,0.04)" }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 20px 0", display: "flex", alignItems: "center", gap: "10px" }}>
+              <ShieldCheck style={{ width: 22, height: 22, color: "#16A34A" }} /> What's Included in Every Track
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {WHATS_INCLUDED.map((item, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "14px", color: "#241417", fontWeight: 500, lineHeight: 1.5 }}>
+                  <CheckCircle style={{ width: 16, height: 16, color: "#16A34A", flexShrink: 0, marginTop: "2px" }} />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ENTERPRISE ADD-ONS */}
+          <div style={{ backgroundColor: "#ffffff", borderRadius: "24px", padding: "32px 28px", border: "1px solid rgba(122, 31, 43, 0.12)", boxShadow: "0 6px 20px rgba(122,31,43,0.04)" }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 20px 0", display: "flex", alignItems: "center", gap: "10px" }}>
+              <Sparkles style={{ width: 22, height: 22, color: "#C99A3D" }} /> Enterprise Add-Ons &amp; Services
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {ADD_ONS.map((addon, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                  <span style={{ fontSize: "20px" }}>{addon.icon}</span>
+                  <div>
+                    <h4 style={{ fontSize: "14.5px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 2px 0" }}>{addon.title}</h4>
+                    <p style={{ fontSize: "13px", color: "#6b5a56", margin: 0, lineHeight: 1.4 }}>{addon.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="pr-addon-buttons">
-              <a href="#plans" className="ld-btn ld-btn--dark">
-                See Plans <span aria-hidden>→</span>
-              </a>
-              <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-                Request a program plan
-              </button>
-            </div>
-          </Reveal>
+          </div>
         </div>
 
-        {/* PLANS */}
-        <Reveal className="pr-estimator" delay={150}>
-          <div className="pr-plans-head" id="plans">
-            <h3 className="pr-col-heading pr-estimator-title">Choose your plan</h3>
-            <div className="pr-currency-toggle" role="group" aria-label="Currency">
-              <button
-                type="button"
-                className={`pr-currency-btn ${currency === "usd" ? "pr-currency-btn--active" : ""}`}
-                onClick={() => setCurrency("usd")}
-              >
-                USD ($)
-              </button>
-              <button
-                type="button"
-                className={`pr-currency-btn ${currency === "eur" ? "pr-currency-btn--active" : ""}`}
-                onClick={() => setCurrency("eur")}
-              >
-                EUR (€)
-              </button>
-            </div>
+        {/* PRICING FAQ SECTION */}
+        <div style={{ maxWidth: "900px", margin: "0 auto 60px" }}>
+          <div style={{ textAlign: "center", marginBottom: "36px" }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "28px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 8px 0" }}>
+              Frequently Asked Questions
+            </h2>
+            <p style={{ fontSize: "15px", color: "#6b5a56", margin: 0 }}>Everything you need to know about pricing, billing, and course access.</p>
           </div>
 
-          <div className="ld-grid ld-grid--3">
-            {PLANS.map((p) => {
-              const price = currency === "usd" ? p.usd : p.eur;
-              const perMonth = currency === "usd" ? p.perMonthUsd : p.perMonthEur;
-              return (
-                <div key={p.id} className={`pr-plan-card ${p.featured ? "pr-plan-card--featured" : ""}`}>
-                  {p.badge && <div className="pr-plan-badge">{p.badge}</div>}
-                  <div className="pr-plan-name">{p.name}</div>
-                  <div className="pr-plan-tagline">{p.tagline}</div>
-                  <div className="pr-plan-price">
-                    {symbol}
-                    {price}
-                    <span className="pr-plan-period">{p.period}</span>
-                  </div>
-                  {perMonth && (
-                    <div className="pr-plan-permonth">
-                      {symbol}
-                      {perMonth}/mo equivalent
-                    </div>
-                  )}
-                  <div className="pr-plan-billed">{p.billedNote}</div>
-                  <ul className="pr-plan-features">
-                    {p.features.map((f) => (
-                      <li key={f}>
-                        <span className="pr-tick">✓</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <a href="#start" className={`ld-btn ${p.featured ? "ld-btn--primary" : "ld-btn--outline"} pr-plan-cta`}>
-                    Choose {p.name} <span aria-hidden>→</span>
-                  </a>
-                </div>
-              );
-            })}
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {FAQS.map((item, i) => (
+              <FaqItem key={i} index={i} item={item} isOpen={openFaq === i} onToggle={toggleFaq} />
+            ))}
           </div>
-          <div className="pr-estimator-footnote">
-            <span aria-hidden>?</span>
-            <p>
-              Need something in between, or pricing for a larger team? Email{" "}
-              <a href="mailto:hello@brandname.com">hello@brandname.com</a> and we&rsquo;ll put together a custom
-              quote.
-            </p>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* FAQ */}
-      <section className="ld-section pr-faq-section" id="faq">
-        <Reveal className="ld-section-head">
-          <h2 className="pr-faq-title">Pricing FAQ</h2>
-          <p>Everything you need to know about plans, billing cycles, and currency.</p>
-        </Reveal>
-
-        <div className="pr-faq-list">
-          {FAQS.map((item, i) => (
-            <FaqItem key={item.q} index={i} item={item} isOpen={openFaq === i} onToggle={toggleFaq} />
-          ))}
         </div>
 
-        <Reveal className="pr-custom-rollout" delay={100}>
-          <div className="pr-rollout-icon">⟳</div>
-          <h3>Need a custom training rollout?</h3>
-          <p>Tell us your team size, target skills, and timeline. We&rsquo;ll recommend a plan mix and currency setup that fits.</p>
-          <div className="ld-hero-cta">
-            <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-              Email Us
-            </button>
-            <a href="#plans" className="ld-btn ld-btn--dark">
-              See Plans <span aria-hidden>→</span>
-            </a>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* CTA */}
-      <section className="ld-cta" id="start">
-        <Reveal className="ld-cta-inner">
-          <h2>Start learning today</h2>
-          <p>
-            Create an account and choose a Monthly, 6-Month, or Yearly plan, priced in USD or EUR — full access to
-            every track either way.
+        {/* CUSTOM ROLLOUT BANNER */}
+        <div style={{ backgroundColor: "#FAF2E8", border: "2px solid rgba(201, 154, 61, 0.4)", borderRadius: "24px", padding: "40px 32px", textAlign: "center", maxWidth: "850px", margin: "0 auto" }}>
+          <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "24px", fontWeight: 800, color: "#7A1F2B", margin: "0 0 10px 0" }}>
+            Need a Custom AI Training Rollout for Your Team?
+          </h3>
+          <p style={{ fontSize: "15px", color: "#6b5a56", margin: "0 0 24px 0", maxWidth: "580px", marginLeft: "auto", marginRight: "auto" }}>
+            Tell us your team size, target AI architecture, and timeline. We'll design a customized learning path and volume pricing package for your engineering group.
           </p>
-          <div className="ld-hero-cta ld-cta-buttons">
-            <a href="#plans" className="ld-btn ld-btn--primary">
-              See Plans <span aria-hidden>→</span>
-            </a>
-            <button type="button" className="ld-btn ld-btn--outline" onClick={openContact}>
-              Get in Touch
+          <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => setContactOpen(true)}
+              style={{ backgroundColor: "#7A1F2B", color: "#ffffff", border: "none", borderRadius: "9999px", padding: "12px 26px", fontSize: "14.5px", fontWeight: 800, cursor: "pointer" }}
+            >
+              Contact Enterprise Sales
+            </button>
+            <button
+              onClick={() => navigate("/courses")}
+              style={{ backgroundColor: "#ffffff", color: "#7A1F2B", border: "1.5px solid rgba(122, 31, 43, 0.3)", borderRadius: "9999px", padding: "12px 26px", fontSize: "14.5px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Browse 24 Courses
             </button>
           </div>
-          <div className="ld-cta-note">
-            <span className="ld-check">✓</span> Tailor-made curriculum &nbsp;•&nbsp; Hands-on labs &nbsp;•&nbsp; Delivered as workshops
-          </div>
-        </Reveal>
-      </section>
+        </div>
+
+      </div>
 
       {/* FOOTER */}
-      <footer className="ld-footer" id="contact">
-        <div className="ld-footer-grid">
+      <footer style={{ backgroundColor: "#241417", color: "#ffffff", padding: "60px 24px 30px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ maxWidth: "1180px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "40px", marginBottom: "40px" }}>
           <div>
-            <a className="ld-logo" href="/">
-              <span className="ld-logo-mark">◤</span> {BRAND_NAME}
-            </a>
-            <p className="ld-footer-desc">
-              Coursera Education & Training Computer Software
+            <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "18px", fontWeight: 800, color: "#C99A3D", margin: "0 0 14px 0" }}>
+              {BRAND_NAME}
+            </h4>
+            <p style={{ fontSize: "13.5px", color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: "0 0 12px 0" }}>
+              Coursera Education &amp; Training Computer Software
             </p>
-            <p className="ld-footer-desc">THE BINARY BY OMNIYAT, Office 1912-196</p>
-            <p className="ld-footer-desc">Business Bay</p>
-            <p className="ld-footer-desc">Dubai, United Arab Emirtates</p>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0" }}>THE BINARY BY OMNIYAT, Office 1912-196</p>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0" }}>Business Bay, Dubai</p>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 16px 0" }}>United Arab Emirates</p>
+            <p style={{ fontSize: "13px", color: "#C99A3D", margin: 0 }}>✉ Courseraeducationn@gmail.com</p>
+          </div>
 
-            <div className="pr-email-row">
-              <span aria-hidden>✉</span> Courseraeducationn@gmail.com
+          <div>
+            <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", margin: "0 0 14px 0" }}>Legal &amp; Policies</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13.5px" }}>
+              <a href="/refund-policy" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Return &amp; Refund Policy</a>
+              <a href="/cancellation-policy" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Cancellation Policy</a>
+              <a href="/terms-and-conditions" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Terms &amp; Conditions</a>
             </div>
           </div>
-          <div>
-            <h4>Policies</h4>
-            <p className="ld-footer-desc">
-              Review our legal and privacy documents. You can also manage your cookie preferences anytime.
-            </p>
-            <ul className="ld-footer-links">
-              <li><a href="/refund-policy">Return &amp; Refund Policy</a></li>
-              <li><a href="/cancellation-policy">Cancellation Policy</a></li>
-              <li><a href="/pricing">Pricing &amp; Terms</a></li>
-            </ul>
 
-          </div>
           <div>
-            <h4>Need help?</h4>
-            <p className="ld-footer-desc">Email us for training guidance, scheduling, or any account questions. We&rsquo;ll get back as soon as possible.</p>
-            <a href="mailto:Courseraeducationn@gmail.com" className="ld-btn ld-btn--email ld-btn--sm">Email Support</a>
-            <p className="ld-footer-note">Typical response time: 1–2 business days.</p>
+            <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", margin: "0 0 14px 0" }}>Need Help?</h4>
+            <p style={{ fontSize: "13.5px", color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: "0 0 16px 0" }}>
+              Reach out to our education advisory team for training guidance or custom proposals.
+            </p>
+            <button
+              onClick={() => setContactOpen(true)}
+              style={{ backgroundColor: "#7A1F2B", color: "#ffffff", border: "none", borderRadius: "9999px", padding: "10px 20px", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Contact Support
+            </button>
           </div>
         </div>
-        <div className="ld-footer-bottom pr-footer-bottom">
+
+        <div style={{ maxWidth: "1180px", margin: "0 auto", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", fontSize: "12.5px", color: "rgba(255,255,255,0.5)" }}>
           <span>© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</span>
           <span>Contact: Courseraeducationn@gmail.com</span>
         </div>
@@ -1357,216 +606,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-const CSS = `
-:root {
-  --bg-0: #ffffff;
-  --bg-1: #f9f0e7;
-  --bg-2: #f3e2d0;
-  --card: #ffffff;
-  --card-border: rgba(122,23,53,0.12);
-  --text-0: #241417;
-  --text-1: #6b5a56;
-  --text-2: #a3908b;
-  --accent-orange: #7a1735;
-  --accent-teal: #c1922f;
-  --accent-green: #16a34a;
-  --gradient: linear-gradient(90deg, var(--accent-orange), var(--accent-teal));
-  --radius-lg: 22px;
-  --radius-md: 16px;
-  --shadow-sm: 0 1px 2px rgba(36,20,23,0.04);
-  --shadow-md: 0 14px 34px -18px rgba(36,20,23,0.20);
-  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-}
-
-.ld-root { background: var(--bg-0); color: var(--text-0); font-family: var(--font-body); overflow-x: hidden; line-height: 1.5; }
-.ld-root * { box-sizing: border-box; }
-
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
-.reveal-visible { opacity: 1; transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
-
-/* NAV */
-.ld-nav { position: sticky; top: 0; z-index: 50; padding: 18px 24px; transition: background .3s ease, padding .3s ease; }
-.ld-nav--scrolled { padding: 10px 24px; background: rgba(255,255,255,0.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--card-border); }
-.ld-nav-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid var(--card-border); border-radius: 999px; padding: 10px 14px 10px 20px; box-shadow: var(--shadow-sm); }
-.ld-logo { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; color: var(--text-0); text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 15px; }
-.ld-logo-mark { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 18px; }
-.ld-nav-links { display: flex; gap: 8px; }
-.ld-nav-links a { color: var(--text-1); text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 8px 16px; border-radius: 999px; transition: color .2s ease, background .2s ease, border-color .2s ease; border: 1px solid transparent; }
-.ld-nav-links a:hover { color: var(--text-0); }
-.ld-nav-actions { display: flex; align-items: center; gap: 16px; }
-.ld-nav-auth-link { color: var(--text-1); text-decoration: none; font-size: 14px; font-weight: 500; }
-.ld-nav-auth-link:hover { color: var(--text-0); }
-.ld-nav-link--active { color: var(--accent-orange) !important; background: rgba(122,23,53,0.08); border-color: rgba(122,23,53,0.30) !important; }
-
-.ld-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14.5px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease; font-family: var(--font-body); }
-.ld-btn:hover { transform: translateY(-1px); }
-.ld-btn:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 3px; }
-.ld-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.ld-btn--sm { padding: 9px 16px; font-size: 13.5px; }
-.ld-btn--primary { background: var(--gradient); color: #ffffff; box-shadow: 0 10px 24px -8px rgba(122,23,53,0.45); }
-.ld-btn--outline { background: #ffffff; color: var(--text-0); border-color: var(--card-border); }
-.ld-btn--outline:hover { background: var(--bg-1); }
-.ld-btn--dark { background: var(--text-0); color: #ffffff; }
-.ld-btn--dark:hover { background: #3a2226; }
-.ld-btn--email { background: var(--accent-orange); color: #fff; }
-.ld-btn--email:hover { background: #5f1329; }
-
-/* HERO */
-.ld-hero { position: relative; padding: 90px 24px 60px; max-width: 1180px; margin: 0 auto; text-align: center; }
-.ld-hero-bg { position: absolute; inset: -10% -20% auto -20%; height: 520px; background: radial-gradient(60% 60% at 30% 20%, rgba(122,23,53,0.12), transparent 70%), radial-gradient(50% 50% at 75% 10%, rgba(193,146,47,0.16), transparent 70%); filter: blur(10px); pointer-events: none; z-index: 0; }
-.ld-hero-content { position: relative; z-index: 1; }
-.ld-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 26px; }
-
-.pr-hero-title { font-family: var(--font-display); font-size: clamp(2rem, 4.6vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 20px; color: var(--text-0); }
-.pr-hero-title-accent { color: var(--accent-orange); }
-.pr-hero-title-teal { color: var(--accent-teal); }
-.pr-hero-sub { max-width: 720px; }
-
-.ld-hero-sub { font-size: clamp(1rem, 1.6vw, 1.2rem); color: var(--text-1); max-width: 680px; margin: 0 auto 36px; }
-.ld-hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-
-.ld-hero-stats { margin-top: 60px; position: relative; z-index: 1; }
-.ld-hero-stat-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 24px; text-align: center; box-shadow: var(--shadow-sm); }
-.pr-stat-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 18px; margin: 0 auto 18px; }
-.ld-hero-stat-label { font-size: 12.5px; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-.ld-hero-stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-bottom: 8px; color: var(--accent-orange); }
-.ld-hero-stat-sub { font-size: 15px; color: var(--text-1); }
-.ld-hero-stat-sub2 { font-size: 13px; color: var(--text-2); margin-top: 6px; }
-
-.pr-fair-billing { margin-top: 28px; display: flex; align-items: flex-start; gap: 12px; text-align: left; background: rgba(122,23,53,0.06); border: 1px solid rgba(122,23,53,0.22); border-radius: var(--radius-md); padding: 18px 22px; }
-.pr-warn-icon { color: var(--accent-orange); font-size: 16px; margin-top: 2px; }
-.pr-fair-billing p { margin: 0; color: var(--text-1); font-size: 14px; }
-.pr-fair-billing strong { color: var(--text-0); }
-
-/* SECTIONS */
-.ld-section { max-width: 1180px; margin: 0 auto; padding: 96px 24px; }
-.ld-section--dark { max-width: 100%; background: var(--bg-1); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); }
-.ld-section--dark > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
-.ld-section-head { text-align: center; max-width: 680px; margin: 0 auto 56px; }
-.ld-gradient-heading { font-family: var(--font-display); font-size: clamp(1.9rem, 3.6vw, 2.8rem); font-weight: 700; margin: 0 0 16px; letter-spacing: -0.01em; color: var(--text-0); }
-.ld-section-head p { color: var(--text-1); font-size: 16.5px; }
-
-.ld-grid { display: grid; gap: 22px; }
-.ld-grid--4 { grid-template-columns: repeat(4, 1fr); }
-.ld-grid--3 { grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 980px) { .ld-grid--4, .ld-grid--3 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 620px) { .ld-grid--4, .ld-grid--3 { grid-template-columns: 1fr; } .ld-nav-links { display: none; } }
-
-/* Why-plans cards */
-.pr-why-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 26px; box-shadow: var(--shadow-sm); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
-.pr-why-card:hover { transform: translateY(-3px); border-color: rgba(122,23,53,0.28); box-shadow: var(--shadow-md); }
-.pr-why-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 18px; }
-.pr-why-card h3 { font-family: var(--font-display); font-size: 18px; margin: 0 0 8px; }
-.ld-card-desc { color: var(--text-1); font-size: 14px; margin: 0; }
-
-/* Included / Add-ons */
-.pr-included-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; margin-bottom: 70px; }
-@media (max-width: 900px) { .pr-included-grid { grid-template-columns: 1fr; } }
-.pr-included-col { background: transparent; }
-.pr-col-heading { font-family: var(--font-display); font-size: 22px; display: flex; align-items: center; gap: 10px; margin: 0 0 26px; color: var(--text-0); }
-.pr-tick-lg { color: var(--accent-green); }
-.pr-included-list { list-style: none; margin: 0 0 26px; padding: 0; display: flex; flex-direction: column; gap: 18px; }
-.pr-included-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--text-1); }
-.pr-tick { color: var(--accent-green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-.pr-private-note { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px 20px; background: var(--card); }
-.pr-private-note p { margin: 0; font-size: 14px; color: var(--text-1); }
-.pr-private-note strong { color: var(--text-0); }
-
-.pr-addon-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
-.pr-addon-card { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 20px 22px; background: var(--card); box-shadow: var(--shadow-sm); }
-.pr-addon-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--bg-1); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
-.pr-addon-card h4 { font-size: 15.5px; margin: 0 0 6px; color: var(--text-0); }
-.pr-addon-buttons { display: flex; gap: 14px; flex-wrap: wrap; }
-
-/* Plans */
-.pr-estimator { border-top: 1px solid var(--card-border); padding-top: 60px; }
-.pr-estimator-title { text-align: left; margin-bottom: 0; }
-.pr-plans-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; margin-bottom: 30px; }
-.pr-currency-toggle { display: inline-flex; border: 1px solid var(--card-border); border-radius: 999px; background: var(--card); padding: 4px; }
-.pr-currency-btn { border: none; background: transparent; padding: 8px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--text-1); cursor: pointer; transition: background .2s ease, color .2s ease; }
-.pr-currency-btn--active { background: var(--gradient); color: #ffffff; }
-
-.pr-plan-card { position: relative; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 30px 26px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
-.pr-plan-card--featured { border-color: var(--accent-orange); box-shadow: var(--shadow-md); }
-.pr-plan-badge { position: absolute; top: -13px; right: 24px; background: var(--gradient); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; }
-.pr-plan-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-0); }
-.pr-plan-tagline { font-size: 13.5px; color: var(--text-2); margin: 4px 0 20px; }
-.pr-plan-price { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--accent-orange); display: flex; align-items: baseline; gap: 6px; }
-.pr-plan-period { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--text-2); }
-.pr-plan-permonth { font-size: 13px; color: var(--text-1); margin-top: 6px; }
-.pr-plan-billed { font-size: 12.5px; color: var(--text-2); margin-top: 4px; margin-bottom: 20px; }
-.pr-plan-features { list-style: none; margin: 0 0 26px; padding: 0; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-.pr-plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--text-1); }
-.pr-plan-cta { justify-content: center; width: 100%; }
-
-.pr-estimator-footnote { display: flex; gap: 12px; align-items: flex-start; margin-top: 26px; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px 22px; background: #ffffff; }
-.pr-estimator-footnote p { margin: 0; font-size: 13.5px; color: var(--text-2); }
-.pr-estimator-footnote a { color: var(--accent-orange); text-decoration: none; }
-
-/* FAQ */
-.pr-faq-section { padding-top: 90px; }
-.pr-faq-title { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin: 0 0 16px; color: var(--text-0); }
-.pr-faq-list { display: flex; flex-direction: column; gap: 18px; max-width: 900px; margin: 0 auto 60px; }
-.pr-faq-item { border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; box-shadow: var(--shadow-sm); }
-.pr-faq-head { width: 100%; display: flex; align-items: center; gap: 20px; text-align: left; background: transparent; border: none; color: var(--text-0); cursor: pointer; padding: 26px 28px; font-family: var(--font-body); }
-.pr-faq-num { font-family: var(--font-display); font-size: 13px; color: var(--text-2); border: 1px solid var(--card-border); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.pr-faq-q { flex: 1; font-size: 17px; font-weight: 600; }
-.pr-faq-arrow { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; transition: transform .25s ease; flex-shrink: 0; color: var(--text-1); }
-.pr-faq-arrow--open { transform: rotate(180deg); }
-.pr-faq-body { padding: 0 28px 26px 76px; }
-.pr-faq-body p { margin: 0; color: var(--text-1); font-size: 15px; line-height: 1.65; }
-
-/* Custom rollout box */
-.pr-custom-rollout { max-width: 900px; margin: 0 auto; text-align: center; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--card); padding: 56px 40px; box-shadow: var(--shadow-sm); }
-.pr-rollout-icon { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; font-size: 20px; background: var(--bg-1); }
-.pr-custom-rollout h3 { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 14px; color: var(--text-0); }
-.pr-custom-rollout p { color: var(--text-1); font-size: 15.5px; margin: 0 0 28px; max-width: 560px; margin-left: auto; margin-right: auto; }
-
-/* CTA */
-.ld-cta { padding: 100px 24px; text-align: center; background: var(--bg-1); border-top: 1px solid var(--card-border); }
-.ld-cta-inner { max-width: 620px; margin: 0 auto; }
-.ld-cta h2 { font-family: var(--font-display); font-size: clamp(1.9rem, 3.4vw, 2.6rem); margin: 0 0 14px; color: var(--text-0); }
-.ld-cta p { color: var(--text-1); font-size: 16.5px; margin-bottom: 34px; }
-.ld-cta-buttons { margin-bottom: 20px; }
-.ld-cta-note { font-size: 13px; color: var(--text-2); display: flex; align-items: center; justify-content: center; gap: 6px; }
-.ld-check { color: var(--accent-orange); font-weight: 700; font-size: 12px; }
-
-/* FOOTER */
-.ld-footer { padding: 70px 24px 30px; background: var(--bg-1); border-top: 1px solid var(--card-border); }
-.ld-footer-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 50px; }
-.ld-footer h4 { font-size: 14px; margin: 0 0 12px; color: var(--text-0); }
-.ld-footer-desc { color: var(--text-2); font-size: 13.5px; line-height: 1.6; margin: 12px 0; }
-.ld-footer-links { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
-.ld-footer-links a { color: var(--text-1); text-decoration: none; font-size: 13.5px; }
-.ld-footer-links a:hover { color: var(--text-0); }
-.ld-footer-note { font-size: 12px; color: var(--text-2); margin-top: 10px; }
-.ld-footer-bottom { max-width: 1180px; margin: 50px auto 0; padding-top: 24px; border-top: 1px solid var(--card-border); font-size: 12.5px; color: var(--text-2); text-align: center; }
-.pr-footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; text-align: left; }
-@media (max-width: 800px) { .ld-footer-grid { grid-template-columns: 1fr; gap: 34px; } .pr-footer-bottom { flex-direction: column; } }
-
-.pr-address { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-1); margin: 16px 0 10px; }
-.pr-email-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-1); margin-bottom: 18px; }
-.pr-payment-icons { display: flex; gap: 14px; flex-wrap: wrap; }
-.pr-payment-icons span { font-size: 12px; color: var(--text-2); border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 10px; }
-
-/* CONTACT MODAL */
-.ld-modal-overlay { position: fixed; inset: 0; background: rgba(36,20,23,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-.ld-modal { position: relative; background: #ffffff; border-radius: var(--radius-lg); max-width: 480px; width: 100%; padding: 40px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
-.ld-modal-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--card-border); background: #fff; cursor: pointer; font-size: 14px; color: var(--text-1); }
-.ld-modal-close:hover { background: var(--bg-1); }
-.ld-modal-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-orange); border: 1px solid rgba(122,23,53,0.30); background: rgba(122,23,53,0.06); padding: 8px 18px; border-radius: 999px; margin-bottom: 20px; }
-.ld-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-orange); display: inline-block; }
-.ld-modal h3 { font-family: var(--font-display); font-size: 26px; margin: 0 0 12px; color: var(--text-0); }
-.ld-modal-sub { color: var(--text-1); font-size: 14.5px; margin: 0 0 28px; }
-.ld-field { margin-bottom: 20px; }
-.ld-field label { display: block; font-size: 14px; font-weight: 600; color: var(--text-0); margin-bottom: 8px; }
-.ld-field input, .ld-field textarea { width: 100%; border: 1px solid var(--card-border); background: var(--bg-1); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; font-family: var(--font-body); color: var(--text-0); resize: vertical; }
-.ld-field textarea { min-height: 110px; }
-.ld-field input:focus, .ld-field textarea:focus { outline: 2px solid var(--accent-teal); outline-offset: 1px; }
-.ld-modal-submit { width: 100%; justify-content: center; margin-top: 6px; }
-.ld-modal-success { text-align: center; padding: 20px 0; }
-.ld-modal-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(22,163,74,0.12); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px; }
-`;

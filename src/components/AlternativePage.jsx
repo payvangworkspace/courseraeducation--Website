@@ -441,7 +441,7 @@ export default function AlternativesPage() {
             <ul className="ld-footer-links">
               <li><a href="/refund-policy">Return &amp; Refund Policy</a></li>
               <li><a href="/cancellation-policy">Cancellation Policy</a></li>
-              <li><a href="/pricing">Pricing &amp; Terms</a></li>
+              <li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li>
             </ul>
 
           </div>
