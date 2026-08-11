@@ -44,16 +44,16 @@ export function saveAuthToken(
   try {
     store.setItem(TOKEN_KEY, String(token));
     store.setItem(ROLE_KEY, String(userRole || ""));
-    store.setItem("user_email", String(email || ""));
-    store.setItem("user_fullName", String(fullName || ""));
-    store.setItem("user_verified", String(verified ?? ""));
+    store.setItem("email", String(email || ""));
+    store.setItem("fullName", String(fullName || ""));
+    store.setItem("verified", String(verified ?? ""));
     store.setItem("payoutEnabledViaApp", String(payoutEnabledViaApp ?? ""));
 
     clear.removeItem(TOKEN_KEY);
     clear.removeItem(ROLE_KEY);
-    clear.removeItem("user_email");
-    clear.removeItem("user_fullName");
-    clear.removeItem("user_verified");
+    clear.removeItem("email");
+    clear.removeItem("fullName");
+    clear.removeItem("verified");
     clear.removeItem("payoutEnabledViaApp");
 
     // Verify write succeeded
@@ -227,9 +227,6 @@ export async function apiRequest(endpoint, options = {}) {
   const rawInput = `${activeMerchantId}${activeOrderId}${activePayableAmount}`;
 
   // Explicit console log of generated merchantHash and raw input
-  console.log(`[PayVang Hash]:`, computedHash);
-  console.log(`[PayVang Signature Raw Input]:`, rawInput);
-
   // Format request body for logging
   const hasBody = body !== undefined && body !== null;
   const formattedBodyData = hasBody
@@ -239,27 +236,6 @@ export async function apiRequest(endpoint, options = {}) {
     : undefined;
 
   // Print structured console log matching PayVang API documentation format
-  console.log(
-    `==================== PAYVANG API REQUEST DOCUMENTATION REFERENCE ====================\n` +
-    `[Request Method & URL]: ${options.method || "GET"} ${url}\n` +
-    `[Generated Merchant Hash]: ${computedHash}\n` +
-    `[Signature Plain Text]: ${rawInput}\n` +
-    `[Headers Description]:\n` +
-    `  merchantAppId: "${activeAppId}"\n` +
-    `  merchantSecretId: "${activeMerchantSecretId}"\n` +
-    `  merchantHash: "${computedHash}"\n` +
-    `  Content-Type: "application/json"\n` +
-    `[Request Parameters / Body]:`,
-    hasBody ? parsedBody : "(No Body - GET Request)",
-    `\n[Sample cURL Reference]:\n` +
-    `curl --location '${url}' \\\n` +
-    `  --header 'merchantAppId: ${activeAppId}' \\\n` +
-    `  --header 'merchantSecretId: ${activeMerchantSecretId}' \\\n` +
-    `  --header 'merchantHash: ${computedHash}' \\\n` +
-    `  --header 'Content-Type: application/json'` +
-    (hasBody ? ` \\\n  --data-raw '${typeof body === "string" ? body : JSON.stringify(parsedBody, null, 2)}'` : ` \\\n  --data-raw '' # GET requests do not send a body payload\n`) +
-    `\n=====================================================================================`
-  );
 
   const payVangHeaders = {
     merchantAppId: activeAppId,
