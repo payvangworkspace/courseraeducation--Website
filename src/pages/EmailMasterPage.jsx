@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { Mail, Plus, RefreshCw } from 'lucide-react';
+import { emailApi, unwrapList } from '../api';
+
+function normalizeEmail(em, idx) {
+  return {
+    id: em.id || em.emailCode || `EM-${idx}`,
+    emailCode: em.emailCode || em.code || '—',
+    fromEmail: em.fromEmail || em.from || em.sender || '—',
+    subject: em.subject || em.emailSubject || '—',
+    smtpHost: em.smtpHost || em.host || '—',
+    smtpPort: em.smtpPort || em.port || '—',
+    status: em.status || (em.active === false ? 'Inactive' : 'Active'),
+  };
+}
 
 export default function EmailMasterPage() {
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/GetEmailMasterList', { method: 'POST' })
-      .then((res) => res.json())
-      .then((data) => {
-        setEmails(data);
-        setLoading(false);
-      });
+    emailApi
+      .getEmailMasterList({})
+      .then((data) => setEmails(unwrapList(data).map(normalizeEmail)))
+      .catch((err) => {
+        console.error(err);
+        setEmails([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

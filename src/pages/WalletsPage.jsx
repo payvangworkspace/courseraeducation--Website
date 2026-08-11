@@ -2,6 +2,34 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import GradientButton from '../components/common/GradientButton';
 import { Wallet, Plus, RefreshCw, DollarSign } from 'lucide-react';
+import { walletApi, unwrapList } from '../api';
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  const n = Number(String(value).replace(/[₹$,\s]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeFiat(w) {
+  return {
+    merchantId: w.merchantId || w.userId || w.id || '—',
+    merchantName: w.merchantName || w.fullName || w.businessName || w.name || '—',
+    balance: toNumber(w.netBalance ?? w.balance ?? w.availableBalance ?? w.amount),
+    reservedBalance: toNumber(w.reservedBalance ?? w.reserved ?? w.escrow ?? 0),
+    lastUpdated: w.lastUpdated || w.updatedOn || w.modifiedDate || w.createdOn || '—',
+  };
+}
+
+function normalizeCrypto(cw) {
+  return {
+    merchantId: cw.merchantId || cw.userId || cw.id || '—',
+    coinType: cw.coinType || cw.coin || cw.currency || '—',
+    chainType: cw.chainType || cw.network || cw.chain || '—',
+    walletAddress: cw.walletAddress || cw.address || '—',
+    balance: toNumber(cw.balance ?? cw.cryptoBalance ?? 0),
+    fiatValueUSD: toNumber(cw.fiatValueUSD ?? cw.fiatValue ?? cw.usdValue ?? 0),
+  };
+}
 
 export default function WalletsPage() {
   const [wallets, setWallets] = useState([]);
@@ -9,15 +37,17 @@ export default function WalletsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/wallet/walletList').then((r) => r.json()),
-      fetch('/wallet/cryptoWalletList').then((r) => r.json())
-    ])
+    Promise.all([walletApi.getWalletList(), walletApi.getCryptoWalletList()])
       .then(([wData, cData]) => {
-        setWallets(wData);
-        setCryptoWallets(cData);
-        setLoading(false);
-      });
+        setWallets(unwrapList(wData).map(normalizeFiat));
+        setCryptoWallets(unwrapList(cData).map(normalizeCrypto));
+      })
+      .catch((err) => {
+        console.error('Error loading wallets:', err);
+        setWallets([]);
+        setCryptoWallets([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

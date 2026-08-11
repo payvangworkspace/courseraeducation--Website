@@ -3,8 +3,8 @@ import CryptoJS from "crypto-js";
 export function getCurrentUserEmail() {
   if (typeof window === "undefined") return "";
   return (
-    localStorage.getItem("user_email") ||
-    sessionStorage.getItem("user_email") ||
+    localStorage.getItem("email") ||
+    sessionStorage.getItem("email") ||
     ""
   ).trim();
 }

@@ -1,18 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { ShieldCheck, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ipKeyApi, unwrapList } from '../api';
+
+function normalizeIp(ip, idx) {
+  return {
+    id: ip.id || ip.keyId || idx,
+    merchantId: ip.merchantId || ip.userId || '—',
+    ipAddress: ip.ipAddress || ip.ip || ip.whitelistIp || '—',
+    systemName: ip.systemName || ip.name || ip.label || '—',
+    ipAddressDesc: ip.ipAddressDesc || ip.description || ip.desc || '—',
+  };
+}
 
 export default function IPWhitelistPage() {
   const [ipList, setIpList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/admin/keys/GetIpKeyList')
-      .then((res) => res.json())
-      .then((data) => {
-        setIpList(data);
-        setLoading(false);
-      });
+    ipKeyApi
+      .getIpKeyList()
+      .then((data) => setIpList(unwrapList(data).map(normalizeIp)))
+      .catch((err) => {
+        console.error(err);
+        setIpList([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

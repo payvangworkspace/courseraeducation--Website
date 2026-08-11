@@ -3,6 +3,7 @@ import PayVangLayout from '../components/layout/PayVangLayout';
 import StatCard from '../components/common/StatCard';
 import ProgressBar from '../components/common/ProgressBar';
 import GradientButton from '../components/common/GradientButton';
+import { getDashboardStats } from '../api';
 import {
   ResponsiveContainer,
   LineChart,
@@ -98,8 +99,7 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState('7d');
 
   useEffect(() => {
-    fetch('/api/stats/dashboard')
-      .then((res) => res.json())
+    getDashboardStats()
       .then((resData) => {
         if (resData && typeof resData === 'object' && resData.todayTxnAmount !== undefined) {
           setData(resData);

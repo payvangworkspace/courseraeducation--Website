@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { Coins, Plus, RefreshCw } from 'lucide-react';
+import { cryptoConfigApi, unwrapList } from '../api';
+
+function normalizeConfig(c, idx) {
+  return {
+    id: c.id || c.configId || `${c.merchantId || 'CFG'}-${idx}`,
+    merchantId: c.merchantId || c.userId || '—',
+    defaultCoin: c.defaultCoin || c.coin || c.coinType || '—',
+    defaultNetwork: c.defaultNetwork || c.network || c.chain || '—',
+    fiatCurrencyCode: c.fiatCurrencyCode || c.fiatCurrency || c.currency || '—',
+    walletAddress: c.walletAddress || c.address || '—',
+    active: c.active !== false && String(c.status || '').toLowerCase() !== 'inactive',
+  };
+}
 
 export default function CryptoConfigPage() {
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/CryptoConfig/ListCryptoConfig')
-      .then((res) => res.json())
-      .then((data) => {
-        setConfigs(data);
-        setLoading(false);
-      });
+    cryptoConfigApi
+      .listCryptoConfig()
+      .then((data) => setConfigs(unwrapList(data).map(normalizeConfig)))
+      .catch((err) => {
+        console.error(err);
+        setConfigs([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

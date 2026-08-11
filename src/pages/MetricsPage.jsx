@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import StatCard from '../components/common/StatCard';
 import { Activity, RefreshCw } from 'lucide-react';
+import { metricsApi, unwrapList } from '../api';
 
 export default function MetricsPage() {
   const [totalHits, setTotalHits] = useState(null);
@@ -11,16 +12,26 @@ export default function MetricsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/v1/metrics/hits/total').then((r) => r.json()),
-      fetch('/api/v1/metrics/hits/url').then((r) => r.json()),
-      fetch('/api/v1/metrics/hits/status').then((r) => r.json())
+      metricsApi.getTotalHits(),
+      metricsApi.getHitsPerUrl(),
+      metricsApi.getHitsPerStatus(),
     ])
       .then(([t, u, s]) => {
-        setTotalHits(t);
-        setUrlHits(u);
+        const totalPayload = t?.data && typeof t.data === 'object' ? t.data : t;
+        setTotalHits({
+          totalHits: Number(totalPayload?.totalHits ?? totalPayload?.hits ?? 0),
+          uptimePercentage: totalPayload?.uptimePercentage || totalPayload?.uptime || '—',
+        });
+        setUrlHits(
+          unwrapList(u).map((h) => ({
+            url: h.url || h.endpoint || h.path || '—',
+            hits: Number(h.hits ?? h.count ?? 0),
+          }))
+        );
         setStatusHits(s);
-        setLoading(false);
-      });
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, []);
 
   return (

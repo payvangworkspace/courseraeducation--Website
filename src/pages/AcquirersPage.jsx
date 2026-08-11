@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import GradientButton from '../components/common/GradientButton';
 import { Building2, Plus, Code, Globe, Shield, RefreshCw, X, Check, FileJson } from 'lucide-react';
+import { acquirerApi, unwrapList } from '../api';
+
+function normalizeAcquirer(a) {
+  return {
+    id: a.id || a.acquirerId || a.aggregatorCode || Math.random().toString(36).slice(2),
+    aggregatorCode: a.aggregatorCode || a.code || '—',
+    apiName: a.apiName || a.name || '—',
+    httpMethod: a.httpMethod || a.method || 'POST',
+    type: a.type || a.txnType || '—',
+    environment: a.environment || a.env || 'PRODUCTION',
+    status: a.status || (a.active === false ? 'Inactive' : 'Active'),
+    ...a,
+  };
+}
 
 export default function AcquirersPage() {
   const [acquirers, setAcquirers] = useState([]);
@@ -28,18 +42,17 @@ export default function AcquirersPage() {
     requestTemplate: '{\n  "merchant_id": "{{MERCHANT_ID}}",\n  "amount": "{{TXN_AMOUNT}}",\n  "currency": "INR",\n  "callback_url": "{{RESPONSE_URL}}"\n}'
   });
 
-  const fetchAcquirers = () => {
+  const fetchAcquirers = async () => {
     setLoading(true);
-    fetch('/api/acquirers')
-      .then((res) => res.json())
-      .then((data) => {
-        setAcquirers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching acquirers:', err);
-        setLoading(false);
-      });
+    try {
+      const res = await acquirerApi.getAllAcquirer({ start: 0, length: 1000 });
+      setAcquirers(unwrapList(res).map(normalizeAcquirer));
+    } catch (err) {
+      console.error('Error fetching acquirers:', err);
+      setAcquirers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -54,7 +67,7 @@ export default function AcquirersPage() {
     }));
   };
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
     if (!formData.aggregatorCode || !formData.apiName) {
       alert('Please fill in Aggregator Code and API Name.');
@@ -62,21 +75,16 @@ export default function AcquirersPage() {
     }
 
     setSubmitting(true);
-    fetch('/api/acquirers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-      .then((res) => res.json())
-      .then((newAcq) => {
-        setSubmitting(false);
-        setShowModal(false);
-        fetchAcquirers();
-      })
-      .catch((err) => {
-        console.error('Error adding acquirer:', err);
-        setSubmitting(false);
-      });
+    try {
+      await acquirerApi.createAcquirer(formData);
+      setShowModal(false);
+      await fetchAcquirers();
+    } catch (err) {
+      console.error('Error adding acquirer:', err);
+      alert(err.message || 'Failed to create acquirer.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

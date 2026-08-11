@@ -29,6 +29,7 @@ import {
   Mail,
   Activity
 } from 'lucide-react';
+import { authApi, clearAuthToken } from '../../api';
 
 export default function PayVangLayout({ children, title, subtitle }) {
   const location = useLocation();
@@ -36,7 +37,8 @@ export default function PayVangLayout({ children, title, subtitle }) {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    fetch('/logoutuser', { method: 'POST' }).catch(() => {});
+    authApi.logout({}).catch(() => {});
+    clearAuthToken();
     localStorage.clear();
     sessionStorage.clear();
     navigate('/');

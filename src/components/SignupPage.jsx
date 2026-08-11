@@ -339,10 +339,10 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import ContactModal from "./ContactModel";
+import { merchantApi } from "../api";
+import { getApiKeyHeaders } from "../api/client/apiKey";
 
-const BRAND_NAME = "Your App Name"; // TODO: replace with your real product name
-const API_BASE = "https://api.courseraeducation.com"; // TODO: replace with your real API domain
-const ZIPAPIKEY_VALUE = "";
+const BRAND_NAME = "Coursera Education";
 export default function SignupPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -381,55 +381,25 @@ export default function SignupPage() {
     setErrorMsg("");
 
     try {
-      // Real self-serve account creation lives at POST /user/merchant
-      // (UserController#createMerchant). It expects plain JSON matching
-      // UserRegistrationModel — NOT the encrypted payload /generate-token needs.
-      // const res = await fetch(`${API_BASE}/user/merchant`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     userId: form.email,           // backend uses userId as the login/email field
-      //     fullName: form.name,
-      //     contactNumber: form.contactNumber.trim(),
-      //     password: form.password,
-      //   }),
-      // });
-
-
-        const res = await fetch(`${API_BASE}/user/merchant`, {
-          method: "POST",
-          headers: {
-          "Content-Type": "application/json",
-          "ZIPAPIKEY": ZIPAPIKEY_VALUE, // nonce.token.encryptedMerchantId — see notes below
-        },
-        body: JSON.stringify({
+      const body = await merchantApi.createMerchant(
+        {
           userId: form.email,
           fullName: form.name,
           contactNumber: form.contactNumber.trim(),
           password: form.password,
-      }),
-    });
+        },
+        { headers: getApiKeyHeaders(), auth: false }
+      );
 
-      const body = await safeJson(res);
-
-      if (!res.ok || body?.status === "fail" || body?.success === false) {
-        throw new Error(body?.message || `Signup failed (${res.status})`);
+      if (body?.status === "fail" || body?.success === false) {
+        throw new Error(body?.message || "Signup failed");
       }
 
-      // This endpoint creates the account but does not log the user in —
-      // there's no token in the response, so send them to /login instead.
+      // Account created — no token returned; send user to login.
       setStatus("success");
     } catch (err) {
       setStatus("idle");
-      setErrorMsg(err.message || "Something went wrong. Please try again.");
-    }
-  }
-
-  async function safeJson(res) {
-    try {
-      return await res.json();
-    } catch {
-      return null;
+      setErrorMsg(err.message || err.data?.message || "Something went wrong. Please try again.");
     }
   }
 

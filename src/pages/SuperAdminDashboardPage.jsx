@@ -17,14 +17,14 @@ import {
   CartesianGrid
 } from 'recharts';
 import { ShieldCheck, RefreshCw, TrendingUp, DollarSign, Award, Layers } from 'lucide-react';
+import { getSuperAdminStats } from '../api';
 
 export default function SuperAdminDashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/stats/super-admin')
-      .then((res) => res.json())
+    getSuperAdminStats()
       .then((resData) => {
         setData(resData);
         setLoading(false);

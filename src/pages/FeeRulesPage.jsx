@@ -2,6 +2,33 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import GradientButton from '../components/common/GradientButton';
 import { Percent, ShieldAlert, Plus, RefreshCw, Layers } from 'lucide-react';
+import { feeRuleApi, unwrapList } from '../api';
+
+function normalizeFeeRule(f, idx) {
+  return {
+    ruleId: f.ruleId || f.id || f.feeRuleId || `FEE-${idx}`,
+    merchantId: f.merchantId || f.userId || '—',
+    txnType: f.txnType || f.transactionType || f.type || '—',
+    feeValue: f.feeValue ?? f.feePercent ?? f.fee ?? 0,
+    commissionPercent: f.commissionPercent ?? f.commission ?? 0,
+    capMin: f.capMin ?? f.minCap ?? f.minAmount ?? 0,
+    capMax: f.capMax ?? f.maxCap ?? f.maxAmount ?? 0,
+    active: f.active !== false && String(f.status || '').toLowerCase() !== 'inactive',
+  };
+}
+
+function normalizeLimitRule(l, idx) {
+  return {
+    limitId: l.limitId || l.ruleId || l.id || l.limitRuleId || `LIM-${idx}`,
+    merchantId: l.merchantId || l.userId || '—',
+    txnType: l.txnType || l.transactionType || l.type || '—',
+    perTxnMin: l.perTxnMin ?? l.minAmount ?? l.ticketMin ?? 0,
+    perTxnMax: l.perTxnMax ?? l.maxAmount ?? l.ticketMax ?? 0,
+    dailyCap: l.dailyCap ?? l.dailyLimit ?? 0,
+    monthlyCap: l.monthlyCap ?? l.monthlyLimit ?? 0,
+    active: l.active !== false && String(l.status || '').toLowerCase() !== 'inactive',
+  };
+}
 
 export default function FeeRulesPage() {
   const [feeRules, setFeeRules] = useState([]);
@@ -10,18 +37,19 @@ export default function FeeRulesPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/FeeLimitRule/GetAllFeeRules', { method: 'POST' }).then((r) => r.json()),
-      fetch('/FeeLimitRule/GetLimitRules', { method: 'POST' }).then((r) => r.json())
+      feeRuleApi.getAllFeeRules({}),
+      feeRuleApi.getAllLimitRules({}),
     ])
       .then(([fData, lData]) => {
-        setFeeRules(fData);
-        setLimitRules(lData);
-        setLoading(false);
+        setFeeRules(unwrapList(fData).map(normalizeFeeRule));
+        setLimitRules(unwrapList(lData).map(normalizeLimitRule));
       })
       .catch((err) => {
         console.error(err);
-        setLoading(false);
-      });
+        setFeeRules([]);
+        setLimitRules([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

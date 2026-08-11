@@ -123,8 +123,8 @@ export default function LoginPage() {
         {
           auth_token: token ? "(set)" : "(empty)",
           user_role: userRole,
-          user_email: email,
-          user_fullName: fullName,
+          email,
+          fullName,
         }
       );
 

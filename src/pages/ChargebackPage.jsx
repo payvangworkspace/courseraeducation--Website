@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import StatCard from '../components/common/StatCard';
 import { AlertOctagon, Download, Filter, RefreshCw } from 'lucide-react';
+import { merchantApi, unwrapList } from '../api';
 
 export default function ChargebackPage() {
   const [data, setData] = useState({ stats: null, items: [] });
@@ -13,9 +14,17 @@ export default function ChargebackPage() {
   const [currency, setCurrency] = useState('INR');
 
   useEffect(() => {
-    fetch('/api/merchants')
-      .then((res) => res.json())
-      .then((m) => setMerchantsList(m));
+    merchantApi
+      .getAllMerchantList({ start: 0, length: 1000 })
+      .then((res) => {
+        setMerchantsList(
+          unwrapList(res).map((m) => ({
+            id: m.userId || m.id || m.merchantId,
+            name: m.fullName || m.name || m.businessName || m.userId || m.id,
+          }))
+        );
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   const fetchChargebacks = () => {

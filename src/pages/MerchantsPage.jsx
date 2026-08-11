@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { Search, Plus, ChevronLeft, ChevronRight, RefreshCw, Building2, Phone, Calendar, User } from 'lucide-react';
+import { merchantApi, unwrapList } from '../api';
+
+function normalizeMerchant(m) {
+  const id = m.userId || m.id || m.merchantId || m.email || '';
+  const name = m.fullName || m.name || m.businessName || id || '—';
+  return {
+    id,
+    name,
+    contactNumber: m.contactNumber || m.phone || m.mobile || '—',
+    username: m.userId || m.username || m.email || '—',
+    businessName: m.businessName || m.companyName || m.business || '—',
+    registrationDate: m.registrationDate || m.createdOn || m.createdDate || m.createdAt || '—',
+  };
+}
 
 export default function MerchantsPage() {
   const navigate = useNavigate();
@@ -11,18 +25,27 @@ export default function MerchantsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const fetchMerchants = (query = '') => {
+  const fetchMerchants = async (query = '') => {
     setLoading(true);
-    fetch(`/api/merchants?q=${encodeURIComponent(query)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setMerchants(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching merchants:', err);
-        setLoading(false);
-      });
+    try {
+      const res = await merchantApi.getAllMerchantList({ start: 0, length: 1000, search: query });
+      let list = unwrapList(res).map(normalizeMerchant);
+      const q = query.trim().toLowerCase();
+      if (q) {
+        list = list.filter((m) =>
+          [m.name, m.username, m.businessName, m.contactNumber, m.id]
+            .join(' ')
+            .toLowerCase()
+            .includes(q)
+        );
+      }
+      setMerchants(list);
+    } catch (err) {
+      console.error('Error fetching merchants:', err);
+      setMerchants([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

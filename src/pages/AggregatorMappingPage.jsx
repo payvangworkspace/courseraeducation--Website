@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { Layers, Plus, RefreshCw, ArrowRightLeft } from 'lucide-react';
+import { apiMasterApi, unwrapList } from '../api';
+
+function normalizeMapping(m, idx) {
+  return {
+    id: m.id || m.mappingId || idx,
+    merchantId: m.merchantId || m.userId || '—',
+    aggregatorCode: m.aggregatorCode || m.acquirerCode || m.code || '—',
+    environment: m.environment || m.env || '—',
+    txnType: m.txnType || m.transactionType || m.type || '—',
+    priority: m.priority ?? m.priorityOrder ?? idx + 1,
+    active: m.active !== false && String(m.status || '').toLowerCase() !== 'inactive',
+  };
+}
 
 export default function AggregatorMappingPage() {
   const [mappings, setMappings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/apimasters/GetMerchantAggregatorMapping/ALL')
-      .then((res) => res.json())
-      .then((data) => {
-        setMappings(data);
-        setLoading(false);
-      });
+    apiMasterApi
+      .getMerchantAggregatorMapping('ALL')
+      .then((data) => setMappings(unwrapList(data).map(normalizeMapping)))
+      .catch((err) => {
+        console.error(err);
+        setMappings([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

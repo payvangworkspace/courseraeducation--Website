@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import GradientButton from '../components/common/GradientButton';
 import { ArrowLeft, CheckCircle2, AlertCircle, Building, Lock } from 'lucide-react';
+import { merchantApi } from '../api';
+import { getApiKeyHeaders } from '../api/client/apiKey';
 
 export default function AddMerchantPage() {
   const navigate = useNavigate();
@@ -59,36 +61,34 @@ export default function AddMerchantPage() {
 
     setSubmitting(true);
 
-    fetch('/api/merchants', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: formData.name,
-        username: formData.username,
-        businessName: formData.businessName,
-        contactNumber: formData.phoneNumber,
-        businessType: formData.businessType,
-        subIndustry: formData.subIndustry,
-        panSSN: formData.panSSN,
-        gstVAT: formData.gstVAT,
-        website: formData.website,
-        password: formData.password
-      })
-    })
-      .then((res) => {
-        if (!res.ok) return res.json().then((err) => Promise.reject(err));
-        return res.json();
-      })
+    merchantApi
+      .createUserViaAdmin(
+        {
+          userId: formData.username,
+          fullName: formData.name,
+          contactNumber: formData.phoneNumber,
+          password: formData.password,
+          businessName: formData.businessName,
+          businessType: formData.businessType,
+          subIndustry: formData.subIndustry,
+          panSSN: formData.panSSN,
+          gstVAT: formData.gstVAT,
+          website: formData.website,
+        },
+        { headers: getApiKeyHeaders() }
+      )
       .then((newMerchant) => {
         setSubmitting(false);
-        setSuccessMsg(`Merchant "${newMerchant.name}" successfully created with ID ${newMerchant.id}! Redirecting...`);
+        const displayName = newMerchant?.fullName || newMerchant?.name || formData.name;
+        const displayId = newMerchant?.userId || newMerchant?.id || formData.username;
+        setSuccessMsg(`Merchant "${displayName}" successfully created with ID ${displayId}! Redirecting...`);
         setTimeout(() => {
           navigate('/home/user-management/merchants');
         }, 1500);
       })
       .catch((err) => {
         setSubmitting(false);
-        setErrors({ server: err.error || 'Failed to create merchant.' });
+        setErrors({ server: err.message || err.data?.message || err.error || 'Failed to create merchant.' });
       });
   };
 

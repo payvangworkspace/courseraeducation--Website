@@ -2,6 +2,49 @@ import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import StatCard from '../components/common/StatCard';
 import { CreditCard, Download, Filter, RefreshCw, AlertCircle, Eye, CheckCircle2, XCircle, Clock, X } from 'lucide-react';
+import { merchantApi, paymentApi, unwrapList } from '../api';
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  const n = Number(String(value).replace(/[₹,\s]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeStatus(raw) {
+  const s = String(raw || '').toLowerCase();
+  if (['success', 'successful', 'captured', 'paid', 'completed', 'settled'].includes(s)) return 'Success';
+  if (['failed', 'fail', 'declined', 'error'].includes(s)) return 'Failed';
+  return 'Pending';
+}
+
+function normalizeTxn(t) {
+  return {
+    id: t.txnId || t.transactionId || t.orderId || t.id || '—',
+    merchantId: t.merchantId || t.userId || '—',
+    merchantName: t.merchantName || t.fullName || t.businessName || '—',
+    status: normalizeStatus(t.status || t.txnStatus),
+    customerName: t.customerName || t.name || '—',
+    customerEmail: t.customerEmail || t.email || '—',
+    txnAmt: toNumber(t.txnAmt ?? t.amount ?? t.txnAmount ?? t.totalAmount),
+    currency: t.currency || t.currencyCode || 'INR',
+    transactionType: t.transactionType || t.txnType || t.type || 'PAYIN',
+    createdOn: t.createdOn || t.createdDate || t.date || t.txnDate || '—',
+    raw: t,
+  };
+}
+
+function buildStats(items) {
+  const bucket = () => ({ count: 0, amount: 0 });
+  const stats = { total: bucket(), success: bucket(), failed: bucket(), pending: bucket() };
+  items.forEach((item) => {
+    stats.total.count += 1;
+    stats.total.amount += item.txnAmt;
+    const key = item.status === 'Success' ? 'success' : item.status === 'Failed' ? 'failed' : 'pending';
+    stats[key].count += 1;
+    stats[key].amount += item.txnAmt;
+  });
+  return stats;
+}
 
 export default function TransactionsPage() {
   const [data, setData] = useState({ stats: null, items: [] });
@@ -18,30 +61,65 @@ export default function TransactionsPage() {
 
   // Fetch Merchants for Filter
   useEffect(() => {
-    fetch('/api/merchants')
-      .then((res) => res.json())
-      .then((mList) => setMerchantsList(mList))
+    merchantApi
+      .getAllMerchantList({ start: 0, length: 1000 })
+      .then((res) => {
+        setMerchantsList(
+          unwrapList(res).map((m) => ({
+            id: m.userId || m.id || m.merchantId,
+            name: m.fullName || m.name || m.businessName || m.userId || m.id,
+          }))
+        );
+      })
       .catch((err) => console.error(err));
   }, []);
 
-  const fetchTransactions = () => {
+  const fetchTransactions = async () => {
     setLoading(true);
-    const query = new URLSearchParams({ merchant, currency, status, dateFrom, dateTo }).toString();
-    fetch(`/api/transactions?${query}`)
-      .then((res) => res.json())
-      .then((resData) => {
-        setData(resData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching transactions:', err);
-        setLoading(false);
+    try {
+      const res = await paymentApi.getAllTransactions({
+        start: 0,
+        length: 1000,
+        merchantId: merchant === 'ALL' ? undefined : merchant,
+        currency: currency === 'ALL' ? undefined : currency,
+        status: status === 'ALL' ? undefined : status,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
       });
+
+      let items = unwrapList(res).map(normalizeTxn);
+
+      if (merchant !== 'ALL') items = items.filter((t) => String(t.merchantId) === String(merchant));
+      if (currency !== 'ALL') items = items.filter((t) => String(t.currency).toUpperCase() === currency);
+      if (status !== 'ALL') items = items.filter((t) => t.status === status);
+      if (dateFrom) {
+        const from = new Date(dateFrom);
+        items = items.filter((t) => {
+          const d = new Date(t.createdOn);
+          return Number.isNaN(d.getTime()) || d >= from;
+        });
+      }
+      if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        items = items.filter((t) => {
+          const d = new Date(t.createdOn);
+          return Number.isNaN(d.getTime()) || d <= to;
+        });
+      }
+
+      setData({ stats: buildStats(items), items });
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+      setData({ stats: buildStats([]), items: [] });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchTransactions();
-  }, [merchant, currency, status]);
+  }, [merchant, currency, status, dateFrom, dateTo]);
 
   // Export to CSV Function
   const exportToCSV = () => {

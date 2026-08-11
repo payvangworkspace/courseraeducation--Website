@@ -49,6 +49,12 @@ export function saveAuthToken(
     store.setItem("verified", String(verified ?? ""));
     store.setItem("payoutEnabledViaApp", String(payoutEnabledViaApp ?? ""));
 
+    // Drop legacy duplicate keys if present
+    ["user_email", "user_fullName", "user_verified"].forEach((key) => {
+      store.removeItem(key);
+      clear.removeItem(key);
+    });
+
     clear.removeItem(TOKEN_KEY);
     clear.removeItem(ROLE_KEY);
     clear.removeItem("email");
@@ -68,10 +74,14 @@ export function clearAuthToken() {
   [
     TOKEN_KEY,
     ROLE_KEY,
+    "email",
+    "fullName",
+    "verified",
+    "payoutEnabledViaApp",
+    // legacy keys (cleanup only)
     "user_email",
     "user_fullName",
     "user_verified",
-    "payoutEnabledViaApp",
   ].forEach((key) => {
     localStorage.removeItem(key);
     sessionStorage.removeItem(key);
@@ -82,15 +92,29 @@ export function clearAuthToken() {
 export function unwrapList(data) {
   if (Array.isArray(data)) return data;
   if (!data || typeof data !== "object") return [];
-  return (
-    data.data ||
-    data.content ||
-    data.items ||
-    data.list ||
-    data.merchants ||
-    data.result ||
-    []
-  );
+
+  const candidates = [
+    data.data,
+    data.content,
+    data.items,
+    data.list,
+    data.merchants,
+    data.result,
+    data.transactions,
+    data.wallets,
+    data.records,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+    if (candidate && typeof candidate === "object") {
+      const nested =
+        candidate.content || candidate.items || candidate.list || candidate.data;
+      if (Array.isArray(nested)) return nested;
+    }
+  }
+
+  return [];
 }
 
 /**
