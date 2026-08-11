@@ -529,7 +529,7 @@ export default function CoursesPage() {
                           gap: "4px"
                         }}
                       >
-                        Register Now <ArrowRight style={{ width: 14, height: 14 }} />
+                        Add to Cart <ArrowRight style={{ width: 14, height: 14 }} />
                       </button>
                     </div>
                   </div>
@@ -653,7 +653,7 @@ export default function CoursesPage() {
                     gap: "8px"
                   }}
                 >
-                  Register Now <ArrowRight style={{ width: 16, height: 16 }} />
+                  Add to Cart <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
               </div>
             </div>
