@@ -22,6 +22,8 @@ import GetPaymentLinkPage from "./components/GetPaymentLinkPage";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentGatewayForm from "./components/PaymentGatewayForm";
 import ReturnRefundPolicyPage from "./components/ReturnRefundPolicyPage";
+import CancellationPolicyPage from "./components/CancellationPolicyPage";
+import TermsAndConditionsPage from "./components/TermsAndConditionsPage";
 import CoursesPage from "./components/CoursesPage";
 
 
@@ -91,7 +93,11 @@ export default function App() {
         {/* Legal & Policy Routes */}
         <Route path="/refund-policy" element={<ReturnRefundPolicyPage />} />
         <Route path="/return-policy" element={<ReturnRefundPolicyPage />} />
-        <Route path="/cancellation-policy" element={<ReturnRefundPolicyPage />} />
+        <Route path="/cancellation-policy" element={<CancellationPolicyPage />} />
+        <Route path="/cancellation" element={<CancellationPolicyPage />} />
+        <Route path="/terms" element={<TermsAndConditionsPage />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+        <Route path="/terms-conditions" element={<TermsAndConditionsPage />} />
         <Route path="/return-and-refund-policy" element={<ReturnRefundPolicyPage />} />
 
 
