@@ -1492,10 +1492,11 @@ export default function CoursesPage() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("price-asc"); // Default: Minimum price first!
   const [activeCourseModal, setActiveCourseModal] = useState(null);
   const [contactOpen, setContactOpen] = useState(false);
 
-  // Filter courses based on category and search query
+  // Filter & sort courses based on category, search query, and price (minimum price first)
   const filteredCourses = COURSES_DATA.filter((course) => {
     const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
     const matchesSearch =
@@ -1503,6 +1504,11 @@ export default function CoursesPage() {
       course.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === "price-asc") return a.priceUSD - b.priceUSD;
+    if (sortBy === "price-desc") return b.priceUSD - a.priceUSD;
+    if (sortBy === "rating") return b.rating - a.rating;
+    return 0;
   });
 
   const handleRegisterCourse = (course) => {
@@ -1767,12 +1773,38 @@ export default function CoursesPage() {
         </div>
 
         {/* RESULTS HEADER */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
-            Available Courses <span style={{ fontSize: "14px", fontWeight: 600, color: "#9E8984" }}>({filteredCourses.length})</span>
-          </h2>
-          <div style={{ fontSize: "13px", color: "#6b5a56", fontWeight: 600 }}>
-            Showing {selectedCategory} track
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "28px" }}>
+          <div>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
+              Available Courses <span style={{ fontSize: "14px", fontWeight: 600, color: "#9E8984" }}>({filteredCourses.length})</span>
+            </h2>
+            <div style={{ fontSize: "12.5px", color: "#6b5a56", fontWeight: 500, marginTop: "2px" }}>
+              Showing {selectedCategory} tracks • Sorted by Minimum Price First
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "13px", color: "#6b5a56", fontWeight: 700 }}>Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1.5px solid rgba(122, 31, 43, 0.2)",
+                backgroundColor: "#ffffff",
+                color: "#7A1F2B",
+                fontSize: "13.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+                outline: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+              }}
+            >
+              <option value="price-asc">Price: Low to High ($399 → $1,949)</option>
+              <option value="price-desc">Price: High to Low ($1,949 → $399)</option>
+              <option value="rating">Highest Rated ⭐</option>
+            </select>
           </div>
         </div>
 
