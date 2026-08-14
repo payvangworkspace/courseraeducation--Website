@@ -11,9 +11,27 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { paymentApi } from "../api";
+import { generateMerchantHash } from "../utils/hashUtil";
 
 function buildCheckoutPath(orderId) {
   return `/checkout/${encodeURIComponent(orderId.trim())}`;
+}
+
+function makeOrderId() {
+  return `ORD${Date.now().toString().slice(-10)}`;
+}
+
+/** PayVang merchant credentials — match createOrder curl headers */
+function getPayinMerchantConfig() {
+  return {
+    merchantAppId:
+      import.meta.env.VITE_MERCHANT_APP_ID || "ZEpNIaTHy20260712080032636",
+    merchantSecretId:
+      import.meta.env.VITE_MERCHANT_SECRET_ID ||
+      "NCb+aCsOPig2sbMDbjhOP4xnd2ZPuzjt1f6s6o2nB4g=",
+    merchantId:
+      import.meta.env.VITE_MERCHANT_ID || "devendra@payvang.com",
+  };
 }
 
 export default function PaymentsLinksPage() {
@@ -49,64 +67,113 @@ export default function PaymentsLinksPage() {
   async function handleGetPaymentLink(e) {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
+    setCreatedLink(null);
 
-    let orderId = form.orderId.trim();
+    const { merchantAppId, merchantSecretId, merchantId } = getPayinMerchantConfig();
+    const orderId = form.orderId.trim() || makeOrderId();
+    const payableAmount = String(form.amount || "100");
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://courseraeducation.com";
 
-    // If no orderId yet, create one via payin API (falls back to local id)
-    if (!orderId) {
-      setSubmitting(true);
-      try {
-        const payload = {
-          payableAmount: Number(form.amount) || 0,
-          currencyCode: form.currency || "USD",
-          paymentRemarks: form.title || "Payment Link",
-          emailId: form.emailId || undefined,
-          firstname: form.firstname || undefined,
-          return_url: `${window.location.origin}/orderstatus`,
-          callback_url: `${window.location.origin}/orderstatus`,
-        };
-
-        const res = await paymentApi.createOrder(payload);
-        orderId =
-          res?.orderId ||
-          res?.data?.orderId ||
-          res?.data?.order_id ||
-          res?.order_id ||
-          "";
-
-        if (!orderId) {
-          // Local fallback so checkout flow still works for testing
-          orderId = `ORD${Date.now().toString().slice(-10)}`;
-        }
-
-        setForm((prev) => ({ ...prev, orderId }));
-      } catch (err) {
-        // Still allow opening checkout with a generated test order id
-        orderId = `ORD${Date.now().toString().slice(-10)}`;
-        setForm((prev) => ({ ...prev, orderId }));
-        console.warn("createOrder failed, using generated orderId:", err?.message);
-      } finally {
-        setSubmitting(false);
-      }
-    }
-
-    const path = buildCheckoutPath(orderId);
-    const url = `${window.location.origin}${path}`;
-
-    setCreatedLink({
+    const merchantHash = generateMerchantHash(
+      merchantSecretId,
+      merchantId,
       orderId,
-      path,
-      url,
-      amount: form.amount,
-      currency: form.currency,
-      title: form.title,
-    });
+      payableAmount
+    );
+
+    // Same shape as:
+    // POST /payins/createOrder with merchantAppId / merchantSecretId / merchantHash
+    const payload = {
+      appid: merchantAppId,
+      callback_url:
+        import.meta.env.VITE_PAYIN_CALLBACK_URL ||
+        "https://api.courseraeducation.com/payinwebhook/afsReturn",
+      cancel_url:
+        import.meta.env.VITE_PAYIN_CANCEL_URL ||
+        "https://webhook.site/929ae74c-d41c-460f-8ae1-c43882b33e7a",
+      countryCode: form.currency === "AED" ? "UAE" : form.currency === "INR" ? "IN" : "UAE",
+      currencyCode: form.currency || "USD",
+      emailId: form.emailId.trim() || "dev@gmail.com",
+      firstname: form.firstname.trim() || "Customer",
+      lastname: "User",
+      merchantId,
+      mobileNo: "9716184021",
+      orderId,
+      payableAmount,
+      paymentMode: "ONLINE",
+      paymentRemarks: form.title.trim() || "Test payment",
+      return_url:
+        import.meta.env.VITE_PAYIN_RETURN_URL ||
+        `${origin}/orderstatus`,
+      txnType: "PAYIN",
+      udf1: "CustomField1",
+      udf2: "CustomField2",
+      udf3: "CustomField3",
+      udf4: "CustomField4",
+      udf5: "CustomField5",
+      vpaId: "9716184020@ptyes",
+    };
+
+    try {
+      const res = await paymentApi.createOrder(payload, {
+        auth: false,
+        // Send exact curl header names only (avoid camelCase + lowercase duplicates)
+        includePayVangHeaders: false,
+        headers: {
+          merchantAppId,
+          merchantSecretId,
+          merchantHash,
+        },
+      });
+
+      const createdOrderId =
+        res?.orderId ||
+        res?.data?.orderId ||
+        res?.data?.order_id ||
+        res?.order_id ||
+        orderId;
+
+      const paymentUrl =
+        res?.paymentUrl ||
+        res?.data?.paymentUrl ||
+        res?.checkoutUrl ||
+        res?.data?.checkoutUrl ||
+        "";
+
+      setForm((prev) => ({ ...prev, orderId: createdOrderId }));
+
+      const path = buildCheckoutPath(createdOrderId);
+      const url =
+        paymentUrl ||
+        `${typeof window !== "undefined" ? window.location.origin : ""}${path}`;
+
+      setCreatedLink({
+        orderId: createdOrderId,
+        path,
+        url,
+        amount: form.amount,
+        currency: form.currency,
+        title: form.title,
+        apiResponse: res,
+      });
+    } catch (err) {
+      console.error("createOrder failed:", err);
+      setError(
+        err?.message ||
+          err?.data?.message ||
+          err?.data?.error ||
+          "Failed to create payment order. Check merchant credentials and API base URL."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function openCheckout(orderId) {
     const id = (orderId || form.orderId || createdLink?.orderId || "").trim();
     if (!id) {
-      setError("Enter or generate an Order ID first.");
+      setError("Create a payment link first (Get Payment Link).");
       return;
     }
     navigate(buildCheckoutPath(id));
@@ -132,7 +199,6 @@ export default function PaymentsLinksPage() {
           gap: "24px",
         }}
       >
-        {/* LEFT: Get Payment Link form */}
         <div
           style={{
             backgroundColor: "#ffffff",
@@ -175,8 +241,8 @@ export default function PaymentsLinksPage() {
             Generate checkout link
           </h3>
           <p style={{ margin: "0 0 24px 0", fontSize: "13px", color: "#6b5a56" }}>
-            Enter an existing Order ID, or leave it blank to create one. Then open
-            the checkout page to collect card payment.
+            Calls <code style={{ color: "#7A1F2B" }}>POST /payins/createOrder</code> with
+            merchantAppId, merchantSecretId, and merchantHash — same as your curl.
           </p>
 
           <form onSubmit={handleGetPaymentLink} style={{ display: "grid", gap: "16px" }}>
@@ -184,7 +250,7 @@ export default function PaymentsLinksPage() {
               <label style={labelStyle}>Order ID</label>
               <input
                 type="text"
-                placeholder="e.g. ORD0805269912 (optional)"
+                placeholder="e.g. ORD0805269915 (auto if empty)"
                 value={form.orderId}
                 onChange={(e) => updateField("orderId", e.target.value)}
                 style={inputStyle}
@@ -285,7 +351,6 @@ export default function PaymentsLinksPage() {
           </form>
         </div>
 
-        {/* RIGHT: Preview / result */}
         <div
           style={{
             background:
