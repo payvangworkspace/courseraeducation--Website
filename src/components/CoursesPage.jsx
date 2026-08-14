@@ -932,6 +932,422 @@ const COURSES_DATA = [
       { title: "Module 5: Defining AI Quality Metrics & SLAs", duration: "3 Lessons · 2.0 hrs" },
       { title: "Module 6: Capstone: AI Product Strategy & Pitch Deck", duration: "2 Lessons · 3.5 hrs" }
     ]
+  },
+  {
+    id: "python-ai-data-science",
+    title: "Python for AI & Data Science Fundamentals",
+    tagline: "Master Python NumPy, Pandas, Matplotlib & PyTorch basics for AI engineering.",
+    category: "ML & Deep Learning",
+    badge: "Starter",
+    badgeColor: "#16A34A",
+    priceUSD: 399,
+    priceAED: 1464,
+    rating: 4.85,
+    reviewsCount: 420,
+    studentsCount: 1890,
+    duration: "3 Weeks",
+    modulesCount: 5,
+    level: "Beginner",
+    instructor: "Priya Patel",
+    instructorRole: "Data Science Lead",
+    icon: "🐍",
+    overview: "A hands-on foundational course in Python programming tailored specifically for machine learning and AI developers. Learn matrix operations with NumPy, data manipulation with Pandas, and PyTorch tensor operations.",
+    whatYouWillLearn: [
+      "Master NumPy array indexing, vectorization & matrix algebra",
+      "Clean, transform & aggregate structured datasets with Pandas",
+      "Visualize model metrics & data distributions with Matplotlib & Seaborn",
+      "Understand PyTorch tensor creation, GPU acceleration & autograd",
+      "Write modular Python code for data ingestion pipelines"
+    ],
+    curriculum: [
+      { title: "Module 1: Python Fundamentals & Data Structures for AI", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Matrix Computing & Vectorization with NumPy", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Data Wrangling & Manipulation with Pandas", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Data Visualization & Exploratory Analytics", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 5: Capstone: End-to-End Data Preprocessing Engine", duration: "2 Lessons · 3.0 hrs" }
+    ]
+  },
+  {
+    id: "git-github-mlops-cicd",
+    title: "Git, GitHub Actions & MLOps CI/CD Essentials",
+    tagline: "Automate code linting, model testing & deployment pipelines with GitHub Actions.",
+    category: "Governance & Safety",
+    badge: "Practical",
+    badgeColor: "#2563EB",
+    priceUSD: 449,
+    priceAED: 1648,
+    rating: 4.88,
+    reviewsCount: 310,
+    studentsCount: 1120,
+    duration: "3 Weeks",
+    modulesCount: 5,
+    level: "Beginner to Intermediate",
+    instructor: "Vikram Rao",
+    instructorRole: "DevOps & MLOps Specialist",
+    icon: "⚙️",
+    overview: "Learn modern DevOps and CI/CD workflow automation for machine learning projects. Master Git branching strategies, automated code formatting with Black/Flake8, PyTest unit testing, and GitHub Actions integration.",
+    whatYouWillLearn: [
+      "Master Git rebase, cherry-pick & pull-request code reviews",
+      "Automate code linting & static analysis with Flake8 & Ruff",
+      "Write unit & integration tests for ML pipelines using PyTest",
+      "Build custom GitHub Actions workflows for automated testing",
+      "Deploy Docker containers automatically upon git push"
+    ],
+    curriculum: [
+      { title: "Module 1: Advanced Git Version Control for Engineering Teams", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Code Quality, Linting & Formatting Standards", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 3: Unit Testing ML Code with PyTest", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 4: GitHub Actions CI/CD Pipeline Automation", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 5: Capstone: Automated CI/CD Testing Pipeline", duration: "2 Lessons · 3.0 hrs" }
+    ]
+  },
+  {
+    id: "fastapi-ai-microservices",
+    title: "FastAPI & Microservices for AI Applications",
+    tagline: "Build high-speed asynchronous REST APIs for ML models & LLM streaming.",
+    category: "Agentic AI",
+    badge: "Popular",
+    badgeColor: "#7A1F2B",
+    priceUSD: 499,
+    priceAED: 1831,
+    rating: 4.92,
+    reviewsCount: 380,
+    studentsCount: 1450,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate",
+    instructor: "David Miller",
+    instructorRole: "Principal Backend Engineer",
+    icon: "⚡",
+    overview: "Learn to build production-grade, asynchronous REST APIs for serving machine learning models and streaming LLM responses using FastAPI, Pydantic, and Uvicorn.",
+    whatYouWillLearn: [
+      "Build asynchronous REST endpoints with FastAPI & Uvicorn",
+      "Enforce strict input/output validation using Pydantic V2",
+      "Implement Server-Sent Events (SSE) for streaming LLM tokens",
+      "Manage background worker tasks & async database queries",
+      "Secure endpoints with JWT authentication & rate limiting"
+    ],
+    curriculum: [
+      { title: "Module 1: FastAPI Architecture & Async Request Loops", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Pydantic V2 Schema Validation & Serialization", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Streaming Responses & Server-Sent Events (SSE)", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Authentication, Middleware & Rate Limiting", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: Microservice Containerization & OpenAPI Docs", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 6: Capstone: High-Throughput AI Inference Microservice", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "docker-containers-data-science",
+    title: "Docker & Containerization for Data Scientists",
+    tagline: "Containerize Python ML environments, GPU drivers & vLLM inference nodes.",
+    category: "Governance & Safety",
+    badge: "Essential",
+    badgeColor: "#16A34A",
+    priceUSD: 549,
+    priceAED: 2015,
+    rating: 4.87,
+    reviewsCount: 290,
+    studentsCount: 980,
+    duration: "3 Weeks",
+    modulesCount: 5,
+    level: "Beginner to Intermediate",
+    instructor: "Elena Rostova",
+    instructorRole: "Infrastructure Engineer",
+    icon: "🐳",
+    overview: "Master containerizing data science applications and LLM microservices. Learn Dockerfile multi-stage builds, Docker Compose multi-container orchestrations, and NVIDIA CUDA GPU container runtimes.",
+    whatYouWillLearn: [
+      "Write lightweight, multi-stage Dockerfiles for Python apps",
+      "Optimize Docker layer caching & minimize image file size",
+      "Orchestrate multi-container stacks with Docker Compose",
+      "Pass NVIDIA GPU access into Docker containers using nvidia-docker",
+      "Mount persistent storage volumes & environment secrets"
+    ],
+    curriculum: [
+      { title: "Module 1: Docker Core Principles & Container Lifecycle", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Writing Efficient Multi-Stage Dockerfiles", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Docker Compose for Multi-Service Architectures", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: GPU Acceleration inside Docker Containers", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: Capstone: Production Containerized AI App Stack", duration: "2 Lessons · 3.0 hrs" }
+    ]
+  },
+  {
+    id: "sql-data-engineering-llms",
+    title: "SQL & Data Engineering for LLM Pipelines",
+    tagline: "PostgreSQL, pgvector, DuckDB & SQL data transformations for RAG context.",
+    category: "RAG & VectorDB",
+    badge: "Starter",
+    badgeColor: "#C99A3D",
+    priceUSD: 429,
+    priceAED: 1574,
+    rating: 4.86,
+    reviewsCount: 260,
+    studentsCount: 840,
+    duration: "3 Weeks",
+    modulesCount: 5,
+    level: "Beginner",
+    instructor: "Sarah Chen",
+    instructorRole: "Data Engineer",
+    icon: "🗄️",
+    overview: "Learn essential SQL query design and data engineering techniques for powering RAG pipelines. Master relational joins, pgvector extension for PostgreSQL, and high-speed in-memory analytical queries with DuckDB.",
+    whatYouWillLearn: [
+      "Write complex SQL queries (CTEs, Window Functions, Joins)",
+      "Store & index vector embeddings inside PostgreSQL using pgvector",
+      "Query millions of rows in-memory using DuckDB",
+      "Extract & transform unstructured data into relational tables",
+      "Optimize query performance with indexing & partitioning"
+    ],
+    curriculum: [
+      { title: "Module 1: Relational SQL Fundamentals & Advanced CTEs", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: PostgreSQL pgvector Extension & Similarity Queries", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 3: Fast In-Memory Analytics with DuckDB", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 4: Data Pipeline Engineering for RAG Ingestion", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 5: Capstone: Hybrid Relational + Vector SQL Database", duration: "2 Lessons · 3.0 hrs" }
+    ]
+  },
+  {
+    id: "openai-api-function-calling",
+    title: "OpenAI API & Function Calling Mastery",
+    tagline: "Master GPT-4o JSON mode, function calling, assistant APIs, and structured outputs.",
+    category: "Prompt Engineering",
+    badge: "Hot",
+    badgeColor: "#DC2626",
+    priceUSD: 599,
+    priceAED: 2198,
+    rating: 4.94,
+    reviewsCount: 510,
+    studentsCount: 2100,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate",
+    instructor: "Alex Morgan",
+    instructorRole: "AI Solutions Lead",
+    icon: "🤖",
+    overview: "Master the official OpenAI Python API SDK. Learn structured JSON outputs, tools & function calling, OpenAI Assistants API v2, fine-tuning API, and streaming token handlers.",
+    whatYouWillLearn: [
+      "Configure OpenAI SDK client, rate limits & exponential retries",
+      "Enforce strict JSON schema outputs with response_format",
+      "Define custom tool functions for model tool-calling",
+      "Manage threads, runs & code interpreter with Assistants API v2",
+      "Stream token responses for real-time user interface updates"
+    ],
+    curriculum: [
+      { title: "Module 1: OpenAI SDK Setup & Chat Completion Mechanics", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Structured Outputs & JSON Schema Enforcement", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Function Calling & Tool Integration", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Assistants API v2, Threads & Code Interpreter", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 5: Token Streaming & Error Handling Patterns", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 6: Capstone: Autonomous OpenAI Function Calling Bot", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "streamlit-gradio-ai-apps",
+    title: "Streamlit & Gradio AI App Dashboards",
+    tagline: "Build interactive browser frontends for ML models & LLM prototypes in minutes.",
+    category: "Agentic AI",
+    badge: "Starter",
+    badgeColor: "#16A34A",
+    priceUSD: 479,
+    priceAED: 1758,
+    rating: 4.89,
+    reviewsCount: 340,
+    studentsCount: 1290,
+    duration: "3 Weeks",
+    modulesCount: 5,
+    level: "Beginner",
+    instructor: "Sophia Martinez",
+    instructorRole: "Frontend AI Developer",
+    icon: "🖼️",
+    overview: "Quickly convert Python ML scripts and LLM prompts into polished interactive web UI dashboards using Streamlit and Gradio for client demos and team prototypes.",
+    whatYouWillLearn: [
+      "Build reactive Streamlit layouts, widgets & state management",
+      "Create Gradio interfaces for audio, vision & text models",
+      "Embed chat UI components for conversational AI bots",
+      "Deploy Streamlit & Gradio apps to Streamlit Community Cloud / HuggingFace Spaces",
+      "Connect frontend dashboards to backend FastAPI microservices"
+    ],
+    curriculum: [
+      { title: "Module 1: Streamlit Layouts, Widgets & Session State", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Conversational Chat UI Components", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 3: Gradio Interface Building for Vision & Multimodal", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 4: Cloud Deployment to HuggingFace & Streamlit Cloud", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 5: Capstone: Production AI Prototype Dashboard", duration: "2 Lessons · 3.0 hrs" }
+    ]
+  },
+  {
+    id: "langchain-basics-memory",
+    title: "LangChain Basics & Memory Systems",
+    tagline: "LCEL syntax, prompt templates, buffer memory & vector store retrievers.",
+    category: "Agentic AI",
+    badge: "Popular",
+    badgeColor: "#7A1F2B",
+    priceUSD: 649,
+    priceAED: 2382,
+    rating: 4.91,
+    reviewsCount: 410,
+    studentsCount: 1620,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate",
+    instructor: "Sophia Martinez",
+    instructorRole: "Senior AI Solutions Architect",
+    icon: "🔗",
+    overview: "Master LangChain v0.2 core principles. Learn LangChain Expression Language (LCEL), ChatPromptTemplate design, ConversationBufferMemory, and retriever integration.",
+    whatYouWillLearn: [
+      "Construct composable chains using LCEL pipe operator syntax",
+      "Design dynamic ChatPromptTemplate & Few-Shot prompt templates",
+      "Implement conversation memory strategies (Window, Summary, Vector)",
+      "Connect vector store retrievers to question-answering chains",
+      "Trace and debug chains using LangSmith observability"
+    ],
+    curriculum: [
+      { title: "Module 1: LangChain Ecosystem & LCEL Syntax", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Prompt Templates & Input Parsers", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Memory Systems & Conversation Context", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Vector Store Integration & Document Retrievers", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: LangSmith Observability & Chain Debugging", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 6: Capstone: Conversational AI Knowledge Assistant", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "pinecone-qdrant-bootcamp",
+    title: "Pinecone & Qdrant VectorDB BootCamp",
+    tagline: "Vector indexing, distance metrics, metadata filtering & payload schemas.",
+    category: "RAG & VectorDB",
+    badge: "Essential",
+    badgeColor: "#16A34A",
+    priceUSD: 699,
+    priceAED: 2565,
+    rating: 4.90,
+    reviewsCount: 330,
+    studentsCount: 1050,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate",
+    instructor: "Sarah Chen",
+    instructorRole: "Vector DB Specialist",
+    icon: "🌲",
+    overview: "A comprehensive practical bootcamp on production vector databases. Master cloud vector indexing with Pinecone and self-hosted high-speed vector retrieval with Qdrant.",
+    whatYouWillLearn: [
+      "Configure Pinecone indexes, namespaces & serverless pod specs",
+      "Deploy Qdrant vector database via Docker & cloud API",
+      "Implement metadata filtering for fine-grained vector search",
+      "Perform batch vector upside operations & payload management",
+      "Compare cosine, dot-product, and euclidean distance metrics"
+    ],
+    curriculum: [
+      { title: "Module 1: Vector Search Mathematics & Similarity Metrics", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: Pinecone Cloud Serverless Vector Indexing", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 3: Qdrant Setup, Collections & Payload Schemas", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Advanced Metadata Filtering & Tenant Isolation", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: Batch Upserts, Deletions & Index Telemetry", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 6: Capstone: High-Speed Enterprise Vector Search Engine", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "llamaindex-document-parsing",
+    title: "LlamaIndex Document Parsing & Chunking",
+    tagline: "Parse complex PDFs, tables, markdown & unstructured docs into clean RAG nodes.",
+    category: "RAG & VectorDB",
+    badge: "Specialized",
+    badgeColor: "#C99A3D",
+    priceUSD: 749,
+    priceAED: 2749,
+    rating: 4.93,
+    reviewsCount: 280,
+    studentsCount: 920,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate to Advanced",
+    instructor: "Sarah Chen",
+    instructorRole: "Principal Data Scientist",
+    icon: "📄",
+    overview: "Master document ingestion and chunking mechanics using LlamaIndex. Learn LlamaParse for complex PDF financial tables, sentence splitter chunkers, node parsers, and metadata extractors.",
+    whatYouWillLearn: [
+      "Extract structured text from complex multi-page PDFs using LlamaParse",
+      "Configure SentenceSplitter & SemanticSplitter node parsers",
+      "Extract automatic metadata (summary, keywords, title) into nodes",
+      "Build SummaryIndex & VectorStoreIndex data structures",
+      "Evaluate chunking strategies using retrieval accuracy metrics"
+    ],
+    curriculum: [
+      { title: "Module 1: Document Readers & Unstructured Data Ingestion", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: LlamaParse Deep Dive: Table & PDF Extraction", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 3: Chunking Strategies: Fixed, Recursive & Semantic", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Metadata Extractors & Node Enrichment", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: Query Engine Building & Custom Prompt Overrides", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 6: Capstone: Multi-Document RAG Ingestion Pipeline", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "ml-model-evaluation-ab-testing",
+    title: "ML Model Evaluation, Metrics & AB Testing",
+    tagline: "Precision, recall, ROC-AUC, F1 score, confusion matrices & statistical A/B tests.",
+    category: "Governance & Safety",
+    badge: "Essential",
+    badgeColor: "#16A34A",
+    priceUSD: 799,
+    priceAED: 2932,
+    rating: 4.88,
+    reviewsCount: 230,
+    studentsCount: 790,
+    duration: "4 Weeks",
+    modulesCount: 6,
+    level: "Intermediate",
+    instructor: "Marcus Lee",
+    instructorRole: "Lead Data Scientist",
+    icon: "📊",
+    overview: "Learn rigorous statistical evaluation and online A/B testing for machine learning models. Master classification metrics (Precision, Recall, ROC-AUC), regression errors (RMSE, MAE), and online split testing.",
+    whatYouWillLearn: [
+      "Calculate & interpret Precision, Recall, F1 Score & ROC-AUC curves",
+      "Evaluate regression models with RMSE, MAE & R-Squared",
+      "Design online A/B split testing experiments with sample size sizing",
+      "Audit model overfitting vs underfitting with cross-validation",
+      "Detect statistical significance using p-values & t-tests"
+    ],
+    curriculum: [
+      { title: "Module 1: Classification Performance Metrics & Confusion Matrices", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: ROC-AUC Curves & Decision Threshold Tuning", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 3: Regression Metrics & Error Analysis", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 4: Statistical Hypothesis Testing & p-Value Mechanics", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 5: Online A/B Testing & Model Traffic Splitting", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 6: Capstone: End-to-End Model Evaluation Suite", duration: "2 Lessons · 3.5 hrs" }
+    ]
+  },
+  {
+    id: "ai-ethics-nemo-guardrails",
+    title: "AI Ethics, Guardrails & NeMo Guardrails",
+    tagline: "NVIDIA NeMo Guardrails, programmable safety rails, and hallucination bounds.",
+    category: "Governance & Safety",
+    badge: "Specialized",
+    badgeColor: "#C99A3D",
+    priceUSD: 899,
+    priceAED: 3299,
+    rating: 4.92,
+    reviewsCount: 210,
+    studentsCount: 680,
+    duration: "5 Weeks",
+    modulesCount: 7,
+    level: "Intermediate to Advanced",
+    instructor: "Dr. Elena Rostova",
+    instructorRole: "AI Safety Director",
+    icon: "🛡️",
+    overview: "Master NVIDIA NeMo Guardrails to enforce strict behavioral safety rails, topical boundaries, and hallucination checks on LLM conversations.",
+    whatYouWillLearn: [
+      "Configure NVIDIA NeMo Guardrails Colang syntax & rails definitions",
+      "Enforce topical rails to keep LLM responses strictly on-domain",
+      "Implement input & output moderation rails for toxic content",
+      "Detect & block prompt injection & system jailbreak attempts",
+      "Verify factuality & hallucination limits against source context"
+    ],
+    curriculum: [
+      { title: "Module 1: Enterprise AI Ethics & Safety Principles", duration: "3 Lessons · 1.5 hrs" },
+      { title: "Module 2: NVIDIA NeMo Guardrails & Colang Architecture", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 3: Topical Rails & Dialogue Flow Controls", duration: "4 Lessons · 2.5 hrs" },
+      { title: "Module 4: Moderation & Toxicity Safety Filters", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 5: Prompt Injection & Security Defense Rails", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 6: Factuality & Hallucination Checking Protocols", duration: "3 Lessons · 2.0 hrs" },
+      { title: "Module 7: Capstone: Production Guardrailed Enterprise LLM", duration: "2 Lessons · 4.0 hrs" }
+    ]
   }
 ];
 
@@ -1076,10 +1492,11 @@ export default function CoursesPage() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("price-asc"); // Default: Minimum price first!
   const [activeCourseModal, setActiveCourseModal] = useState(null);
   const [contactOpen, setContactOpen] = useState(false);
 
-  // Filter courses based on category and search query
+  // Filter & sort courses based on category, search query, and price (minimum price first)
   const filteredCourses = COURSES_DATA.filter((course) => {
     const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
     const matchesSearch =
@@ -1087,6 +1504,11 @@ export default function CoursesPage() {
       course.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === "price-asc") return a.priceUSD - b.priceUSD;
+    if (sortBy === "price-desc") return b.priceUSD - a.priceUSD;
+    if (sortBy === "rating") return b.rating - a.rating;
+    return 0;
   });
 
   const handleRegisterCourse = (course) => {
@@ -1351,12 +1773,38 @@ export default function CoursesPage() {
         </div>
 
         {/* RESULTS HEADER */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
-            Available Courses <span style={{ fontSize: "14px", fontWeight: 600, color: "#9E8984" }}>({filteredCourses.length})</span>
-          </h2>
-          <div style={{ fontSize: "13px", color: "#6b5a56", fontWeight: 600 }}>
-            Showing {selectedCategory} track
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "28px" }}>
+          <div>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "22px", fontWeight: 800, color: "#7A1F2B", margin: 0 }}>
+              Available Courses <span style={{ fontSize: "14px", fontWeight: 600, color: "#9E8984" }}>({filteredCourses.length})</span>
+            </h2>
+            <div style={{ fontSize: "12.5px", color: "#6b5a56", fontWeight: 500, marginTop: "2px" }}>
+              Showing {selectedCategory} tracks • Sorted by Minimum Price First
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "13px", color: "#6b5a56", fontWeight: 700 }}>Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1.5px solid rgba(122, 31, 43, 0.2)",
+                backgroundColor: "#ffffff",
+                color: "#7A1F2B",
+                fontSize: "13.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+                outline: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+              }}
+            >
+              <option value="price-asc">Price: Low to High ($399 → $1,949)</option>
+              <option value="price-desc">Price: High to Low ($1,949 → $399)</option>
+              <option value="rating">Highest Rated ⭐</option>
+            </select>
           </div>
         </div>
 

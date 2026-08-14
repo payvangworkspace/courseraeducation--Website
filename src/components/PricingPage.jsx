@@ -14,7 +14,7 @@ import { CheckCircle, Sparkles, Zap, ArrowRight, ShieldCheck, HelpCircle, BookOp
 const BRAND_NAME = "Coursera Education";
 
 const HERO_STATS = [
-  { icon: "🎯", label: "24 Practical Tracks", value: "$1,000 – $2,000 USD", sub: "Production AI engineering, RAG & agentic systems" },
+  { icon: "🎯", label: "36 Practical Tracks", value: "$399 – $2,000 USD", sub: "Production AI engineering, RAG & agentic systems" },
   { icon: "💱", label: "Dual Currency", value: "USD ($) & AED", sub: "Transparent pricing with zero hidden fees" },
   { icon: "⚡", label: "Master Bundles", value: "Save Up To 94%", sub: "Bundle multiple tracks or get an All-Access Pass" },
 ];
