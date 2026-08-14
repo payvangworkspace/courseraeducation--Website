@@ -127,23 +127,37 @@ export default function PaymentsLinksPage() {
         },
       });
 
+      if (res?.status === "fail" || res?.error) {
+        throw new Error(res?.message || res?.error || "Order creation failed");
+      }
+
+      const data = res?.data && typeof res.data === "object" ? res.data : res;
+
       const createdOrderId =
+        data?.orderId ||
         res?.orderId ||
-        res?.data?.orderId ||
-        res?.data?.order_id ||
-        res?.order_id ||
+        data?.order_id ||
         orderId;
 
       const paymentUrl =
+        data?.paymentlink ||
+        data?.paymentLink ||
+        data?.paymentUrl ||
+        res?.paymentlink ||
         res?.paymentUrl ||
-        res?.data?.paymentUrl ||
-        res?.checkoutUrl ||
-        res?.data?.checkoutUrl ||
         "";
+
+      const responseAmount = data?.amount || form.amount;
+      const responseEmail = data?.emailId || form.emailId;
+      const responseMobile = data?.mobileNo || "";
+      const ordRequestId = data?.ordRequestId || "";
+      const statusMessage =
+        data?.message || res?.message || "successfully created checkout";
+      const statusCode = data?.statusCode || "";
 
       setForm((prev) => ({ ...prev, orderId: createdOrderId }));
 
-      const path = buildCheckoutPath(createdOrderId);
+      const path = `/checkoutpage/${encodeURIComponent(createdOrderId)}`;
       const url =
         paymentUrl ||
         `${typeof window !== "undefined" ? window.location.origin : ""}${path}`;
@@ -152,9 +166,15 @@ export default function PaymentsLinksPage() {
         orderId: createdOrderId,
         path,
         url,
-        amount: form.amount,
+        amount: responseAmount,
         currency: form.currency,
         title: form.title,
+        emailId: responseEmail,
+        mobileNo: responseMobile,
+        ordRequestId,
+        statusMessage,
+        statusCode,
+        apiStatus: res?.status || "success",
         apiResponse: res,
       });
     } catch (err) {
@@ -171,12 +191,18 @@ export default function PaymentsLinksPage() {
   }
 
   function openCheckout(orderId) {
+    // Prefer API paymentlink (absolute URL)
+    if (createdLink?.url?.startsWith("http")) {
+      window.open(createdLink.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     const id = (orderId || form.orderId || createdLink?.orderId || "").trim();
     if (!id) {
       setError("Create a payment link first (Get Payment Link).");
       return;
     }
-    navigate(buildCheckoutPath(id));
+    navigate(`/checkoutpage/${encodeURIComponent(id)}`);
   }
 
   function copyLink() {
@@ -469,6 +495,32 @@ export default function PaymentsLinksPage() {
                 border: "1px solid rgba(122, 31, 43, 0.12)",
               }}
             >
+              {createdLink?.apiStatus === "success" && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    backgroundColor: "rgba(22, 163, 74, 0.08)",
+                    border: "1px solid rgba(22, 163, 74, 0.25)",
+                    color: "#15803d",
+                    borderRadius: "12px",
+                    padding: "10px 12px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    marginBottom: "14px",
+                  }}
+                >
+                  <Check style={{ width: 15, height: 15 }} />
+                  {createdLink.statusMessage || "successfully created checkout"}
+                  {createdLink.statusCode ? (
+                    <span style={{ fontWeight: 600, opacity: 0.85 }}>
+                      ({createdLink.statusCode})
+                    </span>
+                  ) : null}
+                </div>
+              )}
+
               <div
                 style={{
                   fontSize: "11px",
@@ -486,11 +538,53 @@ export default function PaymentsLinksPage() {
                   color: "#241417",
                   wordBreak: "break-all",
                   fontFamily: "ui-monospace, monospace",
-                  marginBottom: "14px",
+                  marginBottom: "12px",
+                  lineHeight: 1.5,
                 }}
               >
                 {createdLink?.url || fullCheckoutUrl}
               </div>
+
+              {createdLink && (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "6px",
+                    marginBottom: "14px",
+                    fontSize: "12px",
+                    color: "#6b5a56",
+                  }}
+                >
+                  <div>
+                    <strong style={{ color: "#7A1F2B" }}>Order ID:</strong>{" "}
+                    {createdLink.orderId}
+                  </div>
+                  {createdLink.ordRequestId ? (
+                    <div>
+                      <strong style={{ color: "#7A1F2B" }}>Request ID:</strong>{" "}
+                      <span style={{ wordBreak: "break-all" }}>
+                        {createdLink.ordRequestId}
+                      </span>
+                    </div>
+                  ) : null}
+                  {createdLink.emailId ? (
+                    <div>
+                      <strong style={{ color: "#7A1F2B" }}>Email:</strong>{" "}
+                      {createdLink.emailId}
+                    </div>
+                  ) : null}
+                  {createdLink.mobileNo ? (
+                    <div>
+                      <strong style={{ color: "#7A1F2B" }}>Mobile:</strong>{" "}
+                      {createdLink.mobileNo}
+                    </div>
+                  ) : null}
+                  <div>
+                    <strong style={{ color: "#7A1F2B" }}>Amount:</strong>{" "}
+                    {createdLink.currency} {createdLink.amount}
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 <button
