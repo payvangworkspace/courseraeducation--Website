@@ -44,8 +44,16 @@ export const merchantApi = {
   createMerchant: (body, options = {}) =>
     apiClient.post(MERCHANT_ENDPOINTS.CREATE, body, options),
 
-  getAllMerchantList: (body, options = {}) =>
-    apiClient.post(MERCHANT_ENDPOINTS.LIST, body, options),
+  getAllMerchantList: (body = {}, options = {}) =>
+    apiClient.post(
+      MERCHANT_ENDPOINTS.LIST,
+      {
+        start: body.start ?? 0,
+        size: String(body.size ?? 25),
+        keyword: body.keyword ?? "",
+      },
+      options
+    ),
 
   getAllMerchant: (body, options = {}) =>
     apiClient.post(MERCHANT_ENDPOINTS.ALL, body, options),

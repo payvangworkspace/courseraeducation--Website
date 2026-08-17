@@ -1,20 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import GradientButton from '../components/common/GradientButton';
-import { Building2, Plus, Code, Globe, Shield, RefreshCw, X, Check, FileJson } from 'lucide-react';
+import { Building2, Plus, Search, RefreshCw, X, FileJson } from 'lucide-react';
 import { acquirerApi, unwrapList } from '../api';
 
 function normalizeAcquirer(a) {
+  const aggregatorCode = a.aggregatorCode || a.code || '—';
+  const apiName = a.apiName || a.name || '—';
+  const httpMethod = a.httpMethod || a.method || 'POST';
+  const type = a.type || a.txnType || '—';
+  const environment = a.environment || a.env || 'PRODUCTION';
+  const status = a.status || (a.active === false ? 'Inactive' : 'Active');
+
   return {
-    id: a.id || a.acquirerId || a.aggregatorCode || Math.random().toString(36).slice(2),
-    aggregatorCode: a.aggregatorCode || a.code || '—',
-    apiName: a.apiName || a.name || '—',
-    httpMethod: a.httpMethod || a.method || 'POST',
-    type: a.type || a.txnType || '—',
-    environment: a.environment || a.env || 'PRODUCTION',
-    status: a.status || (a.active === false ? 'Inactive' : 'Active'),
     ...a,
+    id: a.id || a.acquirerId || aggregatorCode || Math.random().toString(36).slice(2),
+    aggregatorCode,
+    apiName,
+    httpMethod,
+    type,
+    environment,
+    status,
+    searchText: [aggregatorCode, apiName, httpMethod, type, environment, status]
+      .join(' ')
+      .toLowerCase(),
   };
+}
+
+function matchesKeyword(acquirer, keyword) {
+  const query = String(keyword || '').trim().toLowerCase();
+  if (!query) return true;
+  return acquirer.searchText.includes(query);
 }
 
 export default function AcquirersPage() {
@@ -22,6 +38,8 @@ export default function AcquirersPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [keyword, setKeyword] = useState('');
 
   const [formData, setFormData] = useState({
     aggregatorCode: '',
@@ -42,10 +60,14 @@ export default function AcquirersPage() {
     requestTemplate: '{\n  "merchant_id": "{{MERCHANT_ID}}",\n  "amount": "{{TXN_AMOUNT}}",\n  "currency": "INR",\n  "callback_url": "{{RESPONSE_URL}}"\n}'
   });
 
-  const fetchAcquirers = async () => {
+  const fetchAcquirers = async (query = keyword) => {
     setLoading(true);
     try {
-      const res = await acquirerApi.getAllAcquirer({ start: 0, length: 1000 });
+      const res = await acquirerApi.getAllAcquirer({
+        start: 0,
+        size: "25",
+        keyword: query || "",
+      });
       setAcquirers(unwrapList(res).map(normalizeAcquirer));
     } catch (err) {
       console.error('Error fetching acquirers:', err);
@@ -56,8 +78,20 @@ export default function AcquirersPage() {
   };
 
   useEffect(() => {
-    fetchAcquirers();
-  }, []);
+    const timer = setTimeout(() => {
+      setKeyword(searchInput.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    fetchAcquirers(keyword);
+  }, [keyword]);
+
+  const filteredAcquirers = useMemo(
+    () => acquirers.filter((acquirer) => matchesKeyword(acquirer, searchInput)),
+    [acquirers, searchInput]
+  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -120,10 +154,43 @@ export default function AcquirersPage() {
           </button>
         </div>
 
+        <div style={{ position: 'relative', width: '100%', maxWidth: '360px', marginBottom: '20px' }}>
+          <Search style={{ width: '16px', height: '16px', color: '#9E8984', position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Search code, API name or type..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            style={{
+              width: '100%',
+              backgroundColor: '#FAF2E8',
+              border: '1px solid rgba(122, 31, 43, 0.15)',
+              color: '#241417',
+              fontSize: '13px',
+              borderRadius: '9999px',
+              paddingLeft: '42px',
+              paddingRight: '16px',
+              height: '42px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
         {/* ACQUIRERS TABLE */}
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
             <RefreshCw className="w-7 h-7 text-[#7A1F2B] animate-spin" />
+          </div>
+        ) : filteredAcquirers.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 0', backgroundColor: '#FAF2E8', borderRadius: '16px', border: '1px solid rgba(122, 31, 43, 0.1)' }}>
+            <Building2 className="w-10 h-10 text-[#9E8984] mx-auto" />
+            <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#7A1F2B', margin: '12px 0 4px 0' }}>No Data Found</h4>
+            <p style={{ fontSize: '12px', color: '#6b5a56', margin: 0 }}>
+              {searchInput.trim()
+                ? 'Try a different search term, or add a new acquirer.'
+                : 'No acquirers available. Add a new acquirer to get started.'}
+            </p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto', borderRadius: '16px', border: '1px solid rgba(122, 31, 43, 0.12)' }}>
@@ -140,7 +207,7 @@ export default function AcquirersPage() {
                 </tr>
               </thead>
               <tbody>
-                {acquirers.map((acq) => (
+                {filteredAcquirers.map((acq) => (
                   <tr key={acq.id} style={{ borderBottom: '1px solid rgba(122, 31, 43, 0.06)' }}>
                     <td style={{ padding: '16px 20px', fontWeight: 700, color: '#7A1F2B' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

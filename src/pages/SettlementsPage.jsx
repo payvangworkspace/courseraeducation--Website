@@ -18,7 +18,7 @@ export default function SettlementsPage() {
 
   useEffect(() => {
     merchantApi
-      .getAllMerchantList({ start: 0, length: 1000 })
+      .getAllMerchantList({ start: 0, size: "25", keyword: "" })
       .then((res) => {
         setMerchantsList(
           unwrapList(res).map((m) => ({

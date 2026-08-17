@@ -23,8 +23,16 @@ export const acquirerApi = {
   getAllAcquirerByStatus: (type, body, options = {}) =>
     apiClient.post(ACQUIRER_ENDPOINTS.STATUS(type), body, options),
 
-  getAllAcquirer: (body, options = {}) =>
-    apiClient.post(ACQUIRER_ENDPOINTS.ALL, body, options),
+  getAllAcquirer: (body = {}, options = {}) =>
+    apiClient.post(
+      ACQUIRER_ENDPOINTS.ALL,
+      {
+        start: body.start ?? 0,
+        size: String(body.size ?? 25),
+        keyword: body.keyword ?? "",
+      },
+      options
+    ),
 
   getAcquirerById: (acquirerId, options = {}) =>
     apiClient.get(ACQUIRER_ENDPOINTS.BY_ID(acquirerId), undefined, options),

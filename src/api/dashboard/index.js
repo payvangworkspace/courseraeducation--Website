@@ -116,7 +116,7 @@ function formatINR(n) {
  */
 export async function getDashboardStats() {
   const [merchantsRes, usersRes, txnsRes, walletsRes] = await Promise.all([
-    merchantApi.getAllMerchantList({ start: 0, size: 1000 }),
+    merchantApi.getAllMerchantList({ start: 0, size: "25", keyword: "" }),
     merchantApi.getAllUsers({ start: 0, size: 1000 }),
     paymentApi.getAllTransactions({ start: 0, size: 1000 }),
     walletApi.getWalletList(),
