@@ -16,7 +16,10 @@ export default function StatCard({ title, value, badgeText, badgeType = 'gold', 
     }
   };
 
-  const chartData = sparklineData ? sparklineData.map((val, i) => ({ i, val })) : null;
+  const chartData = Array.isArray(sparklineData)
+    ? sparklineData.map((val, i) => ({ i, val: Number(val) || 0 }))
+    : null;
+  const hasSparkline = Boolean(chartData && chartData.some((point) => point.val > 0));
   const safeId = title ? title.replace(/[^a-zA-Z0-9]/g, '') : 'sparkline';
 
   return (
@@ -25,7 +28,8 @@ export default function StatCard({ title, value, badgeText, badgeType = 'gold', 
         backgroundColor: '#ffffff',
         border: '1px solid rgba(122, 31, 43, 0.12)',
         borderRadius: '20px',
-        padding: '24px',
+        padding: '24px 24px 20px',
+        minHeight: '148px',
         boxShadow: '0 4px 16px rgba(122, 31, 43, 0.05)',
         display: 'flex',
         flexDirection: 'column',
@@ -67,7 +71,7 @@ export default function StatCard({ title, value, badgeText, badgeType = 'gold', 
         )}
       </div>
 
-      {chartData && (
+      {hasSparkline ? (
         <div style={{ height: '56px', width: '100%', marginTop: '16px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 6, right: 0, left: 0, bottom: 0 }}>
@@ -88,7 +92,7 @@ export default function StatCard({ title, value, badgeText, badgeType = 'gold', 
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -126,10 +126,14 @@ export default function PayVangLayout({ children, title, subtitle }) {
   ];
 
   const checkIsActive = (href) => {
+    const path = location.pathname;
     if (href === '/home') {
-      return location.pathname === '/home';
+      return path === '/home';
     }
-    return location.pathname === href || location.pathname.startsWith(href + '/');
+    if (href === '/home/settings') {
+      return path === '/home/settings' || path.startsWith('/home/settings/');
+    }
+    return path === href || path.startsWith(`${href}/`);
   };
 
   return (
