@@ -77,15 +77,7 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await paymentApi.getAllTransactions({
-        start: 0,
-        length: 1000,
-        merchantId: merchant === 'ALL' ? undefined : merchant,
-        currency: currency === 'ALL' ? undefined : currency,
-        status: status === 'ALL' ? undefined : status,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-      });
+      const res = await paymentApi.getAllTransactions({});
 
       let items = unwrapList(res).map(normalizeTxn);
 

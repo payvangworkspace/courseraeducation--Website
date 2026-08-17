@@ -62,8 +62,8 @@ export const paymentApi = {
     apiClient.get(PAYMENT_ENDPOINTS.TEST_PAYIN, undefined, options),
 
 
-  getAllTransactions: (body, options = {}) =>
-    apiClient.post(PAYMENT_ENDPOINTS.TRANSACTIONS, body, options),
+  getAllTransactions: (body = {}, options = {}) =>
+    apiClient.post(PAYMENT_ENDPOINTS.TRANSACTIONS, {}, options),
 
   getPayinTxnDetails: (body, options = {}) =>
     apiClient.post(PAYMENT_ENDPOINTS.PAYIN_TXN_DETAILS, body, options),

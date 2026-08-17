@@ -118,7 +118,7 @@ export async function getDashboardStats() {
   const [merchantsRes, usersRes, txnsRes, walletsRes] = await Promise.all([
     merchantApi.getAllMerchantList({ start: 0, size: "25", keyword: "" }),
     merchantApi.getAllUsers({ start: 0, size: 1000 }),
-    paymentApi.getAllTransactions({ start: 0, size: 1000 }),
+    paymentApi.getAllTransactions({}),
     walletApi.getWalletList(),
   ]);
 
@@ -236,7 +236,7 @@ export async function getDashboardStats() {
  */
 export async function getSuperAdminStats() {
   const [txnsRes, walletsRes] = await Promise.all([
-    paymentApi.getAllTransactions({ start: 0, size: 1000 }),
+    paymentApi.getAllTransactions({}),
     walletApi.getWalletList(),
   ]);
 
