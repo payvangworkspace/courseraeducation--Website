@@ -5,15 +5,8 @@ import {
   ShieldCheck,
   Users,
   Building2,
-  Share2,
-  Sliders,
-  UserCheck,
   CreditCard,
-  CheckCircle2,
-  Send,
-  AlertOctagon,
   Link as LinkIcon,
-  ArrowUpRight,
   Code2,
   Settings,
   ChevronLeft,
@@ -76,8 +69,6 @@ export default function PayVangLayout({ children, title, subtitle }) {
         { label: 'Fee & Limit Rules', href: '/home/user-management/fee-rules', icon: <Percent className="w-5 h-5" /> },
         { label: 'Aggregator Mappings', href: '/home/user-management/aggregator-mappings', icon: <Layers className="w-5 h-5" /> },
         { label: 'Crypto Config', href: '/home/user-management/crypto-config', icon: <Coins className="w-5 h-5" /> },
-        { label: 'Resellers', href: '/home/user-management/resellers', icon: <Share2 className="w-5 h-5" /> },
-        { label: 'Configurations', href: '/home/user-management/configurations', icon: <Sliders className="w-5 h-5" /> }
       ]
     },
     {
@@ -87,25 +78,15 @@ export default function PayVangLayout({ children, title, subtitle }) {
       ]
     },
     {
-      title: 'TEAMS',
-      items: [
-        { label: 'Teams', href: '/home/teams', icon: <UserCheck className="w-5 h-5" /> }
-      ]
-    },
-    {
       title: 'PAYIN',
       items: [
         { label: 'Transactions', href: '/home/payin/transactions', icon: <CreditCard className="w-5 h-5" /> },
-        { label: 'Settlements', href: '/home/payin/settlements', icon: <CheckCircle2 className="w-5 h-5" /> },
-        { label: 'Remittance', href: '/home/payin/remittance', icon: <Send className="w-5 h-5" /> },
-        { label: 'Chargeback', href: '/home/payin/chargeback', icon: <AlertOctagon className="w-5 h-5" /> }
       ]
     },
     {
-      title: 'PAYMENTS LINKS & PAYOUT',
+      title: 'PAYMENT LINKS',
       items: [
         { label: 'Get Payment Link', href: '/home/payments-links', icon: <LinkIcon className="w-5 h-5" /> },
-        { label: 'Payout', href: '/home/payout', icon: <ArrowUpRight className="w-5 h-5" /> }
       ]
     },
     {

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PayVangLayout from '../components/layout/PayVangLayout';
-import GradientButton from '../components/common/GradientButton';
-import { Wallet, Plus, RefreshCw, DollarSign } from 'lucide-react';
+import { Wallet, Plus, RefreshCw, Coins } from 'lucide-react';
 import { walletApi, unwrapList } from '../api';
 
 function toNumber(value) {
@@ -31,6 +30,89 @@ function normalizeCrypto(cw) {
   };
 }
 
+const cardStyle = {
+  backgroundColor: '#ffffff',
+  borderRadius: 24,
+  padding: 32,
+  border: '1px solid rgba(122, 31, 43, 0.12)',
+  boxShadow: '0 4px 20px rgba(122, 31, 43, 0.04)',
+};
+
+const thStyle = {
+  padding: '14px 20px',
+  fontWeight: 800,
+  fontSize: '11.5px',
+  color: '#7A1F2B',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  whiteSpace: 'nowrap',
+  verticalAlign: 'middle',
+};
+
+const tdStyle = {
+  padding: '16px 20px',
+  verticalAlign: 'middle',
+};
+
+function EmptyState({ icon, title, message }) {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+        padding: '48px 16px',
+        backgroundColor: '#FAF2E8',
+        borderRadius: 16,
+        border: '1px solid rgba(122, 31, 43, 0.1)',
+      }}
+    >
+      {icon}
+      <h4 style={{ fontSize: 16, fontWeight: 800, color: '#7A1F2B', margin: '12px 0 4px' }}>{title}</h4>
+      <p style={{ fontSize: 12, color: '#6b5a56', margin: 0 }}>{message}</p>
+    </div>
+  );
+}
+
+function DataTable({ columns, rows, rowKey }) {
+  return (
+    <div style={{ overflowX: 'auto', borderRadius: 16, border: '1px solid rgba(122, 31, 43, 0.12)' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#FAF2E8', borderBottom: '1px solid rgba(122, 31, 43, 0.12)' }}>
+            {columns.map((col) => (
+              <th key={col.key} style={thStyle}>
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr
+              key={rowKey(row, index)}
+              style={{
+                borderBottom: index === rows.length - 1 ? 'none' : '1px solid rgba(122, 31, 43, 0.06)',
+                backgroundColor: '#ffffff',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#FBF8F2';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+              }}
+            >
+              {columns.map((col) => (
+                <td key={col.key} style={{ ...tdStyle, ...col.cellStyle }}>
+                  {col.render(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function WalletsPage() {
   const [wallets, setWallets] = useState([]);
   const [cryptoWallets, setCryptoWallets] = useState([]);
@@ -50,80 +132,182 @@ export default function WalletsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const fiatColumns = [
+    {
+      key: 'name',
+      label: 'Merchant Name',
+      cellStyle: { fontWeight: 700, color: '#241417' },
+      render: (w) => w.merchantName,
+    },
+    {
+      key: 'id',
+      label: 'Merchant ID',
+      cellStyle: { fontSize: 12, fontWeight: 600, color: '#7A1F2B' },
+      render: (w) => w.merchantId,
+    },
+    {
+      key: 'balance',
+      label: 'Net Balance',
+      cellStyle: { fontWeight: 800, color: '#16a34a', fontSize: 14 },
+      render: (w) => `₹${w.balance.toLocaleString('en-IN')}`,
+    },
+    {
+      key: 'reserved',
+      label: 'Reserved Escrow',
+      cellStyle: { fontWeight: 700, color: '#C99A3D' },
+      render: (w) => `₹${w.reservedBalance.toLocaleString('en-IN')}`,
+    },
+    {
+      key: 'sync',
+      label: 'Last Sync',
+      cellStyle: { fontSize: 12, color: '#6b5a56', whiteSpace: 'nowrap' },
+      render: (w) => w.lastUpdated,
+    },
+  ];
+
+  const cryptoColumns = [
+    {
+      key: 'id',
+      label: 'Merchant ID',
+      cellStyle: { fontWeight: 700, color: '#7A1F2B' },
+      render: (cw) => cw.merchantId,
+    },
+    {
+      key: 'coin',
+      label: 'Coin & Chain',
+      cellStyle: { fontWeight: 700, color: '#C99A3D' },
+      render: (cw) => `${cw.coinType} (${cw.chainType})`,
+    },
+    {
+      key: 'address',
+      label: 'Wallet Address',
+      cellStyle: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, color: '#6b5a56' },
+      render: (cw) => cw.walletAddress,
+    },
+    {
+      key: 'balance',
+      label: 'Crypto Balance',
+      cellStyle: { fontWeight: 800, color: '#241417' },
+      render: (cw) => `${cw.balance} ${cw.coinType}`,
+    },
+    {
+      key: 'usd',
+      label: 'Fiat Equivalent (USD)',
+      cellStyle: { fontWeight: 800, color: '#16a34a' },
+      render: (cw) => `$${cw.fiatValueUSD.toLocaleString()}`,
+    },
+  ];
+
   return (
     <PayVangLayout title="Wallets & Escrow" subtitle="Central merchant escrow balances, reserve holds & crypto wallets.">
-      <div className="space-y-6">
-        {/* FIAT WALLETS */}
-        <div className="coursera-card p-6 md:p-8 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-[#7A1F2B]" />
-              <h3 className="text-xl font-bold text-[#7A1F2B] font-heading">Merchant Fiat Escrow Balances</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={cardStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              marginBottom: 24,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <Wallet style={{ width: 20, height: 20, color: '#7A1F2B', flexShrink: 0 }} />
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: 20,
+                    fontWeight: 800,
+                    color: '#7A1F2B',
+                    fontFamily: "'Space Grotesk', sans-serif",
+                  }}
+                >
+                  Merchant Fiat Escrow Balances
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b5a56' }}>
+                  Available settlement balances and reserved escrow holds
+                </p>
+              </div>
             </div>
-            <GradientButton onClick={() => alert('Manually crediting wallet balance...')}>
-              Credit Merchant Wallet
-            </GradientButton>
+            <button
+              onClick={() => alert('Manually crediting wallet balance...')}
+              style={{
+                height: 42,
+                padding: '0 22px',
+                borderRadius: 9999,
+                background: 'linear-gradient(135deg, #7A1F2B 0%, #C99A3D 100%)',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: 13,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(122, 31, 43, 0.2)',
+                flexShrink: 0,
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Credit Merchant Wallet</span>
+            </button>
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-8">
-              <RefreshCw className="w-6 h-6 text-[#7A1F2B] animate-spin" />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
+              <RefreshCw className="w-7 h-7 text-[#7A1F2B] animate-spin" />
             </div>
+          ) : wallets.length === 0 ? (
+            <EmptyState
+              icon={<Wallet className="w-10 h-10 text-[#9E8984] mx-auto" />}
+              title="No Data Found"
+              message="No fiat escrow wallets are available yet. Credit a merchant wallet to get started."
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-[#7A1F2B]/15 text-xs font-bold text-[#7A1F2B] uppercase bg-[#FBF3E7]/50">
-                    <th className="py-3 px-4 rounded-l-xl">Merchant Name</th>
-                    <th className="py-3 px-4">Merchant ID</th>
-                    <th className="py-3 px-4">Net Balance</th>
-                    <th className="py-3 px-4">Reserved Escrow</th>
-                    <th className="py-3 px-4 rounded-r-xl">Last Sync</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#7A1F2B]/10">
-                  {wallets.map((w) => (
-                    <tr key={w.merchantId} className="hover:bg-[#FBF3E7]/60">
-                      <td className="py-3.5 px-4 font-bold text-[#241417]">{w.merchantName}</td>
-                      <td className="py-3.5 px-4 text-xs font-semibold text-[#7A1F2B]">{w.merchantId}</td>
-                      <td className="py-3.5 px-4 font-extrabold text-[#16a34a] text-base">₹{w.balance.toLocaleString('en-IN')}</td>
-                      <td className="py-3.5 px-4 font-bold text-[#C99A3D]">₹{w.reservedBalance.toLocaleString('en-IN')}</td>
-                      <td className="py-3.5 px-4 text-xs text-[#6b5a56]">{w.lastUpdated}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable columns={fiatColumns} rows={wallets} rowKey={(w, i) => `${w.merchantId}-${i}`} />
           )}
         </div>
 
-        {/* CRYPTO WALLETS */}
-        <div className="coursera-card p-6 md:p-8 space-y-4">
-          <h3 className="text-xl font-bold text-[#7A1F2B] font-heading">Merchant Crypto Hot Wallets</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-[#7A1F2B]/15 text-xs font-bold text-[#7A1F2B] uppercase bg-[#FBF3E7]/50">
-                  <th className="py-3 px-4 rounded-l-xl">Merchant ID</th>
-                  <th className="py-3 px-4">Coin & Chain</th>
-                  <th className="py-3 px-4">Wallet Address</th>
-                  <th className="py-3 px-4">Crypto Balance</th>
-                  <th className="py-3 px-4 rounded-r-xl">Fiat Equivalent (USD)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#7A1F2B]/10">
-                {cryptoWallets.map((cw) => (
-                  <tr key={cw.merchantId} className="hover:bg-[#FBF3E7]/60">
-                    <td className="py-3.5 px-4 font-bold text-[#7A1F2B]">{cw.merchantId}</td>
-                    <td className="py-3.5 px-4 font-bold text-[#C99A3D]">{cw.coinType} ({cw.chainType})</td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-[#6b5a56]">{cw.walletAddress}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-[#241417]">{cw.balance} {cw.coinType}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-[#16a34a]">${cw.fiatValueUSD.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+            <Coins style={{ width: 20, height: 20, color: '#7A1F2B', flexShrink: 0 }} />
+            <div>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: '#7A1F2B',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                }}
+              >
+                Merchant Crypto Hot Wallets
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b5a56' }}>
+                On-chain balances, networks and USD equivalents
+              </p>
+            </div>
           </div>
+
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
+              <RefreshCw className="w-7 h-7 text-[#7A1F2B] animate-spin" />
+            </div>
+          ) : cryptoWallets.length === 0 ? (
+            <EmptyState
+              icon={<Coins className="w-10 h-10 text-[#9E8984] mx-auto" />}
+              title="No Data Found"
+              message="No crypto hot wallets are available yet."
+            />
+          ) : (
+            <DataTable
+              columns={cryptoColumns}
+              rows={cryptoWallets}
+              rowKey={(cw, i) => `${cw.merchantId}-${cw.coinType}-${i}`}
+            />
+          )}
         </div>
       </div>
     </PayVangLayout>

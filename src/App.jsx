@@ -34,8 +34,6 @@ import SuperAdminDashboardPage from "./pages/SuperAdminDashboardPage";
 import MerchantsPage from "./pages/MerchantsPage";
 import AddMerchantPage from "./pages/AddMerchantPage";
 import AcquirersPage from "./pages/AcquirersPage";
-import ResellersPage from "./pages/ResellersPage";
-import ConfigurationsPage from "./pages/ConfigurationsPage";
 import FeeRulesPage from "./pages/FeeRulesPage";
 import AggregatorMappingPage from "./pages/AggregatorMappingPage";
 import CryptoConfigPage from "./pages/CryptoConfigPage";
@@ -43,13 +41,8 @@ import WalletsPage from "./pages/WalletsPage";
 import IPWhitelistPage from "./pages/IPWhitelistPage";
 import EmailMasterPage from "./pages/EmailMasterPage";
 import MetricsPage from "./pages/MetricsPage";
-import TeamsPage from "./pages/TeamsPage";
 import TransactionsPage from "./pages/TransactionsPage";
-import SettlementsPage from "./pages/SettlementsPage";
-import RemittancePage from "./pages/RemittancePage";
-import ChargebackPage from "./pages/ChargebackPage";
 import PaymentsLinksPage from "./pages/PaymentsLinksPage";
-import PayoutPage from "./pages/PayoutPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
 import SettingsPage from "./pages/SettingsPage";
 
@@ -114,29 +107,16 @@ export default function App() {
         <Route path="/home/user-management/fee-rules" element={<FeeRulesPage />} />
         <Route path="/home/user-management/aggregator-mappings" element={<AggregatorMappingPage />} />
         <Route path="/home/user-management/crypto-config" element={<CryptoConfigPage />} />
-        <Route path="/home/user-management/resellers" element={<ResellersPage />} />
-        <Route path="/home/user-management/configurations" element={<ConfigurationsPage />} />
 
-        {/* Wallets & Teams Routes */}
+        {/* Wallets */}
         <Route path="/home/wallets" element={<WalletsPage />} />
-        <Route path="/home/teams" element={<TeamsPage />} />
 
-        {/* Payin & Settlements Routes */}
+        {/* Payin */}
         <Route path="/home/payin/transactions" element={<TransactionsPage />} />
         <Route path="/home/transactions" element={<TransactionsPage />} />
 
-        <Route path="/home/payin/settlements" element={<SettlementsPage />} />
-        <Route path="/home/settlements/auth-settlement" element={<SettlementsPage />} />
-
-        <Route path="/home/payin/remittance" element={<RemittancePage />} />
-        <Route path="/home/remittance" element={<RemittancePage />} />
-
-        <Route path="/home/payin/chargeback" element={<ChargebackPage />} />
-        <Route path="/home/charge-back" element={<ChargebackPage />} />
-
-        {/* Payments Links & Payout */}
+        {/* Payment Links */}
         <Route path="/home/payments-links" element={<PaymentsLinksPage />} />
-        <Route path="/home/payout" element={<PayoutPage />} />
 
         {/* Security & Metrics */}
         <Route path="/home/security/ip-whitelist" element={<IPWhitelistPage />} />
