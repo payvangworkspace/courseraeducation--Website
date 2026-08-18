@@ -21,8 +21,40 @@ let merchants = [
 ];
 
 let users = [
-  { userId: 'USR-101', userName: 'alex_admin', email: 'admin@payvang.com', role: 'ADMIN', status: true, payinStatus: true, payoutStatus: true, authStatus: true, payoutGstStatus: true, payoutFeeReturnStatus: true },
-  ...merchants.map(m => ({ userId: m.id, userName: m.username, email: `${m.username}@merchant.com`, role: 'MERCHANT', fullName: m.name, status: true, payinStatus: true, payoutStatus: true, authStatus: true }))
+  { userId: 'USR-101', userName: 'alex_admin', email: 'admin@payvang.com', role: 'ADMIN', status: true, payinStatus: true, payoutStatus: true, authStatus: false, payoutGstStatus: true, payoutFeeReturnStatus: true, payinGstStatus: true, payoutStatusViaApplication: true, verified: true },
+  ...merchants.map((m) => ({
+    userId: m.id,
+    userName: m.username,
+    email: `${m.username}@merchant.com`,
+    role: 'MERCHANT',
+    fullName: m.name,
+    contactNumber: m.contactNumber,
+    businessName: m.businessName,
+    registrationDate: m.registrationDate,
+    activationDate: m.registrationDate,
+    verificationDate: m.registrationDate,
+    merchantCode: m.id.replace('MCH-', ''),
+    appId: `APP${m.id.replace(/\D/g, '')}20260818`,
+    status: true,
+    payinStatus: true,
+    payoutStatus: true,
+    authStatus: false,
+    payinGstStatus: true,
+    payoutGstStatus: true,
+    payoutFeeReturnStatus: true,
+    payoutStatusViaApplication: true,
+    verified: true,
+    website: 'https://courseraeducation.com',
+    businessType: 'E-Commerce',
+    subIndustry: 'Digital Goods',
+    country: 'India',
+    city: 'Mumbai',
+    address: 'Andheri East, Mumbai',
+    gender: '—',
+    webhookUrl: `https://api.courseraeducation.com/payinwebhook/${m.username}`,
+    settlementCycle: 'T+1',
+    settlementMode: 'NEFT',
+  })),
 ];
 
 let acquirers = [
@@ -364,33 +396,79 @@ app.get('/api/configurations', (req, res) => res.json(configurations));
 
 // --- 3. ZENITH OPENAPI 114 ROUTES ---
 
+function findUser(userId) {
+  return users.find((x) => x.userId === userId || x.email === userId || x.userName === userId);
+}
+
+function parseFlag(body, fallback) {
+  if (typeof body === 'boolean') return body;
+  if (body && typeof body === 'object') {
+    if (typeof body.status === 'boolean') return body.status;
+    if (typeof body.verified === 'boolean') return body.verified;
+    if (typeof body.value === 'boolean') return body.value;
+  }
+  return fallback;
+}
+
+function patchUserFlag(userId, field, body) {
+  const user = findUser(userId);
+  if (!user) return null;
+  user[field] = parseFlag(body, !user[field]);
+  return user;
+}
+
 app.post('/user/merchant', (req, res) => res.json(users[1]));
 app.post('/user/merchant/list', (req, res) => res.json(users.filter(u => u.role === 'MERCHANT')));
 app.post('/user/merchant/all', (req, res) => res.json(users.filter(u => u.role === 'MERCHANT')));
-app.get('/user/merchant/:userId', (req, res) => res.json(users.find(x => x.userId === req.params.userId) || users[1]));
+app.get('/user/merchant/:userId', (req, res) => res.json(findUser(req.params.userId) || users[1]));
 app.post('/user/all', (req, res) => res.json(users));
 app.post('/user/admin', (req, res) => res.json(users[0]));
 app.post('/user/UserCreationViaAdmin', (req, res) => res.json({ status: true, message: 'User created' }));
 
-app.put('/user/verifyUser/:userId', (req, res) => res.json({ message: 'Verified' }));
+app.put('/user/verifyUser/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'verified', req.body) || { message: 'Verified' }));
 app.put('/user/updateDetails', (req, res) => res.json({ message: 'Updated' }));
-app.put('/user/status/:userId', (req, res) => res.json({ message: 'Status updated' }));
-app.put('/user/payoutstatus/:userId', (req, res) => res.json({ message: 'Payout status updated' }));
-app.put('/user/payoutStatusViaApplication/:userId', (req, res) => res.json({ message: 'Payout status updated' }));
-app.put('/user/payoutGststatus/:userId', (req, res) => res.json({ message: 'Payout GST status updated' }));
-app.put('/user/payoutFeeReturnStatus/:userId', (req, res) => res.json({ message: 'Payout fee return updated' }));
-app.put('/user/payinstatus/:userId', (req, res) => res.json({ message: 'Payin status updated' }));
-app.put('/user/payinGststatus/:userId', (req, res) => res.json({ message: 'Payin GST status updated' }));
+app.put('/user/status/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'status', req.body) || { message: 'Status updated' }));
+app.put('/user/payoutstatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutStatus', req.body) || { message: 'Payout status updated' }));
+app.put('/user/payoutStatusViaApplication/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutStatusViaApplication', req.body) || { message: 'Payout status updated' }));
+app.put('/user/payoutGststatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutGstStatus', req.body) || { message: 'Payout GST status updated' }));
+app.put('/user/payoutFeeReturnStatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutFeeReturnStatus', req.body) || { message: 'Payout fee return updated' }));
+app.put('/user/payinstatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payinStatus', req.body) || { message: 'Payin status updated' }));
+app.put('/user/payinGststatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payinGstStatus', req.body) || { message: 'Payin GST status updated' }));
 app.put('/user/document/verify/:documentId', (req, res) => res.json({ message: 'Document verified' }));
 app.put('/user/document/reject', (req, res) => res.json({ message: 'Document rejected' }));
-app.put('/user/authStatus/:userId', (req, res) => res.json({ message: 'Auth status updated' }));
+app.put('/user/authStatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'authStatus', req.body) || { message: 'Auth status updated' }));
 app.put('/user/UpdateMerchantShortCode/:userId/ShortCode/:shortCode', (req, res) => res.json({ message: 'Shortcode updated' }));
 
 app.get('/user/test', (req, res) => res.json({ status: 'Online' }));
-app.get('/user/personalDetails/:userId', (req, res) => res.json({ userId: req.params.userId, fullName: 'Alex Morgan' }));
+app.get('/user/personalDetails/:userId', (req, res) => {
+  const user = findUser(req.params.userId) || users[1];
+  res.json({
+    userId: user.userId,
+    fullName: user.fullName,
+    email: user.email,
+    contactNumber: user.contactNumber,
+    businessName: user.businessName,
+    businessType: user.businessType,
+    subIndustry: user.subIndustry,
+    website: user.website,
+    country: user.country,
+    city: user.city,
+    address: user.address,
+    gender: user.gender,
+    dateOfBirth: '',
+  });
+});
 app.get('/user/document/:userId', (req, res) => res.json([{ documentId: 'DOC-901', name: 'PAN Card', status: 'VERIFIED' }]));
 app.get('/user/document/file/:documentId', (req, res) => res.send('Mock File Binary'));
-app.get('/user/accountDetails/:userId', (req, res) => res.json({ userId: req.params.userId, bankName: 'HDFC Bank' }));
+app.get('/user/accountDetails/:userId', (req, res) => {
+  const user = findUser(req.params.userId) || users[1];
+  res.json({
+    userId: user.userId,
+    bankName: 'HDFC Bank',
+    accountNumber: '501000998122',
+    ifsc: 'HDFC0000123',
+  });
+});
 app.get('/user/GetRandomAESKey', (req, res) => res.json({ aesKey: 'AES-256-KEY-9981' }));
 app.post('/userActivity', (req, res) => res.json([{ activity: 'LOGIN', timestamp: '2026-08-06 12:00:00' }]));
 app.post('/user/resetPassword', (req, res) => res.json({ message: 'Reset email sent' }));
@@ -487,7 +565,9 @@ app.get('/payins/TestPayin', (req, res) => res.json({ status: 'Online' }));
 
 
 app.post('/payout/settings', (req, res) => res.json(payoutsList[0]));
-app.get('/payout/settings/:userId', (req, res) => res.json(payoutsList));
+app.get('/payout/settings/:userId', (req, res) => {
+  res.json(payoutsList.find((p) => p.merchantId === req.params.userId) || payoutsList[0]);
+});
 
 app.post('/payout/ipWhiteList', (req, res) => res.json(ipKeys[0]));
 app.delete('/payout/ipWhiteList', (req, res) => res.json({ message: 'IP Removed' }));
@@ -502,7 +582,9 @@ app.get('/CryptoConfig/GetCryptoKeys/:merchantId', (req, res) => res.json({ apiK
 app.get('/CryptoConfig/ActiveMerchantCryptoConfig/:merchantId', (req, res) => res.json(cryptoConfigs[0]));
 
 app.get('/wallet/walletList', (req, res) => res.json(wallets));
-app.get('/wallet/getWalletByMerchantId/:merchantId', (req, res) => res.json(wallets[0]));
+app.get('/wallet/getWalletByMerchantId/:merchantId', (req, res) => {
+  res.json(wallets.find((w) => w.merchantId === req.params.merchantId) || wallets[0]);
+});
 app.get('/wallet/cryptoWalletList', (req, res) => res.json(cryptoWallets));
 app.get('/wallet/getCryptoWalletByMerchantId/:merchantId', (req, res) => res.json(cryptoWallets[0]));
 app.post('/wallet/savewallet', (req, res) => res.json({ message: 'Saved' }));

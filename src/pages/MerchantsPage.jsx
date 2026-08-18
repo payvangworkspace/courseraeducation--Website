@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PayVangLayout from '../components/layout/PayVangLayout';
-import { Search, Plus, ChevronLeft, ChevronRight, RefreshCw, Building2, Phone, Calendar, Mail } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, RefreshCw, Building2, Phone, Calendar, Mail, CircleUser } from 'lucide-react';
 import { merchantApi, unwrapList } from '../api';
 
 const PAGE_SIZE = 25;
@@ -108,6 +108,9 @@ function normalizeMerchant(m) {
     businessName,
     registrationDate: formatRegisteredDate(
       m.registrationDate || m.createdOn || m.createdDate || m.createdAt || m.createDate
+    ),
+    activationDate: formatRegisteredDate(
+      m.activationDate || m.activatedOn || m.verificationDate || m.verifiedOn || m.verifiedDate
     ),
     searchText: [name, email, businessName, distinctUsername, contactNumber, id]
       .join(' ')
@@ -267,6 +270,8 @@ export default function MerchantsPage() {
                   <th style={thStyle}>Email</th>
                   <th style={thStyle}>Business Name</th>
                   <th style={thStyle}>Registration Date</th>
+                  <th style={thStyle}>Activation Date</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,6 +347,47 @@ export default function MerchantsPage() {
                         <Calendar style={{ width: '14px', height: '14px', color: '#9E8984', flexShrink: 0 }} />
                         <span>{m.registrationDate}</span>
                       </div>
+                    </td>
+                    <td style={{ ...tdStyle, color: '#6b5a56', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar style={{ width: '14px', height: '14px', color: '#9E8984', flexShrink: 0 }} />
+                        <span>{m.activationDate}</span>
+                      </div>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        title="View merchant profile"
+                        aria-label={`View ${m.name}`}
+                        onClick={() =>
+                          navigate(`/home/user-management/merchants/${encodeURIComponent(m.id)}`, {
+                            state: { merchant: m },
+                          })
+                        }
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          border: '1px solid rgba(122, 31, 43, 0.18)',
+                          background: 'linear-gradient(135deg, rgba(122, 31, 43, 0.1) 0%, rgba(201, 154, 61, 0.16) 100%)',
+                          color: '#7A1F2B',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(122, 31, 43, 0.08)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(135deg, #7A1F2B 0%, #C99A3D 100%)';
+                          e.currentTarget.style.color = '#ffffff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(122, 31, 43, 0.1) 0%, rgba(201, 154, 61, 0.16) 100%)';
+                          e.currentTarget.style.color = '#7A1F2B';
+                        }}
+                      >
+                        <CircleUser style={{ width: 18, height: 18 }} />
+                      </button>
                     </td>
                   </tr>
                 ))}
