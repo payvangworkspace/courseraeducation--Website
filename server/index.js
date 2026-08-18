@@ -58,10 +58,10 @@ let users = [
 ];
 
 let acquirers = [
-  { id: 'ACQ-01', acquirerId: 'ACQ-01', fullName: 'HDFC Bank Direct Switch', aggregatorCode: 'HDFC_PG_DIRECT', apiName: 'HDFC Bank SmartHub API', httpMethod: 'POST', type: 'NETBANKING', environment: 'PRODUCTION', status: 'Active', baseUrl: 'https://api.hdfcbank.com/v2/pay', endpoint: '/charge', responseUrl: 'https://payvang.com/callback/hdfc', merchantId: 'HDFC_MCH_88291', webhookUrl: 'https://payvang.com/wh/hdfc', secretKey: 'sec_hdfc_live_9981273', responseKey: 'resp_key_hd_33', clientId: 'cli_hdfc_881', payin: true, payout: true },
-  { id: 'ACQ-02', acquirerId: 'ACQ-02', fullName: 'ICICI UPI Stack Engine', aggregatorCode: 'ICICI_UPI_STACK', apiName: 'ICICI Instant UPI Collect', httpMethod: 'POST', type: 'UPI', environment: 'PRODUCTION', status: 'Active', baseUrl: 'https://upi.icicibank.com/v1', endpoint: '/upi/vpa/charge', responseUrl: 'https://payvang.com/callback/icici', merchantId: 'ICICI_MCH_44120', webhookUrl: 'https://payvang.com/wh/icici', secretKey: 'sec_icici_live_772183', responseKey: 'resp_key_ic_99', clientId: 'cli_icici_102', payin: true, payout: true },
-  { id: 'ACQ-03', acquirerId: 'ACQ-03', fullName: 'Razorpay Gateway Bridge', aggregatorCode: 'RAZORPAY_AGG', apiName: 'Razorpay Gateway Bridge', httpMethod: 'POST', type: 'CARDS', environment: 'SANDBOX', status: 'Active', baseUrl: 'https://api.razorpay.com/v1', endpoint: '/payments/create', responseUrl: 'https://payvang.com/callback/rzp', merchantId: 'rzp_live_918237', webhookUrl: 'https://payvang.com/wh/rzp', secretKey: 'sec_rzp_test_556123', responseKey: 'resp_key_rzp', clientId: 'cli_rzp_554', payin: true, payout: false },
-  { id: 'ACQ-04', acquirerId: 'ACQ-04', fullName: 'Axis Card Payment Hub', aggregatorCode: 'AXIS_CARD_ENGINE', apiName: 'Axis Card Payment Hub', httpMethod: 'POST', type: 'CARDS', environment: 'PRODUCTION', status: 'Inactive', baseUrl: 'https://pg.axisbank.co.in/api', endpoint: '/cards/tokenize', responseUrl: 'https://payvang.com/callback/axis', merchantId: 'AXIS_MCH_11928', webhookUrl: 'https://payvang.com/wh/axis', secretKey: 'sec_axis_883491', responseKey: 'resp_key_ax', clientId: 'cli_axis_990', payin: true, payout: true }
+  { acquirerId: 'ACQ-01', fullName: 'HDFC SmartHub', acquirerCode: 'HDFC_PG_DIRECT', acquirerPgId: 'HDFC_MCH_88291', acquirerPgKey: 'pg_key_hdfc_991', acquirerPgPassword: 'sec_hdfc_live_9981273', acquirerPayoutPgId: 'HDFC_PO_88291', acquirerPayoutPgKey: 'po_key_hdfc_991', acquirerPayoutPgPassword: 'sec_hdfc_po_112', status: true, payinWebhookUrl: 'https://api.courseraeducation.com/wh/payin/hdfc', payoutWebhookUrl: 'https://api.courseraeducation.com/wh/payout/hdfc', payin: true, payout: true },
+  { acquirerId: 'ACQ-02', fullName: 'ICICI UPI Stack', acquirerCode: 'ICICI_UPI_STACK', acquirerPgId: 'ICICI_MCH_44120', acquirerPgKey: 'pg_key_icici_772', acquirerPgPassword: 'sec_icici_live_772183', acquirerPayoutPgId: 'ICICI_PO_44120', acquirerPayoutPgKey: 'po_key_icici_772', acquirerPayoutPgPassword: 'sec_icici_po_889', status: true, payinWebhookUrl: 'https://api.courseraeducation.com/wh/payin/icici', payoutWebhookUrl: 'https://api.courseraeducation.com/wh/payout/icici', payin: true, payout: true },
+  { acquirerId: 'ACQ-03', fullName: 'Razorpay Bridge', acquirerCode: 'RAZORPAY_AGG', acquirerPgId: 'rzp_live_918237', acquirerPgKey: 'pg_key_rzp_556', acquirerPgPassword: 'sec_rzp_test_556123', acquirerPayoutPgId: '', acquirerPayoutPgKey: '', acquirerPayoutPgPassword: '', status: true, payinWebhookUrl: 'https://api.courseraeducation.com/wh/payin/rzp', payoutWebhookUrl: '', payin: true, payout: false },
+  { acquirerId: 'ACQ-04', fullName: 'Axis Card Hub', acquirerCode: 'AXIS_CARD_ENGINE', acquirerPgId: 'AXIS_MCH_11928', acquirerPgKey: 'pg_key_axis_883', acquirerPgPassword: 'sec_axis_883491', acquirerPayoutPgId: 'AXIS_PO_11928', acquirerPayoutPgKey: 'po_key_axis_883', acquirerPayoutPgPassword: 'sec_axis_po_774', status: false, payinWebhookUrl: 'https://api.courseraeducation.com/wh/payin/axis', payoutWebhookUrl: 'https://api.courseraeducation.com/wh/payout/axis', payin: true, payout: true }
 ];
 
 let transactions = [
@@ -312,8 +312,7 @@ app.post('/api/merchants', (req, res) => {
 
 app.get('/api/acquirers', (req, res) => res.json(acquirers));
 app.post('/api/acquirers', (req, res) => {
-  const { aggregatorCode, apiName } = req.body;
-  const newA = { id: `ACQ-0${acquirers.length + 1}`, aggregatorCode, apiName, ...req.body, status: req.body.active ? 'Active' : 'Inactive' };
+  const newA = { ...req.body, acquirerId: req.body.acquirerId || `ACQ-${String(acquirers.length + 1).padStart(2, '0')}` };
   acquirers.unshift(newA);
   res.status(201).json(newA);
 });
@@ -474,19 +473,95 @@ app.post('/userActivity', (req, res) => res.json([{ activity: 'LOGIN', timestamp
 app.post('/user/resetPassword', (req, res) => res.json({ message: 'Reset email sent' }));
 app.post('/user/document', (req, res) => res.json({ message: 'Uploaded' }));
 
-app.post('/acquirer', (req, res) => res.json(acquirers[0]));
-app.get('/acquirer/:acquirerId', (req, res) => res.json(acquirers[0]));
-app.delete('/acquirer/:acquirerId', (req, res) => res.json({ message: 'Deleted' }));
-app.post('/acquirer/updatePayout', (req, res) => res.json({ message: 'Updated' }));
-app.post('/acquirer/updatePayin', (req, res) => res.json({ message: 'Updated' }));
-app.post('/acquirer/status/:type', (req, res) => res.json(acquirers));
-app.post('/acquirer/all', (req, res) => res.json(acquirers));
+const findAcquirer = (acquirerId) =>
+  acquirers.find((a) => String(a.acquirerId) === String(acquirerId));
 
-app.post('/apimasters/saveapi', (req, res) => res.json(apiMasters[0]));
-app.post('/apimasters/updateapi', (req, res) => res.json({ message: 'Updated' }));
+const upsertAcquirer = (body) => {
+  const existing = findAcquirer(body.acquirerId);
+  if (!existing) return null;
+  Object.assign(existing, body);
+  return existing;
+};
+
+app.post('/acquirer', (req, res) => {
+  const { acquirerCode, fullName } = req.body || {};
+  if (!acquirerCode || !fullName) {
+    return res.status(400).json({ status: 'fail', message: 'acquirerCode and fullName are required' });
+  }
+  const created = { ...req.body, acquirerId: req.body.acquirerId || `ACQ-${String(acquirers.length + 1).padStart(2, '0')}` };
+  acquirers.unshift(created);
+  res.status(201).json(created);
+});
+
+app.post('/acquirer/updatePayout', (req, res) => {
+  const updated = upsertAcquirer(req.body || {});
+  if (!updated) return res.status(404).json({ status: 'fail', message: 'Acquirer not found' });
+  res.json(updated);
+});
+
+app.post('/acquirer/updatePayin', (req, res) => {
+  const updated = upsertAcquirer(req.body || {});
+  if (!updated) return res.status(404).json({ status: 'fail', message: 'Acquirer not found' });
+  res.json(updated);
+});
+
+app.post('/acquirer/status/:type', (req, res) => {
+  const type = String(req.params.type || '').toLowerCase();
+  if (type === 'payin') return res.json(acquirers.filter((a) => a.payin));
+  if (type === 'payout') return res.json(acquirers.filter((a) => a.payout));
+  res.json(acquirers);
+});
+
+app.post('/acquirer/all', (req, res) => {
+  const { start = 0, size = 25, keyword = '' } = req.body || {};
+  const query = String(keyword).trim().toLowerCase();
+  const filtered = query
+    ? acquirers.filter((a) =>
+        [a.acquirerCode, a.fullName, a.acquirerPgId, a.acquirerPayoutPgId]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(query))
+      )
+    : acquirers;
+  res.json(filtered.slice(Number(start), Number(start) + Number(size)));
+});
+
+app.get('/acquirer/:acquirerId', (req, res) => {
+  const found = findAcquirer(req.params.acquirerId);
+  if (!found) return res.status(404).json({ status: 'fail', message: 'Acquirer not found' });
+  res.json(found);
+});
+
+app.delete('/acquirer/:acquirerId', (req, res) => {
+  const before = acquirers.length;
+  acquirers = acquirers.filter((a) => String(a.acquirerId) !== String(req.params.acquirerId));
+  if (acquirers.length === before) return res.status(404).json({ status: 'fail', message: 'Acquirer not found' });
+  res.json({ message: 'Deleted' });
+});
+
+app.post('/apimasters/saveapi', (req, res) => {
+  const created = {
+    ...req.body,
+    id: req.body.id || `API-${String(apiMasters.length + 1).padStart(2, '0')}`,
+    createdAt: new Date().toISOString(),
+  };
+  apiMasters.unshift(created);
+  res.status(201).json(created);
+});
+
+app.post('/apimasters/updateapi', (req, res) => {
+  const index = apiMasters.findIndex((item) => String(item.id) === String(req.body.id));
+  if (index < 0) return res.status(404).json({ status: 'fail', message: 'API master not found' });
+  apiMasters[index] = { ...apiMasters[index], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(apiMasters[index]);
+});
+
 app.get('/apimasters/GetAllApi', (req, res) => res.json(apiMasters));
-app.get('/apimasters/GetApiByid/:id', (req, res) => res.json(apiMasters[0]));
-app.get('/apimasters/GetAcquirerCodes', (req, res) => res.json(acquirers.map(a => a.aggregatorCode)));
+app.get('/apimasters/GetApiByid/:id', (req, res) => {
+  const found = apiMasters.find((item) => String(item.id) === String(req.params.id));
+  if (!found) return res.status(404).json({ status: 'fail', message: 'API master not found' });
+  res.json(found);
+});
+app.get('/apimasters/GetAcquirerCodes', (req, res) => res.json(acquirers.map(a => a.acquirerCode)));
 
 app.post('/apimasters/savemerchantAggregatormapping', (req, res) => res.json(merchantAggregatorMappings[0]));
 app.post('/apimasters/updatemerchantAggregatormapping', (req, res) => res.json({ message: 'Updated' }));

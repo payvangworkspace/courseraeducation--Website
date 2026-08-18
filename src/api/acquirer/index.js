@@ -28,7 +28,7 @@ export const acquirerApi = {
       ACQUIRER_ENDPOINTS.ALL,
       {
         start: body.start ?? 0,
-        size: String(body.size ?? 25),
+        size: Number(body.size ?? 25),
         keyword: body.keyword ?? "",
       },
       options
