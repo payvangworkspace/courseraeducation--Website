@@ -40,7 +40,6 @@ import CryptoConfigPage from "./pages/CryptoConfigPage";
 import WalletsPage from "./pages/WalletsPage";
 import IPWhitelistPage from "./pages/IPWhitelistPage";
 import EmailMasterPage from "./pages/EmailMasterPage";
-import MetricsPage from "./pages/MetricsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import PaymentsLinksPage from "./pages/PaymentsLinksPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
@@ -118,9 +117,8 @@ export default function App() {
         {/* Payment Links */}
         <Route path="/home/payments-links" element={<PaymentsLinksPage />} />
 
-        {/* Security & Metrics */}
+        {/* Security */}
         <Route path="/home/security/ip-whitelist" element={<IPWhitelistPage />} />
-        <Route path="/home/system-metrics" element={<MetricsPage />} />
 
         {/* Settings & Email */}
         <Route path="/home/settings" element={<SettingsPage />} />

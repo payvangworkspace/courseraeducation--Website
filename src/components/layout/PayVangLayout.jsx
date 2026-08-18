@@ -20,7 +20,6 @@ import {
   Wallet,
   ShieldAlert,
   Mail,
-  Activity
 } from 'lucide-react';
 import { authApi, clearAuthToken, getSessionUser } from '../../api';
 
@@ -90,10 +89,9 @@ export default function PayVangLayout({ children, title, subtitle }) {
       ]
     },
     {
-      title: 'SECURITY & METRICS',
+      title: 'SECURITY',
       items: [
         { label: 'IP Whitelist', href: '/home/security/ip-whitelist', icon: <ShieldAlert className="w-5 h-5" /> },
-        { label: 'System Metrics', href: '/home/system-metrics', icon: <Activity className="w-5 h-5" /> }
       ]
     },
     {
