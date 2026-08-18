@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PayVangLayout from '../components/layout/PayVangLayout';
-import { ArrowLeft, CheckCircle2, AlertCircle, Building2, Lock, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle, Building2, Lock, FileText, Eye, EyeOff } from 'lucide-react';
 import { merchantApi } from '../api';
 
 const fieldStyle = {
@@ -129,6 +129,7 @@ export default function AddMerchantPage() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -139,9 +140,19 @@ export default function AddMerchantPage() {
   };
 
   const validatePassword = (pass) => {
-    const hasUpper = /[A-Z]/.test(pass);
     const hasMinLength = pass.length >= 8;
-    return { hasUpper, hasMinLength, isValid: hasUpper && hasMinLength };
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasDigit = /\d/.test(pass);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    return {
+      hasMinLength,
+      hasUpper,
+      hasLower,
+      hasDigit,
+      hasSpecial,
+      isValid: hasMinLength && hasUpper && hasLower && hasDigit && hasSpecial,
+    };
   };
 
   const passValidation = validatePassword(formData.password);
@@ -156,7 +167,8 @@ export default function AddMerchantPage() {
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (!passValidation.isValid) {
-      newErrors.password = 'Password does not meet required security criteria';
+      newErrors.password =
+        'Password should be at least 8 characters long and should contain at least one uppercase letter, one lowercase letter, one digit and one special character.';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -499,24 +511,54 @@ export default function AddMerchantPage() {
                 </span>
               </div>
 
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter a secure password..."
-                style={{
-                  ...inputStyle(!!errors.password),
-                  backgroundColor: '#ffffff',
-                  marginBottom: '14px',
-                }}
-                {...themedFocusHandlers(!!errors.password)}
-              />
+              <div style={{ position: 'relative', marginBottom: '14px' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter a secure password..."
+                  autoComplete="new-password"
+                  style={{
+                    ...inputStyle(!!errors.password),
+                    backgroundColor: '#ffffff',
+                    paddingRight: 44,
+                  }}
+                  {...themedFocusHandlers(!!errors.password)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 28,
+                    height: 28,
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#7A1F2B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {showPassword ? <EyeOff style={{ width: 18, height: 18 }} /> : <Eye style={{ width: 18, height: 18 }} />}
+                </button>
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 'auto' }}>
                 {[
-                  { ok: passValidation.hasUpper, text: 'At least 1 uppercase letter (A–Z)' },
                   { ok: passValidation.hasMinLength, text: 'At least 8 characters long' },
+                  { ok: passValidation.hasUpper, text: 'At least 1 uppercase letter (A–Z)' },
+                  { ok: passValidation.hasLower, text: 'At least 1 lowercase letter (a–z)' },
+                  { ok: passValidation.hasDigit, text: 'At least 1 digit (0–9)' },
+                  { ok: passValidation.hasSpecial, text: 'At least 1 special character (!@#$%…)' },
                 ].map((rule) => (
                   <div key={rule.text} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span
