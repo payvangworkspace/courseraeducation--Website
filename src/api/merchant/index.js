@@ -85,32 +85,34 @@ export const merchantApi = {
   updateDetails: (body, options = {}) =>
     apiClient.put(MERCHANT_ENDPOINTS.UPDATE_DETAILS, body, options),
 
-  verifyUser: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.VERIFY_USER(userId), body, options),
+  // Status toggles: Swagger declares path param only, NO request body.
+  // The endpoint flips the current server-side value; caller must refetch.
+  verifyUser: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.VERIFY_USER(userId), undefined, options),
 
-  updateLockedStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.STATUS(userId), body, options),
+  updateLockedStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.STATUS(userId), undefined, options),
 
-  updatePayinStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYIN_STATUS(userId), body, options),
+  updatePayinStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYIN_STATUS(userId), undefined, options),
 
-  updatePayoutStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_STATUS(userId), body, options),
+  updatePayoutStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_STATUS(userId), undefined, options),
 
-  updatePayoutStatusViaApplication: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_STATUS_VIA_APP(userId), body, options),
+  updatePayoutStatusViaApplication: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_STATUS_VIA_APP(userId), undefined, options),
 
-  updatePayinGstStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYIN_GST_STATUS(userId), body, options),
+  updatePayinGstStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYIN_GST_STATUS(userId), undefined, options),
 
-  updatePayoutGstStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_GST_STATUS(userId), body, options),
+  updatePayoutGstStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_GST_STATUS(userId), undefined, options),
 
-  updatePayoutFeeReturnStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_FEE_RETURN_STATUS(userId), body, options),
+  updatePayoutFeeReturnStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.PAYOUT_FEE_RETURN_STATUS(userId), undefined, options),
 
-  updateAuthStatus: (userId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.AUTH_STATUS(userId), body, options),
+  updateAuthStatus: (userId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.AUTH_STATUS(userId), undefined, options),
 
   updateMerchantShortCode: (userId, shortCode, body, options = {}) =>
     apiClient.put(MERCHANT_ENDPOINTS.SHORT_CODE(userId, shortCode), body, options),
@@ -118,15 +120,30 @@ export const merchantApi = {
   uploadDocuments: (body, options = {}) =>
     apiClient.post(MERCHANT_ENDPOINTS.DOCUMENTS, body, options),
 
+  /**
+   * Multipart document upload.
+   * POST /user/document?documentType=&userId= with form field `file`.
+   */
+  uploadDocument: (file, { documentType, userId } = {}, options = {}) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient.post(MERCHANT_ENDPOINTS.DOCUMENTS, form, {
+      ...options,
+      params: { documentType, userId, ...(options.params || {}) },
+    });
+  },
+
   getUsersDocuments: (userId, options = {}) =>
     apiClient.get(MERCHANT_ENDPOINTS.DOCUMENTS_BY_USER(userId), undefined, options),
 
   getDocumentsFile: (documentId, options = {}) =>
     apiClient.get(MERCHANT_ENDPOINTS.DOCUMENT_FILE(documentId), undefined, options),
 
-  verifyDocument: (documentId, body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.VERIFY_DOCUMENT(documentId), body, options),
+  // PUT /user/document/verify/{documentId}: path param only, no request body.
+  verifyDocument: (documentId, options = {}) =>
+    apiClient.put(MERCHANT_ENDPOINTS.VERIFY_DOCUMENT(documentId), undefined, options),
 
+  // PUT /user/document/reject: body is a Map<string,string> (e.g. { documentId, reason }).
   rejectDocument: (body, options = {}) =>
     apiClient.put(MERCHANT_ENDPOINTS.REJECT_DOCUMENT, body, options),
 

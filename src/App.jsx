@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Main Website Pages
 import LandingPage from "./components/LandingPage";
@@ -33,6 +33,7 @@ import DashboardPage from "./pages/DashboardPage";
 import SuperAdminDashboardPage from "./pages/SuperAdminDashboardPage";
 import MerchantsPage from "./pages/MerchantsPage";
 import AddMerchantPage from "./pages/AddMerchantPage";
+import MerchantDetailPage from "./pages/MerchantDetailPage";
 import AcquirersPage from "./pages/AcquirersPage";
 import FeeRulesPage from "./pages/FeeRulesPage";
 import AggregatorMappingPage from "./pages/AggregatorMappingPage";
@@ -102,6 +103,7 @@ export default function App() {
         {/* User Management Routes */}
         <Route path="/home/user-management/merchants" element={<MerchantsPage />} />
         <Route path="/home/user-management/merchants/add-merchant" element={<AddMerchantPage />} />
+        <Route path="/home/user-management/merchants/:userId" element={<MerchantDetailPage />} />
         <Route path="/home/user-management/acquirers" element={<AcquirersPage />} />
         <Route path="/home/user-management/fee-rules" element={<FeeRulesPage />} />
         <Route path="/home/user-management/aggregator-mappings" element={<AggregatorMappingPage />} />
