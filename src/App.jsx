@@ -35,6 +35,7 @@ import MerchantsPage from "./pages/MerchantsPage";
 import AddMerchantPage from "./pages/AddMerchantPage";
 import MerchantDetailPage from "./pages/MerchantDetailPage";
 import AcquirersPage from "./pages/AcquirersPage";
+import AddAcquirerPage from "./pages/AddAcquirerPage";
 import FeeRulesPage from "./pages/FeeRulesPage";
 import AggregatorMappingPage from "./pages/AggregatorMappingPage";
 import CryptoConfigPage from "./pages/CryptoConfigPage";
@@ -106,6 +107,8 @@ export default function App() {
         <Route path="/home/user-management/merchants/add-merchant" element={<AddMerchantPage />} />
         <Route path="/home/user-management/merchants/:userId" element={<MerchantDetailPage />} />
         <Route path="/home/user-management/acquirers" element={<AcquirersPage />} />
+        <Route path="/home/user-management/acquirers/add-acquirer" element={<AddAcquirerPage />} />
+        <Route path="/home/user-management/acquirers/:acquirerId/edit" element={<AddAcquirerPage />} />
         <Route path="/home/user-management/fee-rules" element={<FeeRulesPage />} />
         <Route path="/home/user-management/aggregator-mappings" element={<AggregatorMappingPage />} />
         <Route path="/home/user-management/crypto-config" element={<CryptoConfigPage />} />

@@ -1,27 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PayVangLayout from '../components/layout/PayVangLayout';
-import GradientButton from '../components/common/GradientButton';
-import { Building2, Plus, Search, RefreshCw, X, FileJson } from 'lucide-react';
-import { acquirerApi, unwrapList } from '../api';
+import { Building2, Plus, Search, RefreshCw, Pencil, X, Mail } from 'lucide-react';
+import { apiMasterApi, unwrapList } from '../api';
 
 function normalizeAcquirer(a) {
-  const aggregatorCode = a.aggregatorCode || a.code || '—';
-  const apiName = a.apiName || a.name || '—';
-  const httpMethod = a.httpMethod || a.method || 'POST';
-  const type = a.type || a.txnType || '—';
-  const environment = a.environment || a.env || 'PRODUCTION';
-  const status = a.status || (a.active === false ? 'Inactive' : 'Active');
+  const aggregatorCode = a.aggregatorCode || a.acquirerCode || a.code || '—';
+  const apiName = a.apiName || a.fullName || a.name || '—';
+  const id = a.id || a.apiId || aggregatorCode;
 
   return {
     ...a,
-    id: a.id || a.acquirerId || aggregatorCode || Math.random().toString(36).slice(2),
+    id,
     aggregatorCode,
     apiName,
-    httpMethod,
-    type,
-    environment,
-    status,
-    searchText: [aggregatorCode, apiName, httpMethod, type, environment, status]
+    httpMethod: a.httpMethod || '—',
+    type: a.type || '—',
+    environment: a.environment || '—',
+    active: a.active !== false,
+    searchText: [aggregatorCode, apiName, a.httpMethod, a.type, a.environment]
+      .filter(Boolean)
       .join(' ')
       .toLowerCase(),
   };
@@ -33,44 +31,56 @@ function matchesKeyword(acquirer, keyword) {
   return acquirer.searchText.includes(query);
 }
 
+const thStyle = {
+  padding: '14px 20px',
+  fontWeight: 800,
+  fontSize: '11.5px',
+  color: '#7A1F2B',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+};
+
+const editFieldStyle = {
+  width: '100%',
+  height: 44,
+  boxSizing: 'border-box',
+  border: '1px solid rgba(122,31,43,.2)',
+  borderRadius: 10,
+  backgroundColor: '#fff',
+  color: '#241417',
+  fontSize: 13.5,
+  padding: '0 14px',
+  outline: 'none',
+};
+
+const editLabelStyle = {
+  display: 'block',
+  marginBottom: 7,
+  color: '#7A1F2B',
+  fontSize: 11.5,
+  fontWeight: 800,
+  textTransform: 'uppercase',
+  letterSpacing: '.04em',
+};
+
 export default function AcquirersPage() {
+  const navigate = useNavigate();
   const [acquirers, setAcquirers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-  const [keyword, setKeyword] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editForm, setEditForm] = useState({});
 
-  const [formData, setFormData] = useState({
-    aggregatorCode: '',
-    apiName: '',
-    httpMethod: 'POST',
-    type: 'UPI',
-    environment: 'PRODUCTION',
-    baseUrl: '',
-    endpoint: '/charge',
-    active: true,
-    responseUrl: '',
-    merchantId: '',
-    webhookUrl: '',
-    secretKey: '',
-    responseKey: '',
-    clientId: '',
-    headers: '{\n  "Content-Type": "application/json",\n  "Authorization": "Bearer {{SECRET_KEY}}"\n}',
-    requestTemplate: '{\n  "merchant_id": "{{MERCHANT_ID}}",\n  "amount": "{{TXN_AMOUNT}}",\n  "currency": "INR",\n  "callback_url": "{{RESPONSE_URL}}"\n}'
-  });
-
-  const fetchAcquirers = async (query = keyword) => {
+  const fetchAcquirers = async () => {
     setLoading(true);
     try {
-      const res = await acquirerApi.getAllAcquirer({
-        start: 0,
-        size: "25",
-        keyword: query || "",
-      });
+      const res = await apiMasterApi.getAllApi();
       setAcquirers(unwrapList(res).map(normalizeAcquirer));
     } catch (err) {
-      console.error('Error fetching acquirers:', err);
+      console.error('Error fetching API masters:', err);
       setAcquirers([]);
     } finally {
       setLoading(false);
@@ -78,61 +88,69 @@ export default function AcquirersPage() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setKeyword(searchInput.trim());
-    }, 400);
+    const timer = setTimeout(fetchAcquirers, 0);
     return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  useEffect(() => {
-    fetchAcquirers(keyword);
-  }, [keyword]);
+  }, []);
 
   const filteredAcquirers = useMemo(
     () => acquirers.filter((acquirer) => matchesKeyword(acquirer, searchInput)),
     [acquirers, searchInput]
   );
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const openEdit = async (acquirer) => {
+    setEditOpen(true);
+    setEditLoading(true);
+    setEditError('');
+    setEditForm(acquirer);
+    try {
+      const response = await apiMasterApi.getApiById(acquirer.id);
+      const detail = response?.data && typeof response.data === 'object' ? response.data : response;
+      if (detail && typeof detail === 'object') setEditForm({ ...acquirer, ...detail });
+    } catch (error) {
+      setEditError(error.message || 'Unable to load acquirer configuration.');
+    } finally {
+      setEditLoading(false);
+    }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!formData.aggregatorCode || !formData.apiName) {
-      alert('Please fill in Aggregator Code and API Name.');
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditForm((previous) => ({ ...previous, [name]: name === 'active' ? value === 'true' : value }));
+    setEditError('');
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    const required = ['baseUrl', 'clientId', 'endpoint', 'merchantId', 'responsekey', 'secretKey', 'webhoockUrl'];
+    if (required.some((key) => !String(editForm[key] ?? '').trim())) {
+      setEditError('Please complete all required configuration fields.');
       return;
     }
 
-    setSubmitting(true);
+    setEditSubmitting(true);
+    setEditError('');
     try {
-      await acquirerApi.createAcquirer(formData);
-      setShowModal(false);
+      await apiMasterApi.updateApiMaster(editForm);
+      setEditOpen(false);
       await fetchAcquirers();
-    } catch (err) {
-      console.error('Error adding acquirer:', err);
-      alert(err.message || 'Failed to create acquirer.');
+    } catch (error) {
+      setEditError(error.message || 'Failed to update acquirer configuration.');
     } finally {
-      setSubmitting(false);
+      setEditSubmitting(false);
     }
   };
 
   return (
-    <PayVangLayout title="User Management - Acquirers" subtitle="Acquiring gateway integrations, bank switches & payload payload rules.">
+    <PayVangLayout title="User Management - Acquirers" subtitle="Acquiring gateway integrations, bank switches & payout routes.">
       <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', padding: '32px', border: '1px solid rgba(122, 31, 43, 0.12)', boxShadow: '0 4px 20px rgba(122, 31, 43, 0.04)', marginBottom: '28px' }}>
-        {/* TOP BAR ACTION */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', marginBottom: '28px', flexWrap: 'wrap' }}>
           <div>
             <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#7A1F2B', fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Acquirer Switches & Connectors</h3>
-            <p style={{ fontSize: '13px', color: '#6b5a56', margin: '4px 0 0 0' }}>Direct bank integrations, aggregator routes & webhook listeners</p>
+            <p style={{ fontSize: '13px', color: '#6b5a56', margin: '4px 0 0 0' }}>Direct bank integrations, payin gateways & payout routes</p>
           </div>
 
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => navigate('/home/user-management/acquirers/add-acquirer')}
             style={{
               height: '42px',
               padding: '0 24px',
@@ -158,7 +176,7 @@ export default function AcquirersPage() {
           <Search style={{ width: '16px', height: '16px', color: '#9E8984', position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
-            placeholder="Search code, API name or type..."
+            placeholder="Search acquirer code or name..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             style={{
@@ -177,7 +195,6 @@ export default function AcquirersPage() {
           />
         </div>
 
-        {/* ACQUIRERS TABLE */}
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
             <RefreshCw className="w-7 h-7 text-[#7A1F2B] animate-spin" />
@@ -197,13 +214,13 @@ export default function AcquirersPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ backgroundColor: '#FAF2E8', borderBottom: '1px solid rgba(122, 31, 43, 0.12)' }}>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aggregator Code</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>API Name</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>HTTP Method</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Environment</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                  <th style={{ padding: '14px 20px', fontWeight: 800, fontSize: '11.5px', color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                  <th style={thStyle}>Aggregator Code</th>
+                  <th style={thStyle}>API Name</th>
+                  <th style={thStyle}>HTTP Method</th>
+                  <th style={thStyle}>Type</th>
+                  <th style={thStyle}>Environment</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,27 +234,21 @@ export default function AcquirersPage() {
                     </td>
                     <td style={{ padding: '16px 20px', fontWeight: 600, color: '#241417', fontSize: '13px' }}>{acq.apiName}</td>
                     <td style={{ padding: '16px 20px' }}>
-                      <span style={{ backgroundColor: 'rgba(122, 31, 43, 0.1)', color: '#7A1F2B', fontSize: '12px', fontWeight: 800, padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(122, 31, 43, 0.2)' }}>
-                        {acq.httpMethod}
-                      </span>
+                      <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '6px', backgroundColor: 'rgba(122,31,43,0.1)', color: '#7A1F2B' }}>{acq.httpMethod}</span>
                     </td>
-                    <td style={{ padding: '16px 20px', fontSize: '12px', fontWeight: 600, color: '#6b5a56' }}>{acq.type}</td>
+                    <td style={{ padding: '16px 20px', fontSize: '12px', fontWeight: 700, color: '#6b5a56' }}>{acq.type}</td>
+                    <td style={{ padding: '16px 20px', fontSize: '12px', fontWeight: 700, color: '#6b5a56' }}>{acq.environment}</td>
                     <td style={{ padding: '16px 20px' }}>
-                      <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', border: '1px solid transparent', backgroundColor: acq.environment === 'PRODUCTION' ? 'rgba(22,163,74,0.1)' : 'rgba(217,119,6,0.1)', color: acq.environment === 'PRODUCTION' ? '#16a34a' : '#d97706', borderColor: acq.environment === 'PRODUCTION' ? 'rgba(22,163,74,0.25)' : 'rgba(217,119,6,0.25)' }}>
-                        {acq.environment}
+                      <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', border: '1px solid transparent', backgroundColor: acq.active ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: acq.active ? '#16a34a' : '#dc2626', borderColor: acq.active ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)' }}>
+                        {acq.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td style={{ padding: '16px 20px' }}>
-                      <span style={{ fontSize: '11.5px', fontWeight: 800, padding: '4px 10px', borderRadius: '9999px', border: '1px solid transparent', backgroundColor: acq.status === 'Active' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: acq.status === 'Active' ? '#16a34a' : '#dc2626', borderColor: acq.status === 'Active' ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)' }}>
-                        {acq.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px 20px', fontSize: '12px', fontWeight: 700, color: '#7A1F2B' }}>
                       <button
-                        onClick={() => alert(`Inspecting configuration payload for ${acq.aggregatorCode}`)}
-                        style={{ background: 'none', border: 'none', color: '#7A1F2B', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => openEdit(acq)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: '#7A1F2B', fontWeight: 700, fontSize: '12px', cursor: 'pointer', padding: 0 }}
                       >
-                        Configure
+                        <Pencil style={{ width: '13px', height: '13px' }} /> Edit
                       </button>
                     </td>
                   </tr>
@@ -248,249 +259,143 @@ export default function AcquirersPage() {
         )}
       </div>
 
-      {/* ADD ACQUIRER MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="coursera-card bg-[#FDF6EE] w-full max-w-4xl p-6 md:p-8 space-y-6 my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#7A1F2B]/15">
+      {editOpen && (
+        <div
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setEditOpen(false);
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 60,
+            backgroundColor: 'rgba(36,20,23,.55)',
+            backdropFilter: 'blur(2px)',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit Acquirer Configuration"
+            style={{
+              width: 'min(640px, 100%)',
+              height: '100%',
+              overflowY: 'auto',
+              backgroundColor: '#fff',
+              boxShadow: '-16px 0 40px rgba(36,20,23,.2)',
+              padding: '28px 32px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 18,
+                paddingBottom: 20,
+                marginBottom: 24,
+                borderBottom: '1px solid rgba(122,31,43,.12)',
+              }}
+            >
               <div>
-                <h3 className="text-xl font-bold text-[#7A1F2B] font-heading">Add Acquirer Gateway API</h3>
-                <p className="text-xs text-[#6b5a56]">Configure connector endpoints, secrets, headers & request template</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Mail style={{ width: 21, height: 21, color: '#9E8984' }} />
+                  <h2 style={{ margin: 0, fontSize: 21, fontWeight: 800, color: '#7A1F2B' }}>
+                    Edit Acquirer Configuration
+                  </h2>
+                </div>
+                <p style={{ margin: '7px 0 0 31px', color: '#6b5a56', fontSize: 12.5 }}>
+                  {editForm.aggregatorCode || '—'} · {editForm.apiName || '—'}
+                </p>
               </div>
               <button
-                onClick={() => setShowModal(false)}
-                className="w-8 h-8 rounded-full bg-[#FAF2E8] text-[#7A1F2B] flex items-center justify-center hover:bg-[#F5E8D8] transition-colors"
+                type="button"
+                onClick={() => setEditOpen(false)}
+                aria-label="Close edit configuration"
+                style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(122,31,43,.14)', background: '#FAF2E8', color: '#7A1F2B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
               >
-                <X className="w-5 h-5" />
+                <X style={{ width: 18, height: 18 }} />
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Aggregator Code *</label>
-                  <input
-                    type="text"
-                    name="aggregatorCode"
-                    value={formData.aggregatorCode}
-                    onChange={handleChange}
-                    placeholder="e.g. HDFC_PG_DIRECT"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
+            {editLoading ? (
+              <div style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <RefreshCw className="w-7 h-7 text-[#7A1F2B] animate-spin" />
+              </div>
+            ) : (
+              <form onSubmit={handleEditSubmit}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 19 }}>
+                  {[
+                    ['baseUrl', 'Base URL', 'https://gateway.example.com'],
+                    ['clientId', 'Client ID', 'Enter client ID'],
+                    ['endpoint', 'Endpoint', '/api/v1/payin/create'],
+                    ['merchantId', 'Merchant ID', 'Enter merchant ID'],
+                    ['responsekey', 'Response Key', 'Enter response key'],
+                    ['secretKey', 'Secret Key', 'Enter secret key'],
+                    ['webhoockUrl', 'Webhook URL', 'https://courseraeducation.com/webhook'],
+                  ].map(([name, label, placeholder]) => (
+                    <div key={name}>
+                      <label style={editLabelStyle}>
+                        {label}<span style={{ color: '#C99A3D', marginLeft: 4 }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name={name}
+                        value={editForm[name] ?? ''}
+                        onChange={handleEditChange}
+                        placeholder={placeholder}
+                        style={editFieldStyle}
+                        onFocus={(event) => {
+                          event.target.style.borderColor = '#7A1F2B';
+                          event.target.style.boxShadow = '0 0 0 3px rgba(122,31,43,.12)';
+                        }}
+                        onBlur={(event) => {
+                          event.target.style.borderColor = 'rgba(122,31,43,.2)';
+                          event.target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+                  ))}
+
+                  <div>
+                    <label style={editLabelStyle}>
+                      Status<span style={{ color: '#C99A3D', marginLeft: 4 }}>*</span>
+                    </label>
+                    <select name="active" value={String(editForm.active !== false)} onChange={handleEditChange} style={editFieldStyle}>
+                      <option value="true">ACTIVE</option>
+                      <option value="false">INACTIVE</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">API Name *</label>
-                  <input
-                    type="text"
-                    name="apiName"
-                    value={formData.apiName}
-                    onChange={handleChange}
-                    placeholder="e.g. HDFC SmartHub Direct"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
+                {editError && (
+                  <div style={{ marginTop: 20, padding: '12px 14px', borderRadius: 10, color: '#b91c1c', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.22)', fontSize: 12.5, fontWeight: 600 }}>
+                    {editError}
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">HTTP Method</label>
-                  <select
-                    name="httpMethod"
-                    value={formData.httpMethod}
-                    onChange={handleChange}
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 28, paddingTop: 20, borderTop: '1px solid rgba(122,31,43,.12)', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditOpen(false)}
+                    style={{ height: 42, padding: '0 22px', borderRadius: 9999, border: '1px solid rgba(122,31,43,.2)', background: '#fff', color: '#7A1F2B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
                   >
-                    <option value="POST">POST</option>
-                    <option value="GET">GET</option>
-                    <option value="PUT">PUT</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Type</label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
+                    Close
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editSubmitting}
+                    style={{ height: 42, padding: '0 24px', borderRadius: 9999, border: 0, background: editSubmitting ? 'rgba(122,31,43,.45)' : 'linear-gradient(135deg,#7A1F2B 0%,#C99A3D 100%)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: editSubmitting ? 'not-allowed' : 'pointer' }}
                   >
-                    <option value="UPI">UPI</option>
-                    <option value="NETBANKING">NETBANKING</option>
-                    <option value="CARDS">CARDS</option>
-                    <option value="WALLET">WALLET</option>
-                  </select>
+                    {editSubmitting ? 'Updating...' : 'Update Acquirer Details'}
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Environment</label>
-                  <select
-                    name="environment"
-                    value={formData.environment}
-                    onChange={handleChange}
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  >
-                    <option value="PRODUCTION">PRODUCTION</option>
-                    <option value="SANDBOX">SANDBOX</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-2 text-sm font-bold text-[#7A1F2B] cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="active"
-                      checked={formData.active}
-                      onChange={handleChange}
-                      className="w-4 h-4 accent-[#7A1F2B]"
-                    />
-                    Active Gateway Switch
-                  </label>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Base URL</label>
-                  <input
-                    type="text"
-                    name="baseUrl"
-                    value={formData.baseUrl}
-                    onChange={handleChange}
-                    placeholder="https://api.hdfcbank.com/v2"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Endpoint</label>
-                  <input
-                    type="text"
-                    name="endpoint"
-                    value={formData.endpoint}
-                    onChange={handleChange}
-                    placeholder="/charge"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Response URL</label>
-                  <input
-                    type="text"
-                    name="responseUrl"
-                    value={formData.responseUrl}
-                    onChange={handleChange}
-                    placeholder="https://payvang.com/callback/hdfc"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Merchant ID</label>
-                  <input
-                    type="text"
-                    name="merchantId"
-                    value={formData.merchantId}
-                    onChange={handleChange}
-                    placeholder="HDFC_MCH_88291"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Webhook URL</label>
-                  <input
-                    type="text"
-                    name="webhookUrl"
-                    value={formData.webhookUrl}
-                    onChange={handleChange}
-                    placeholder="https://payvang.com/wh/hdfc"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Client ID</label>
-                  <input
-                    type="text"
-                    name="clientId"
-                    value={formData.clientId}
-                    onChange={handleChange}
-                    placeholder="cli_hdfc_881"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Secret Key</label>
-                  <input
-                    type="password"
-                    name="secretKey"
-                    value={formData.secretKey}
-                    onChange={handleChange}
-                    placeholder="sec_hdfc_live_9981273"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] uppercase mb-1">Response Key</label>
-                  <input
-                    type="password"
-                    name="responseKey"
-                    value={formData.responseKey}
-                    onChange={handleChange}
-                    placeholder="resp_key_hd_33"
-                    className="w-full bg-white border border-[#7A1F2B]/15 text-sm rounded-xl px-3.5 py-2"
-                  />
-                </div>
-              </div>
-
-              {/* HEADERS & REQUEST TEMPLATE JSON TEXTAREAS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-[#7A1F2B] uppercase mb-1">
-                    <FileJson className="w-3.5 h-3.5 text-[#C99A3D]" />
-                    HTTP Headers (JSON)
-                  </label>
-                  <textarea
-                    name="headers"
-                    rows={5}
-                    value={formData.headers}
-                    onChange={handleChange}
-                    className="w-full bg-[#241417] text-[#C99A3D] font-mono text-xs rounded-xl p-3 border border-[#7A1F2B]/30 outline-none focus:border-[#C99A3D]"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-[#7A1F2B] uppercase mb-1">
-                    <FileJson className="w-3.5 h-3.5 text-[#C99A3D]" />
-                    Request Payload Template (JSON)
-                  </label>
-                  <textarea
-                    name="requestTemplate"
-                    rows={5}
-                    value={formData.requestTemplate}
-                    onChange={handleChange}
-                    className="w-full bg-[#241417] text-[#16a34a] font-mono text-xs rounded-xl p-3 border border-[#7A1F2B]/30 outline-none focus:border-[#16a34a]"
-                  />
-                </div>
-              </div>
-
-              {/* MODAL ACTIONS */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#7A1F2B]/15">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-5 py-2 rounded-full border border-[#7A1F2B]/20 text-[#7A1F2B] font-semibold text-sm hover:bg-[#FAF2E8]"
-                >
-                  Cancel
-                </button>
-                <GradientButton type="submit" className={submitting ? 'opacity-50' : ''}>
-                  {submitting ? 'Creating...' : 'Save Acquirer Gateway'}
-                </GradientButton>
-              </div>
-            </form>
-          </div>
+              </form>
+            )}
+          </aside>
         </div>
       )}
     </PayVangLayout>
