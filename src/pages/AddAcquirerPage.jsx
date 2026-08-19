@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, Braces, Building2, CheckCircle2, KeyRound, Link2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import PayVangLayout from '../components/layout/PayVangLayout';
 import { apiMasterApi } from '../api';
 
@@ -52,11 +52,7 @@ const labelStyle = {
   marginBottom: '8px',
 };
 
-const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-  gap: '20px 24px',
-};
+const columnStyle = { display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 };
 
 function unwrapObject(value) {
   if (!value || typeof value !== 'object') return {};
@@ -69,12 +65,10 @@ function focusHandlers(hasError = false) {
     onFocus: (event) => {
       event.target.style.borderColor = hasError ? '#dc2626' : '#7A1F2B';
       event.target.style.boxShadow = `0 0 0 3px ${hasError ? 'rgba(220,38,38,.12)' : 'rgba(122,31,43,.14)'}`;
-      event.target.style.backgroundColor = '#fffdf9';
     },
     onBlur: (event) => {
       event.target.style.borderColor = hasError ? 'rgba(220,38,38,.45)' : 'rgba(122,31,43,.15)';
       event.target.style.boxShadow = 'none';
-      event.target.style.backgroundColor = '#FAF2E8';
     },
   };
 }
@@ -92,66 +86,15 @@ function Field({ label, required, error, children }) {
   );
 }
 
-function Section({ icon, iconBg, iconColor, title, subtitle, action, children }) {
-  return (
-    <section
-      style={{
-        backgroundColor: '#FFFCFA',
-        border: '1px solid rgba(122, 31, 43, 0.1)',
-        borderRadius: 18,
-        padding: 24,
-        marginBottom: 24,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          flexWrap: 'wrap',
-          paddingBottom: 18,
-          marginBottom: 22,
-          borderBottom: '1px solid rgba(122,31,43,.08)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              backgroundColor: iconBg,
-              color: iconColor,
-            }}
-          >
-            {icon}
-          </div>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#7A1F2B' }}>{title}</h3>
-            <p style={{ margin: '2px 0 0', fontSize: 12.5, color: '#6b5a56' }}>{subtitle}</p>
-          </div>
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function TextInput({ name, value, onChange, placeholder, type = 'text', error }) {
+function TextInput({ name, value, onChange, placeholder, error }) {
   return (
     <input
-      type={type}
+      type="text"
       name={name}
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      style={{ ...fieldStyle, borderColor: error ? 'rgba(220,38,38,.45)' : fieldStyle.border.split(' ').at(-1) }}
+      style={{ ...fieldStyle, borderColor: error ? 'rgba(220,38,38,.45)' : 'rgba(122,31,43,.15)' }}
       {...focusHandlers(Boolean(error))}
     />
   );
@@ -267,33 +210,17 @@ export default function AddAcquirerPage() {
     }
   };
 
-  const statusControl = (
-    <label
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 10,
-        cursor: 'pointer',
-        padding: '8px 16px',
-        borderRadius: 9999,
-        backgroundColor: formData.active ? 'rgba(22,163,74,.08)' : 'rgba(158,137,132,.12)',
-        border: `1px solid ${formData.active ? 'rgba(22,163,74,.28)' : 'rgba(158,137,132,.3)'}`,
-      }}
-    >
-      <input
-        type="checkbox"
-        name="active"
-        checked={formData.active}
-        onChange={handleChange}
-        style={{ width: 16, height: 16, margin: 0, accentColor: '#7A1F2B' }}
-      />
-      <span style={{ fontSize: 12.5, fontWeight: 800, color: formData.active ? '#15803d' : '#6b5a56' }}>
-        {formData.active ? 'ACTIVE' : 'INACTIVE'}
-      </span>
-    </label>
-  );
-
   const selectStyle = { ...fieldStyle, cursor: 'pointer' };
+  const jsonStyle = {
+    ...fieldStyle,
+    height: 'auto',
+    padding: 16,
+    resize: 'vertical',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: 12.5,
+    lineHeight: 1.6,
+    backgroundColor: '#241417',
+  };
 
   return (
     <PayVangLayout
@@ -319,7 +246,7 @@ export default function AddAcquirerPage() {
             gap: 16,
             flexWrap: 'wrap',
             paddingBottom: 18,
-            marginBottom: 24,
+            marginBottom: 26,
             borderBottom: '1px solid rgba(122,31,43,.1)',
           }}
         >
@@ -336,34 +263,66 @@ export default function AddAcquirerPage() {
         </div>
 
         {(success || errors.server) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', marginBottom: 20, borderRadius: 14, fontSize: 13, fontWeight: 600, color: success ? '#15803d' : '#b91c1c', background: success ? 'rgba(22,163,74,.08)' : 'rgba(220,38,38,.08)', border: `1px solid ${success ? 'rgba(22,163,74,.28)' : 'rgba(220,38,38,.28)'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', marginBottom: 22, borderRadius: 14, fontSize: 13, fontWeight: 600, color: success ? '#15803d' : '#b91c1c', background: success ? 'rgba(22,163,74,.08)' : 'rgba(220,38,38,.08)', border: `1px solid ${success ? 'rgba(22,163,74,.28)' : 'rgba(220,38,38,.28)'}` }}>
             {success ? <CheckCircle2 style={{ width: 18 }} /> : <AlertCircle style={{ width: 18 }} />}
             {success || errors.server}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <Section
-            icon={<Building2 style={{ width: 18 }} />}
-            iconBg="rgba(122,31,43,.08)"
-            iconColor="#7A1F2B"
-            title="Gateway Profile"
-            subtitle="Aggregator identity, transaction type and runtime environment"
-            action={statusControl}
-          >
-            <div style={gridStyle}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '18px 40px' }}>
+            {/* LEFT COLUMN */}
+            <div style={columnStyle}>
               <Field label="Aggregator Code" required error={errors.aggregatorCode}>
-                <TextInput name="aggregatorCode" value={formData.aggregatorCode} onChange={handleChange} placeholder="e.g. HDFC_PG_DIRECT" error={errors.aggregatorCode} />
+                <TextInput name="aggregatorCode" value={formData.aggregatorCode} onChange={handleChange} placeholder="Enter aggregator code" error={errors.aggregatorCode} />
               </Field>
+
               <Field label="API Name" required error={errors.apiName}>
-                <TextInput name="apiName" value={formData.apiName} onChange={handleChange} placeholder="e.g. HDFC SmartHub Direct" error={errors.apiName} />
+                <TextInput name="apiName" value={formData.apiName} onChange={handleChange} placeholder="Enter API name" error={errors.apiName} />
               </Field>
+
+              <Field label="Base URL" required error={errors.baseUrl}>
+                <TextInput name="baseUrl" value={formData.baseUrl} onChange={handleChange} placeholder="Enter base URL" error={errors.baseUrl} />
+              </Field>
+
+              <Field label="Endpoint" required error={errors.endpoint}>
+                <TextInput name="endpoint" value={formData.endpoint} onChange={handleChange} placeholder="Enter endpoint" error={errors.endpoint} />
+              </Field>
+
+              <Field label="Response URL">
+                <TextInput name="responseUrl" value={formData.responseUrl} onChange={handleChange} placeholder="Enter response URL" />
+              </Field>
+
+              <Field label="Webhook URL">
+                <TextInput name="webhoockUrl" value={formData.webhoockUrl} onChange={handleChange} placeholder="Enter webhook URL" />
+              </Field>
+
+              <Field label="Merchant ID">
+                <TextInput name="merchantId" value={formData.merchantId} onChange={handleChange} placeholder="Enter merchant ID" />
+              </Field>
+
+              <Field label="Secret Key">
+                <TextInput name="secretKey" value={formData.secretKey} onChange={handleChange} placeholder="Enter secret key" />
+              </Field>
+
+              <Field label="Response Key">
+                <TextInput name="responsekey" value={formData.responsekey} onChange={handleChange} placeholder="Enter response key" />
+              </Field>
+
+              <Field label="Client ID">
+                <TextInput name="clientId" value={formData.clientId} onChange={handleChange} placeholder="Enter client ID" />
+              </Field>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div style={columnStyle}>
               <Field label="Type" required>
                 <select name="type" value={formData.type} onChange={handleChange} style={selectStyle}>
                   <option value="PAYIN">PAYIN</option>
                   <option value="PAYOUT">PAYOUT</option>
                 </select>
               </Field>
+
               <Field label="HTTP Method" required>
                 <select name="httpMethod" value={formData.httpMethod} onChange={handleChange} style={selectStyle}>
                   <option value="GET">GET</option>
@@ -371,96 +330,85 @@ export default function AddAcquirerPage() {
                   <option value="POST">POST</option>
                 </select>
               </Field>
+
               <Field label="Environment" required>
                 <select name="environment" value={formData.environment} onChange={handleChange} style={selectStyle}>
                   <option value="UAT">UAT</option>
                   <option value="PROD">PROD</option>
                 </select>
               </Field>
-            </div>
-          </Section>
 
-          <Section
-            icon={<Link2 style={{ width: 18 }} />}
-            iconBg="rgba(22,163,74,.11)"
-            iconColor="#15803d"
-            title="Endpoint Configuration"
-            subtitle="Gateway endpoint and callback destinations"
-          >
-            <div style={gridStyle}>
-              <Field label="Base URL" required error={errors.baseUrl}>
-                <TextInput name="baseUrl" value={formData.baseUrl} onChange={handleChange} placeholder="https://api.gateway.com/v2" error={errors.baseUrl} />
-              </Field>
-              <Field label="Endpoint" required error={errors.endpoint}>
-                <TextInput name="endpoint" value={formData.endpoint} onChange={handleChange} placeholder="/charge" error={errors.endpoint} />
-              </Field>
-              <Field label="Response URL">
-                <TextInput name="responseUrl" value={formData.responseUrl} onChange={handleChange} placeholder="https://courseraeducation.com/callback" />
-              </Field>
-              <Field label="Webhook URL">
-                <TextInput name="webhoockUrl" value={formData.webhoockUrl} onChange={handleChange} placeholder="https://courseraeducation.com/webhook" />
-              </Field>
-            </div>
-          </Section>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                <input
+                  type="checkbox"
+                  name="active"
+                  checked={formData.active}
+                  onChange={handleChange}
+                  style={{ width: 16, height: 16, margin: 0, accentColor: '#7A1F2B', cursor: 'pointer' }}
+                />
+                <span style={{ ...labelStyle, marginBottom: 0 }}>Active</span>
+              </label>
 
-          <Section
-            icon={<KeyRound style={{ width: 18 }} />}
-            iconBg="rgba(201,154,61,.14)"
-            iconColor="#C99A3D"
-            title="Gateway Credentials"
-            subtitle="Merchant identifiers and secrets supplied by the provider"
-          >
-            <div style={gridStyle}>
-              <Field label="Merchant ID">
-                <TextInput name="merchantId" value={formData.merchantId} onChange={handleChange} placeholder="Enter merchant ID" />
-              </Field>
-              <Field label="Client ID">
-                <TextInput name="clientId" value={formData.clientId} onChange={handleChange} placeholder="Enter client ID" />
-              </Field>
-              <Field label="Secret Key">
-                <TextInput type="password" name="secretKey" value={formData.secretKey} onChange={handleChange} placeholder="Enter secret key" />
-              </Field>
-              <Field label="Response Key">
-                <TextInput type="password" name="responsekey" value={formData.responsekey} onChange={handleChange} placeholder="Enter response key" />
-              </Field>
-            </div>
-          </Section>
-
-          <Section
-            icon={<Braces style={{ width: 18 }} />}
-            iconBg="rgba(122,31,43,.08)"
-            iconColor="#7A1F2B"
-            title="Request Configuration"
-            subtitle="Valid JSON objects sent as headers and request payload template"
-          >
-            <div style={{ ...gridStyle, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-              <Field label="HTTP Headers (JSON)" required error={errors.headers}>
+              <Field label="Headers (JSON)" required error={errors.headers}>
                 <textarea
                   name="headers"
-                  rows={10}
+                  rows={5}
                   value={formData.headers}
                   onChange={handleChange}
-                  style={{ ...fieldStyle, height: 230, padding: 16, resize: 'vertical', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', lineHeight: 1.55, background: '#241417', color: '#E5C378' }}
+                  style={{ ...jsonStyle, height: 150, color: '#E5C378' }}
+                  {...focusHandlers(Boolean(errors.headers))}
                 />
               </Field>
-              <Field label="Request Payload Template (JSON)" required error={errors.requestTemplate}>
+
+              <Field label="Request Template (JSON)" required error={errors.requestTemplate}>
                 <textarea
                   name="requestTemplate"
-                  rows={10}
+                  rows={11}
                   value={formData.requestTemplate}
                   onChange={handleChange}
-                  style={{ ...fieldStyle, height: 230, padding: 16, resize: 'vertical', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', lineHeight: 1.55, background: '#241417', color: '#86efac' }}
+                  style={{ ...jsonStyle, height: 285, color: '#86efac' }}
+                  {...focusHandlers(Boolean(errors.requestTemplate))}
                 />
               </Field>
             </div>
-          </Section>
+          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 20, borderTop: '1px solid rgba(122,31,43,.1)' }}>
-            <button type="button" onClick={() => navigate('/home/user-management/acquirers')} style={{ height: 42, padding: '0 20px', borderRadius: 9999, border: '1px solid rgba(122,31,43,.2)', background: '#fff', color: '#7A1F2B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Back</button>
-            <button type="button" onClick={handleClear} style={{ height: 42, padding: '0 20px', borderRadius: 9999, border: '1px solid rgba(158,137,132,.45)', background: '#FAF2E8', color: '#6b5a56', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Clear Form</button>
-            <button type="submit" disabled={submitting} style={{ height: 42, padding: '0 24px', borderRadius: 9999, border: 0, background: submitting ? 'rgba(122,31,43,.45)' : 'linear-gradient(135deg,#7A1F2B 0%,#C99A3D 100%)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer' }}>
-              {submitting ? 'Saving...' : isEdit ? 'Update Gateway API' : 'Submit & Create API'}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              flexWrap: 'wrap',
+              paddingTop: 24,
+              marginTop: 28,
+              borderTop: '1px solid rgba(122,31,43,.1)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => navigate('/home/user-management/acquirers')}
+              style={{ height: 42, padding: '0 22px', borderRadius: 9999, border: '1px solid rgba(122,31,43,.2)', background: '#fff', color: '#7A1F2B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              Back
             </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{ height: 42, padding: '0 26px', borderRadius: 9999, border: 0, background: submitting ? 'rgba(122,31,43,.45)' : 'linear-gradient(135deg,#7A1F2B 0%,#C99A3D 100%)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer' }}
+              >
+                {submitting ? 'Saving...' : isEdit ? 'Update' : 'Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={handleClear}
+                style={{ height: 42, padding: '0 22px', borderRadius: 9999, border: '1px solid rgba(201,154,61,.5)', background: '#FAF2E8', color: '#926A18', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </form>
       </div>
