@@ -20,6 +20,7 @@ export { acquirerApi, ACQUIRER_ENDPOINTS } from "./acquirer";
 export { apiMasterApi, API_MASTER_ENDPOINTS } from "./apiMaster";
 export { cryptoConfigApi, CRYPTO_CONFIG_ENDPOINTS } from "./cryptoConfig";
 export { currencyApi, CURRENCY_ENDPOINTS } from "./currency";
+export { countryApi, COUNTRY_ENDPOINTS } from "./country";
 export { emailApi, EMAIL_ENDPOINTS } from "./email";
 export { feeRuleApi, FEE_RULE_ENDPOINTS } from "./feeRule";
 export { ipKeyApi, IP_KEY_ENDPOINTS } from "./ipKey";

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
+  ChevronDown,
   Download,
   Edit3,
   Plus,
@@ -13,6 +14,7 @@ import {
 import {
   acquirerApi,
   apiMasterApi,
+  countryApi,
   currencyApi,
   feeRuleApi,
   ipKeyApi,
@@ -20,6 +22,18 @@ import {
   payoutApi,
   unwrapList,
 } from '../api';
+import {
+  parseMappedCountries,
+  normalizeCountry,
+  readCountryMappingCache,
+  writeCountryMappingCache,
+  isMongoObjectId,
+} from '../api/country';
+import {
+  parseMappedCurrencies,
+  readCurrencyMappingCache,
+  writeCurrencyMappingCache,
+} from '../api/currency';
 
 const ADMIN_OPTS = { includePayVangHeaders: false };
 const IPV4 =
@@ -183,8 +197,8 @@ function ErrorBox({ message }) {
   );
 }
 
-function Table({ columns, data, rowKey = 'id' }) {
-  if (!data.length) return <Empty />;
+function Table({ columns, data, rowKey = 'id', empty = 'Add details to view' }) {
+  if (!data.length) return <Empty>{empty}</Empty>;
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -366,6 +380,119 @@ function CurrencyPicker({ items, value, onChange, disabled = false }) {
           ? `Selected ${selectedItem.currencyName} (${selectedItem.currencyCode})`
           : `Showing ${filtered.length} of ${items.length} currencies`}
       </div>
+    </div>
+  );
+}
+
+function CountryPicker({ items, value, onChange, disabled = false }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const rootRef = useRef(null);
+  const selectedItem = items.find((item) => String(item.countryId || item.countryCode) === String(value));
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return items;
+    return items.filter((item) =>
+      `${item.countryName || ''} ${item.countryCode || ''}`.toLowerCase().includes(needle)
+    );
+  }, [items, query]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointer = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    window.addEventListener('mousedown', onPointer);
+    return () => window.removeEventListener('mousedown', onPointer);
+  }, [open]);
+
+  return (
+    <div ref={rootRef} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          setQuery('');
+          setOpen((current) => !current);
+        }}
+        style={{
+          ...fieldStyle,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          textAlign: 'left',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          color: selectedItem ? '#241417' : '#9E8984',
+        }}
+      >
+        <span>{selectedItem?.countryName || 'Select Country'}</span>
+        <ChevronDown size={16} color="#7A1F2B" />
+      </button>
+      {open ? (
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 20,
+            top: 'calc(100% + 6px)',
+            left: 0,
+            right: 0,
+            border: '1px solid rgba(122,31,43,.18)',
+            borderRadius: 10,
+            background: '#fffdf9',
+            boxShadow: '0 10px 28px rgba(36,20,23,.12)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ position: 'relative', padding: 8 }}>
+            <Search
+              size={14}
+              style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', color: '#9E8984', pointerEvents: 'none' }}
+            />
+            <input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search here"
+              style={{ ...fieldStyle, height: 36, paddingLeft: 34 }}
+            />
+          </div>
+          <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: 14, fontSize: 12.5, color: '#9E8984' }}>No countries match.</div>
+            ) : (
+              filtered.map((item) => {
+                const id = String(item.countryId || item.countryCode);
+                const active = String(value) === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      onChange(id);
+                      setQuery('');
+                      setOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      border: 0,
+                      borderTop: '1px solid rgba(122,31,43,.08)',
+                      background: active ? 'rgba(122,31,43,.08)' : 'transparent',
+                      color: '#241417',
+                      padding: '10px 14px',
+                      font: 'inherit',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {item.countryName}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -703,6 +830,34 @@ export function DocumentsPanel({ userId, merchantName }) {
   );
 }
 
+function isBrokenCurrencyRef(err) {
+  const msg = String(err?.message || err?.data?.message || err?.data?.errors || '');
+  return (
+    err?.status === 500 ||
+    /getCurrencyCode\(\)|LocationCountry|getCountryCode\(\)|because "c" is null|username should not be empty|unrecognized field|json parse error/i.test(msg)
+  );
+}
+
+function friendlyCurrencyError(err, fallback) {
+  if (isBrokenCurrencyRef(err)) return '';
+  return err?.message || fallback;
+}
+
+function resolveCurrency(item, catalog) {
+  if (item && typeof item === 'object') {
+    const id = item.currencyId || item.id;
+    const code = item.currencyCode || item.code;
+    return catalog.find((currency) => currency.currencyId === id || (code && currency.currencyCode === code)) || item;
+  }
+  return (
+    catalog.find((currency) => currency.currencyId === item || currency.currencyCode === item) || {
+      currencyId: /^[a-f0-9]{24}$/i.test(String(item)) ? item : '',
+      currencyCode: /^[a-f0-9]{24}$/i.test(String(item)) ? '' : item,
+      currencyName: item,
+    }
+  );
+}
+
 export function CurrencyPanel({ userId, merchantName }) {
   const [mapped, setMapped] = useState([]);
   const [all, setAll] = useState([]);
@@ -715,37 +870,38 @@ export function CurrencyPanel({ userId, merchantName }) {
   const load = async () => {
     setLoading(true);
     setError('');
-    const [mappingRes, allRes] = await Promise.allSettled([
+    const [mappingRes, allRes, personalRes] = await Promise.allSettled([
       currencyApi.getCurrencyMapping(userId, ADMIN_OPTS),
       currencyApi.getAllCurrencies({}, ADMIN_OPTS),
+      merchantApi.getPersonalDetails(userId, ADMIN_OPTS),
     ]);
     const currencies = allRes.status === 'fulfilled' ? rows(allRes.value) : [];
     setAll(currencies);
-    if (mappingRes.status === 'fulfilled') {
-      const direct = rows(mappingRes.value);
-      const raw = Array.isArray(mappingRes.value?.currencies)
-        ? mappingRes.value.currencies
-        : Array.isArray(mappingRes.value?.data?.currencies)
-        ? mappingRes.value.data.currencies
-        : [];
-      const resolved = (direct.length ? direct : raw).map((currency) => {
-        if (currency && typeof currency === 'object') {
-          const id = currency.currencyId || currency.id;
-          const code = currency.currencyCode || currency.code;
-          return currencies.find((item) => item.currencyId === id || (code && item.currencyCode === code)) || currency;
+
+    const mappingValue = mappingRes.status === 'fulfilled' ? mappingRes.value : null;
+    const mappingKnown = Boolean(mappingValue) && mappingValue.fallback !== true;
+    let raw = mappingKnown
+      ? (() => {
+          const direct = rows(mappingValue);
+          const listed = parseMappedCurrencies(mappingValue);
+          return direct.length ? direct : listed;
+        })()
+      : [];
+    if (!mappingKnown) {
+      for (const source of [
+        readCurrencyMappingCache(userId),
+        personalRes.status === 'fulfilled' ? personalRes.value : null,
+      ]) {
+        const parsed = parseMappedCurrencies(source);
+        if (parsed.length) {
+          raw = parsed;
+          break;
         }
-        return (
-          currencies.find((item) => item.currencyId === currency || item.currencyCode === currency) || {
-            currencyId: /^[a-f0-9]{24}$/i.test(String(currency)) ? currency : '',
-            currencyCode: /^[a-f0-9]{24}$/i.test(String(currency)) ? '' : currency,
-            currencyName: currency,
-          }
-        );
-      });
-      setMapped(resolved);
-    } else {
-      setError(mappingRes.reason?.message || 'Unable to load currency mappings.');
+      }
     }
+    const resolved = raw.map((item) => resolveCurrency(item, currencies));
+    setMapped(resolved);
+    writeCurrencyMappingCache(userId, resolved);
     setLoading(false);
   };
   useEffect(() => {
@@ -771,17 +927,44 @@ export function CurrencyPanel({ userId, merchantName }) {
     setSaving(true);
     setError('');
     try {
-      await currencyApi.addCurrencyMapping(
-        { userId, currencies: [...new Set([...mappedIds, selected])] },
-        ADMIN_OPTS
-      );
+      const nextIds = [...new Set([...mappedIds, selected])];
+      const nextMapped = [
+        ...mapped,
+        resolveCurrency(selected, all),
+      ].filter((item, index, list) => list.findIndex((row) => (row.currencyId || row.currencyCode) === (item.currencyId || item.currencyCode)) === index);
+      writeCurrencyMappingCache(userId, nextMapped);
+      setMapped(nextMapped);
       setDrawer(false);
       setSelected('');
-      await load();
+      await currencyApi.addCurrencyMapping(
+        { userId, currencies: nextIds },
+        ADMIN_OPTS
+      );
     } catch (err) {
-      setError(err.message || 'Unable to map currency.');
+      if (!isBrokenCurrencyRef(err)) setError(err.message || 'Unable to map currency.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const remove = async (row) => {
+    const id = String(row?.currencyId || row?.currencyCode || '');
+    if (!id) return;
+    const remaining = mapped.filter((item) => String(item?.currencyId || item?.currencyCode || '') !== id);
+    setError('');
+    setMapped(remaining);
+    writeCurrencyMappingCache(userId, remaining);
+    try {
+      await currencyApi.removeCurrencyMapping(
+        userId,
+        id,
+        remaining.map((item) => item.currencyCode || item.currencyId),
+        ADMIN_OPTS
+      );
+    } catch (err) {
+      setMapped(remaining);
+      writeCurrencyMappingCache(userId, remaining);
+      if (!isBrokenCurrencyRef(err)) setError(err.message || 'Unable to remove currency.');
     }
   };
 
@@ -805,14 +988,7 @@ export function CurrencyPanel({ userId, merchantName }) {
                 <ActionButton
                   danger
                   title="Remove currency"
-                  onClick={async () => {
-                    try {
-                      await currencyApi.removeCurrencyMapping(userId, valueOf(row, 'currencyId', 'currencyCode'), ADMIN_OPTS);
-                      await load();
-                    } catch (err) {
-                      setError(err.message || 'Unable to remove currency.');
-                    }
-                  }}
+                  onClick={() => remove(row)}
                 >
                   <Trash2 size={14} />
                 </ActionButton>
@@ -834,6 +1010,178 @@ export function CurrencyPanel({ userId, merchantName }) {
               disabled={saving}
             />
           </div>
+          <DrawerActions saving={saving} onClose={() => setDrawer(false)} />
+        </form>
+      </Drawer>
+    </>
+  );
+}
+
+function resolveCountry(item, catalog) {
+  const raw = item && typeof item === 'object' ? item : { countryId: item, countryCode: item };
+  const apiId = String(raw.countryId || raw.id || '');
+  const code = String(
+    raw.countryCode || raw.code || (!isMongoObjectId(apiId) ? apiId : '')
+  ).toUpperCase();
+  const match = catalog.find(
+    (country) =>
+      (code && country.countryCode === code) ||
+      (apiId && !isMongoObjectId(apiId) && String(country.countryId) === apiId) ||
+      (raw.countryName && String(country.countryName).toLowerCase() === String(raw.countryName).toLowerCase())
+  );
+  return {
+    ...raw,
+    countryId: isMongoObjectId(apiId) ? apiId : match?.countryId || apiId || code,
+    countryCode: code || match?.countryCode || '',
+    countryName: raw.countryName || raw.name || match?.countryName || code,
+  };
+}
+
+export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated }) {
+  const [mapped, setMapped] = useState([]);
+  const [all, setAll] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [drawer, setDrawer] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    const [mappingRes, allRes, personalRes, accountRes] = await Promise.allSettled([
+      countryApi.getCountryMapping(userId, ADMIN_OPTS),
+      countryApi.getAllCountries({}, ADMIN_OPTS),
+      merchantApi.getPersonalDetails(userId, ADMIN_OPTS),
+      merchantApi.getAccountDetails(userId, ADMIN_OPTS),
+    ]);
+    const catalog =
+      allRes.status === 'fulfilled' && allRes.value?.data?.length
+        ? allRes.value.data.map(normalizeCountry)
+        : isoCountries();
+    setAll(catalog);
+
+    const mappingValue = mappingRes.status === 'fulfilled' ? mappingRes.value : null;
+    const mappingRows = mappingValue && mappingValue.fallback !== true ? parseMappedCountries(mappingValue) : [];
+    const mappingKnown = mappingRows.some((item) =>
+      isMongoObjectId(item && typeof item === 'object' ? item.countryId || item.id : item)
+    );
+    let raw = mappingKnown ? mappingRows : [];
+    if (!mappingKnown) {
+      for (const source of [
+        readCountryMappingCache(userId),
+        personalRes.status === 'fulfilled' ? personalRes.value : null,
+        accountRes.status === 'fulfilled' ? accountRes.value : null,
+        merchant,
+      ]) {
+        const parsed = parseMappedCountries(source);
+        if (parsed.length) {
+          raw = parsed;
+          break;
+        }
+      }
+    }
+    const resolved = raw.map((item) => resolveCountry(item, catalog));
+    setMapped(resolved);
+    writeCountryMappingCache(userId, resolved);
+    if (allRes.status === 'rejected' && mappingRes.status === 'rejected') {
+      setError(allRes.reason?.message || mappingRes.reason?.message || 'Unable to load countries.');
+    }
+    setLoading(false);
+  };
+  useEffect(() => {
+    const timer = window.setTimeout(load, 0);
+    return () => window.clearTimeout(timer);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mappedIds = useMemo(
+    () => mapped.map((item) => String(item?.countryId || item?.countryCode || '')).filter(Boolean),
+    [mapped]
+  );
+
+  const add = async (event) => {
+    event.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    setError('');
+    try {
+      const nextIds = [...new Set([...mappedIds, selected])];
+      await countryApi.addCountryMapping({ userId, countries: nextIds }, ADMIN_OPTS);
+      writeCountryMappingCache(
+        userId,
+        [...mapped, resolveCountry(selected, all)].filter(Boolean)
+      );
+      setDrawer(false);
+      setSelected('');
+      await load();
+      await onUpdated?.();
+    } catch (err) {
+      setError(err.message || 'Unable to map country.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (row) => {
+    const id = String(row?.countryId || row?.countryCode || '');
+    if (!id) return;
+    const remaining = mapped.filter((item) => String(item?.countryId || item?.countryCode || '') !== id);
+    setError('');
+    setMapped(remaining);
+    writeCountryMappingCache(userId, remaining);
+    try {
+      await countryApi.removeCountryMapping(
+        userId,
+        id,
+        remaining.map((item) => item.countryCode || item.countryId),
+        ADMIN_OPTS
+      );
+      await load();
+      await onUpdated?.();
+    } catch (err) {
+      setMapped(remaining);
+      writeCountryMappingCache(userId, remaining);
+      const message = String(err?.message || '');
+      if (!/LocationCountry|getCountryCode\(\)|because "c" is null/i.test(message)) {
+        setError(err.message || 'Unable to remove country.');
+      }
+    }
+  };
+
+  if (loading) return <Loading />;
+  return (
+    <>
+      <ErrorBox message={error} />
+      <Section title="Country Mapping" onAdd={() => { setSelected(''); setDrawer(true); }} addTitle="Add Country">
+        <Table
+          rowKey="countryId"
+          empty="Add Country to view"
+          data={mapped}
+          columns={[
+            { key: 'countryName', label: 'Country Name', render: (row) => valueOf(row, 'countryName', 'name') },
+            { key: 'countryCode', label: 'Country Code' },
+            {
+              key: 'action',
+              label: 'Action',
+              render: (row) => (
+                <ActionButton danger title="Remove country" onClick={() => remove(row)}>
+                  <Trash2 size={14} />
+                </ActionButton>
+              ),
+            },
+          ]}
+        />
+      </Section>
+      <Drawer title="Add Country" merchantName={merchantName} merchantId={userId} open={drawer} onClose={() => setDrawer(false)}>
+        <form onSubmit={add}>
+          <Field label="Country" required>
+            <CountryPicker
+              items={all.filter((item) => !mappedIds.includes(String(item.countryId || item.countryCode)))}
+              value={selected}
+              onChange={setSelected}
+              disabled={saving}
+            />
+          </Field>
           <DrawerActions saving={saving} onClose={() => setDrawer(false)} />
         </form>
       </Drawer>
