@@ -166,6 +166,21 @@ function mergePreferFilled(...objects) {
   return out;
 }
 
+function applyOperationalFlag(source, key, value) {
+  const patch = {
+    status: { status: value, enabled: value, accountNonLocked: value },
+    saleMode: { processingMode: value ? 'SALE' : 'AUTH', authStatus: !value },
+    verified: { verified: value, isVerified: value },
+    payout: { payoutEnabled: value, payoutStatus: value },
+    payin: { payinEnabled: value, payinStatus: value },
+    gstPayin: { payinGstEnabled: value, payinGstStatus: value },
+    gstPayout: { payoutGstEnabled: value, payoutGstStatus: value },
+    payoutFeeRefund: { feeReturnOnRefund: value, payoutFeeReturnStatus: value },
+    payoutFromWebapp: { payoutEnabledViaApp: value, payoutStatusViaApplication: value },
+  }[key];
+  return patch ? { ...source, ...patch } : source;
+}
+
 function Toggle({ checked, onChange, disabled, label }) {
   return (
     <button
@@ -313,6 +328,7 @@ export default function MerchantDetailPage() {
   const [savingKey, setSavingKey] = useState('');
   const [copied, setCopied] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [flagOverrides, setFlagOverrides] = useState({});
 
   const merged = useMemo(
     () => ({ ...preview, ...account, ...personal, ...merchant }),
@@ -323,7 +339,7 @@ export default function MerchantDetailPage() {
     const processing = String(pickFirst(merged.processingMode, merged.txnProcessingMode) || '').toUpperCase();
     const saleMode =
       processing === 'SALE' ? true : processing === 'AUTH' ? false : !toBool(merged.authStatus);
-    return {
+    const computed = {
       status: toBool(pickFirst(merged.status, merged.enabled, merged.accountNonLocked, true)),
       saleMode,
       verified: toBool(pickFirst(merged.verified, merged.isVerified, merged.verificationStatus)),
@@ -336,7 +352,8 @@ export default function MerchantDetailPage() {
         pickFirst(merged.payoutEnabledViaApp, merged.payoutStatusViaApplication)
       ),
     };
-  }, [merged]);
+    return { ...computed, ...flagOverrides };
+  }, [merged, flagOverrides]);
 
   const displayName = toTitleCase(pickFirst(merged.fullName, merged.name, preview.name)) || 'Merchant';
   const email = dash(pickFirst(merged.email, merged.emailId, merged.emailID, preview.email, userId));
@@ -421,17 +438,23 @@ export default function MerchantDetailPage() {
 
   useEffect(() => {
     if (!userId) return undefined;
+    setFlagOverrides({});
     const timer = window.setTimeout(loadProfile, 0);
     return () => window.clearTimeout(timer);
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const runToggle = async (key, request) => {
+    const next = !flags[key];
     setSavingKey(key);
     setNotice('');
+    setFlagOverrides((prev) => ({ ...prev, [key]: next }));
+    setMerchant((prev) => applyOperationalFlag(prev, key, next));
     try {
       await request();
-      await loadProfile();
+      await loadProfile({ silent: true });
     } catch (err) {
+      setFlagOverrides((prev) => ({ ...prev, [key]: !next }));
+      setMerchant((prev) => applyOperationalFlag(prev, key, !next));
       setNotice(err.message || `Failed to update ${key}.`);
     } finally {
       setSavingKey('');

@@ -187,9 +187,17 @@ export function parseMappedCountries(source) {
 
 const CACHE_PREFIX = "country-mapping:";
 
+function mappingStore() {
+  try {
+    return window.localStorage;
+  } catch {
+    return window.sessionStorage;
+  }
+}
+
 export function readCountryMappingCache(userId) {
   try {
-    const parsed = JSON.parse(sessionStorage.getItem(CACHE_PREFIX + userId) || "[]");
+    const parsed = JSON.parse(mappingStore().getItem(CACHE_PREFIX + userId) || "[]");
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -198,7 +206,7 @@ export function readCountryMappingCache(userId) {
 
 export function writeCountryMappingCache(userId, countries) {
   try {
-    sessionStorage.setItem(CACHE_PREFIX + userId, JSON.stringify(countries || []));
+    mappingStore().setItem(CACHE_PREFIX + userId, JSON.stringify(countries || []));
   } catch {
     /* ignore quota / private mode */
   }
@@ -216,18 +224,34 @@ export const countryApi = {
   },
 
   addCountryMapping: async (body, options = {}) => {
-    const ids = mappingIds(body?.countries);
-    const canUseMappingApi = ids.length > 0 && ids.every(isMongoObjectId);
-    if (canUseMappingApi) {
+    const list = Array.isArray(body?.countries) ? body.countries : [];
+    const ids = mappingIds(list);
+    const names = list
+      .map((item) => (item && typeof item === "object" ? item.countryName || item.name : ""))
+      .filter(Boolean);
+    const codes = ids.filter((id) => !isMongoObjectId(id));
+    const mongoIds = ids.filter(isMongoObjectId);
+    if (mongoIds.length) {
       try {
-        return await apiClient.post(COUNTRY_ENDPOINTS.MAPPING, { ...body, countries: ids }, options);
+        await apiClient.post(COUNTRY_ENDPOINTS.MAPPING, { userId: body?.userId, countries: mongoIds }, options);
       } catch (err) {
         if (!isCountryApiUnavailable(err) && !isBrokenCountryRef(err) && Number(err?.status) !== 500) {
           throw err;
         }
       }
     }
-    return countryApi.saveFallbackCountries(body.userId, ids, options);
+    const countryName = names[names.length - 1] || names[0] || "";
+    const countryCode = codes[codes.length - 1] || codes[0] || "";
+    return merchantApi.updateDetails(
+      {
+        userId: body?.userId,
+        username: body?.userId,
+        userName: body?.userId,
+        ...(countryName ? { country: countryName, countryName } : {}),
+        ...(countryCode ? { countryCode, countries: codes.join(",") } : {}),
+      },
+      options
+    );
   },
 
   getCountryMapping: async (merchantId, options = {}) => {
@@ -252,7 +276,7 @@ export const countryApi = {
   removeCountryMapping: async (merchantId, countryId, remaining = [], options = {}) => {
     if (isMongoObjectId(countryId)) {
       try {
-        return await apiClient.delete(
+        await apiClient.delete(
           COUNTRY_ENDPOINTS.REMOVE_MAPPING(merchantId, countryId),
           options
         );
@@ -262,18 +286,18 @@ export const countryApi = {
         }
       }
     }
-    return countryApi.saveFallbackCountries(merchantId, remaining, options);
-  },
-
-  saveFallbackCountries: (userId, countries = [], options = {}) => {
-    const codes = (Array.isArray(countries) ? countries : [countries])
-      .map((item) => {
-        if (item && typeof item === "object") return item.countryCode || item.countryId;
-        return item;
-      })
+    const codes = mappingIds(remaining).filter((id) => !isMongoObjectId(id));
+    const names = remaining
+      .map((item) => (item && typeof item === "object" ? item.countryName || item.name : ""))
       .filter(Boolean);
     return merchantApi.updateDetails(
-      { userId, username: userId, userName: userId, countries: codes.join(",") },
+      {
+        userId: merchantId,
+        username: merchantId,
+        userName: merchantId,
+        ...(names[0] ? { country: names[0], countryName: names[0] } : {}),
+        ...(codes.length ? { countryCode: codes[0], countries: codes.join(",") } : {}),
+      },
       options
     );
   },
