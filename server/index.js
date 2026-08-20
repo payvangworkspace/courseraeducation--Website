@@ -425,7 +425,12 @@ app.post('/user/admin', (req, res) => res.json(users[0]));
 app.post('/user/UserCreationViaAdmin', (req, res) => res.json({ status: true, message: 'User created' }));
 
 app.put('/user/verifyUser/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'verified', req.body) || { message: 'Verified' }));
-app.put('/user/updateDetails', (req, res) => res.json({ message: 'Updated' }));
+app.put('/user/updateDetails', (req, res) => {
+  const { userId, ...fields } = req.body || {};
+  const user = findUser(userId);
+  if (user) Object.assign(user, fields);
+  res.json({ message: 'Updated', userId, ...fields });
+});
 app.put('/user/status/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'status', req.body) || { message: 'Status updated' }));
 app.put('/user/payoutstatus/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutStatus', req.body) || { message: 'Payout status updated' }));
 app.put('/user/payoutStatusViaApplication/:userId', (req, res) => res.json(patchUserFlag(req.params.userId, 'payoutStatusViaApplication', req.body) || { message: 'Payout status updated' }));
@@ -445,16 +450,26 @@ app.get('/user/personalDetails/:userId', (req, res) => {
     userId: user.userId,
     fullName: user.fullName,
     email: user.email,
+    emailId: user.emailId || user.email,
     contactNumber: user.contactNumber,
     businessName: user.businessName,
     businessType: user.businessType,
+    businessSubType: user.businessSubType || user.subIndustry,
     subIndustry: user.subIndustry,
     website: user.website,
     country: user.country,
     city: user.city,
     address: user.address,
+    addressDetails: user.addressDetails || user.address,
     gender: user.gender,
-    dateOfBirth: '',
+    dateOfBirth: user.dateOfBirth || '',
+    registrationNo: user.registrationNo || '',
+    panSsn: user.panSsn || '',
+    gstVat: user.gstVat || '',
+    integrationFee: user.integrationFee || '0',
+    webTransferFee: user.webTransferFee || '0',
+    settlementFee: user.settlementFee || '0',
+    minSettlementFee: user.minSettlementFee || '0',
   });
 });
 app.get('/user/document/:userId', (req, res) => res.json([{ documentId: 'DOC-901', name: 'PAN Card', status: 'VERIFIED' }]));
@@ -463,9 +478,13 @@ app.get('/user/accountDetails/:userId', (req, res) => {
   const user = findUser(req.params.userId) || users[1];
   res.json({
     userId: user.userId,
-    bankName: 'HDFC Bank',
-    accountNumber: '501000998122',
-    ifsc: 'HDFC0000123',
+    bankName: user.bankName || '',
+    branchName: user.branchName || '',
+    accountNumber: user.accountNumber || '',
+    ifscCode: user.ifscCode || user.ifsc || '',
+    ifsc: user.ifsc || user.ifscCode || '',
+    cardNumber: user.cardNumber || '',
+    vpa: user.vpa || '',
   });
 });
 app.get('/user/GetRandomAESKey', (req, res) => res.json({ aesKey: 'AES-256-KEY-9981' }));
