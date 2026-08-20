@@ -5,6 +5,7 @@ import {
   Edit3,
   Plus,
   RefreshCw,
+  Search,
   ShieldCheck,
   Trash2,
   X,
@@ -120,7 +121,7 @@ function ActionButton({ children, onClick, title, danger = false, disabled = fal
   );
 }
 
-function Section({ title, subtitle, onAdd, children }) {
+function Section({ title, subtitle, onAdd, addTitle, edit, children }) {
   return (
     <section
       style={{
@@ -147,8 +148,8 @@ function Section({ title, subtitle, onAdd, children }) {
           {subtitle ? <p style={{ margin: '2px 0 0', color: '#6b5a56', fontSize: 11.5 }}>{subtitle}</p> : null}
         </div>
         {onAdd ? (
-          <ActionButton title={`Add ${title}`} onClick={onAdd}>
-            <Plus size={16} />
+          <ActionButton title={addTitle || `Add ${title}`} onClick={onAdd}>
+            {edit ? <Edit3 size={16} /> : <Plus size={16} />}
           </ActionButton>
         ) : null}
       </div>
@@ -290,6 +291,82 @@ function Field({ label, required, children }) {
       </span>
       {children}
     </label>
+  );
+}
+
+function CurrencyPicker({ items, value, onChange, disabled = false }) {
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return items;
+    return items.filter((item) =>
+      `${item.currencyName || ''} ${item.currencyCode || ''}`.toLowerCase().includes(needle)
+    );
+  }, [items, query]);
+  const selectedItem = items.find((item) => item.currencyId === value);
+
+  return (
+    <div>
+      <div style={{ position: 'relative' }}>
+        <Search
+          size={14}
+          style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9E8984', pointerEvents: 'none' }}
+        />
+        <input
+          value={query}
+          disabled={disabled}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search by name or code (INR, USD…)"
+          style={{ ...fieldStyle, paddingLeft: 34 }}
+        />
+      </div>
+      <div
+        style={{
+          marginTop: 8,
+          maxHeight: 280,
+          overflowY: 'auto',
+          border: '1px solid rgba(122,31,43,.18)',
+          borderRadius: 10,
+          background: '#fffdf9',
+        }}
+      >
+        {filtered.length === 0 ? (
+          <div style={{ padding: 14, fontSize: 12.5, color: '#9E8984' }}>No currencies match.</div>
+        ) : (
+          filtered.map((item) => {
+            const id = item.currencyId;
+            const code = item.currencyCode;
+            const active = value === id;
+            return (
+              <button
+                key={id || code}
+                type="button"
+                onClick={() => id && onChange(id)}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  border: 0,
+                  borderBottom: '1px solid rgba(122,31,43,.08)',
+                  background: active ? 'rgba(122,31,43,.08)' : 'transparent',
+                  color: '#241417',
+                  padding: '10px 12px',
+                  font: 'inherit',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                {item.currencyName} ({code})
+              </button>
+            );
+          })
+        )}
+      </div>
+      <div style={{ marginTop: 6, fontSize: 11, color: '#9E8984' }}>
+        {selectedItem
+          ? `Selected ${selectedItem.currencyName} (${selectedItem.currencyCode})`
+          : `Showing ${filtered.length} of ${items.length} currencies`}
+      </div>
+    </div>
   );
 }
 
@@ -637,32 +714,35 @@ export function CurrencyPanel({ userId, merchantName }) {
 
   const load = async () => {
     setLoading(true);
+    setError('');
     const [mappingRes, allRes] = await Promise.allSettled([
       currencyApi.getCurrencyMapping(userId, ADMIN_OPTS),
-      currencyApi.getAllCurrencies({ start: 0, size: 500 }, ADMIN_OPTS),
+      currencyApi.getAllCurrencies({}, ADMIN_OPTS),
     ]);
     const currencies = allRes.status === 'fulfilled' ? rows(allRes.value) : [];
     setAll(currencies);
     if (mappingRes.status === 'fulfilled') {
       const direct = rows(mappingRes.value);
-      const codes = Array.isArray(mappingRes.value?.currencies)
+      const raw = Array.isArray(mappingRes.value?.currencies)
         ? mappingRes.value.currencies
         : Array.isArray(mappingRes.value?.data?.currencies)
         ? mappingRes.value.data.currencies
         : [];
-      setMapped(
-        direct.length
-          ? direct
-          : codes.map((currency) =>
-              typeof currency === 'string'
-                ? currencies.find((item) => item.currencyCode === currency) || {
-                    currencyId: currency,
-                    currencyCode: currency,
-                    currencyName: currency,
-                  }
-                : currency
-            )
-      );
+      const resolved = (direct.length ? direct : raw).map((currency) => {
+        if (currency && typeof currency === 'object') {
+          const id = currency.currencyId || currency.id;
+          const code = currency.currencyCode || currency.code;
+          return currencies.find((item) => item.currencyId === id || (code && item.currencyCode === code)) || currency;
+        }
+        return (
+          currencies.find((item) => item.currencyId === currency || item.currencyCode === currency) || {
+            currencyId: /^[a-f0-9]{24}$/i.test(String(currency)) ? currency : '',
+            currencyCode: /^[a-f0-9]{24}$/i.test(String(currency)) ? '' : currency,
+            currencyName: currency,
+          }
+        );
+      });
+      setMapped(resolved);
     } else {
       setError(mappingRes.reason?.message || 'Unable to load currency mappings.');
     }
@@ -673,13 +753,28 @@ export function CurrencyPanel({ userId, merchantName }) {
     return () => window.clearTimeout(timer);
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const codes = useMemo(() => mapped.map((item) => String(valueOf(item, 'currencyCode', 'code'))).filter((code) => code !== '—'), [mapped]);
+  const mappedIds = useMemo(
+    () =>
+      mapped
+        .map((item) => {
+          const id = item?.currencyId;
+          if (id) return String(id);
+          const match = all.find((currency) => currency.currencyCode === item?.currencyCode);
+          return match?.currencyId ? String(match.currencyId) : '';
+        })
+        .filter(Boolean),
+    [mapped, all]
+  );
   const add = async (event) => {
     event.preventDefault();
     if (!selected) return;
     setSaving(true);
+    setError('');
     try {
-      await currencyApi.addCurrencyMapping({ userId, currencies: [...new Set([...codes, selected])] }, ADMIN_OPTS);
+      await currencyApi.addCurrencyMapping(
+        { userId, currencies: [...new Set([...mappedIds, selected])] },
+        ADMIN_OPTS
+      );
       setDrawer(false);
       setSelected('');
       await load();
@@ -694,7 +789,7 @@ export function CurrencyPanel({ userId, merchantName }) {
   return (
     <>
       <ErrorBox message={error} />
-      <Section title="Currency Mapping" onAdd={() => setDrawer(true)}>
+      <Section title="Currency Mapping" onAdd={() => { setSelected(''); setDrawer(true); }}>
         <Table
           rowKey="currencyId"
           data={mapped}
@@ -728,16 +823,17 @@ export function CurrencyPanel({ userId, merchantName }) {
       </Section>
       <Drawer title="Add Currency Mapping" merchantName={merchantName} merchantId={userId} open={drawer} onClose={() => setDrawer(false)}>
         <form onSubmit={add}>
-          <Field label="Currency" required>
-            <select value={selected} onChange={(e) => setSelected(e.target.value)} style={fieldStyle}>
-              <option value="">Select currency</option>
-              {all.filter((item) => !codes.includes(item.currencyCode)).map((item) => (
-                <option key={item.currencyId || item.currencyCode} value={item.currencyCode}>
-                  {item.currencyName} ({item.currencyCode})
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div style={{ marginBottom: 14 }}>
+            <span style={{ display: 'block', marginBottom: 6, color: '#7A1F2B', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase' }}>
+              Currency <span style={{ color: '#dc2626' }}>*</span>
+            </span>
+            <CurrencyPicker
+              items={all.filter((item) => item.currencyId && !mappedIds.includes(item.currencyId))}
+              value={selected}
+              onChange={setSelected}
+              disabled={saving}
+            />
+          </div>
           <DrawerActions saving={saving} onClose={() => setDrawer(false)} />
         </form>
       </Drawer>
@@ -1023,6 +1119,228 @@ export function AggregatorPanel({ userId, merchantName }) {
             ACTIVE
           </label>
           <DrawerActions saving={saving} submitLabel={editing ? 'Update' : 'Add'} onClose={() => setDrawer(false)} />
+        </form>
+      </Drawer>
+    </>
+  );
+}
+
+const EMPTY_BUSINESS = {
+  businessName: '',
+  registrationNo: '',
+  emailId: '',
+  contactNumber: '',
+  website: '',
+  addressDetails: '',
+  panSsn: '',
+  gstVat: '',
+  integrationFee: '0',
+  webTransferFee: '0',
+  settlementFee: '0',
+  minSettlementFee: '0',
+};
+
+const EMPTY_BANK = {
+  bankName: '',
+  branchName: '',
+  accountNumber: '',
+  ifscCode: '',
+  cardNumber: '',
+  vpa: '',
+};
+
+function pickDetail(source, ...keys) {
+  for (const key of keys) {
+    const value = source?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== '') return String(value);
+  }
+  return '';
+}
+
+function DetailRow({ label, value, last = false }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 12,
+        padding: '10px 0',
+        borderBottom: last ? 'none' : '1px solid rgba(122, 31, 43, 0.06)',
+      }}
+    >
+      <span style={{ minWidth: 150, fontSize: 12, fontWeight: 800, color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 13.5, fontWeight: 600, color: '#241417', wordBreak: 'break-word' }}>{value || '—'}</span>
+    </div>
+  );
+}
+
+export function BusinessPanel({ userId, merchantName, merchant = {}, onUpdated }) {
+  const [drawer, setDrawer] = useState('');
+  const [business, setBusiness] = useState(EMPTY_BUSINESS);
+  const [bank, setBank] = useState(EMPTY_BANK);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const openBusiness = () => {
+    setError('');
+    setBusiness({
+      businessName: pickDetail(merchant, 'businessName', 'companyName'),
+      registrationNo: pickDetail(merchant, 'registrationNo', 'registrationNumber', 'companyRegistration'),
+      emailId: pickDetail(merchant, 'emailId', 'companyEmail', 'email', 'emailID') || userId,
+      contactNumber: pickDetail(merchant, 'companyContactNumber', 'contactNumber', 'phone', 'mobile'),
+      website: pickDetail(merchant, 'website', 'websiteUrl'),
+      addressDetails: pickDetail(merchant, 'addressDetails', 'address'),
+      panSsn: pickDetail(merchant, 'panSsn', 'panSSN', 'pan'),
+      gstVat: pickDetail(merchant, 'gstVat', 'gstVAT', 'gst'),
+      integrationFee: pickDetail(merchant, 'integrationFee') || '0',
+      webTransferFee: pickDetail(merchant, 'webTransferFee') || '0',
+      settlementFee: pickDetail(merchant, 'settlementFee') || '0',
+      minSettlementFee: pickDetail(merchant, 'minSettlementFee') || '0',
+    });
+    setDrawer('business');
+  };
+
+  const openBank = () => {
+    setError('');
+    setBank({
+      bankName: pickDetail(merchant, 'bankName'),
+      branchName: pickDetail(merchant, 'branchName', 'bankBranch'),
+      accountNumber: pickDetail(merchant, 'accountNumber', 'bankAccountNumber'),
+      ifscCode: pickDetail(merchant, 'ifscCode', 'ifsc', 'swift'),
+      cardNumber: pickDetail(merchant, 'cardNumber'),
+      vpa: pickDetail(merchant, 'vpa', 'vpaId'),
+    });
+    setDrawer('bank');
+  };
+
+  const save = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      const fields = drawer === 'business' ? business : bank;
+      await merchantApi.updateDetails({ userId, ...fields }, ADMIN_OPTS);
+      setDrawer('');
+      await onUpdated?.();
+    } catch (err) {
+      setError(err.message || 'Unable to save details.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasBank = Boolean(
+    pickDetail(merchant, 'bankName', 'accountNumber', 'bankAccountNumber', 'ifsc', 'ifscCode', 'branchName', 'vpa')
+  );
+
+  return (
+    <>
+      <ErrorBox message={error} />
+      <div style={{ display: 'grid', gap: 20 }}>
+        <Section title="Business Details" onAdd={openBusiness} addTitle="Update Business Details" edit>
+          <div className="merchant-business-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 28px' }}>
+            <div>
+              <DetailRow label="Business Name" value={pickDetail(merchant, 'businessName', 'companyName')} />
+              <DetailRow label="Registration No" value={pickDetail(merchant, 'registrationNo', 'registrationNumber')} />
+              <DetailRow label="Email Id" value={pickDetail(merchant, 'emailId', 'companyEmail', 'email') || userId} />
+              <DetailRow label="Phone" value={pickDetail(merchant, 'companyContactNumber', 'contactNumber', 'phone')} />
+              <DetailRow label="Business Type" value={pickDetail(merchant, 'businessType')} last />
+            </div>
+            <div>
+              <DetailRow label="Address" value={pickDetail(merchant, 'addressDetails', 'address')} />
+              <DetailRow label="Website" value={pickDetail(merchant, 'website', 'websiteUrl')} />
+              <DetailRow label="PAN / SSN" value={pickDetail(merchant, 'panSsn', 'panSSN', 'pan')} />
+              <DetailRow label="GST / VAT" value={pickDetail(merchant, 'gstVat', 'gstVAT', 'gst')} />
+              <DetailRow label="Business Sub Type" value={pickDetail(merchant, 'businessSubType', 'subIndustry')} last />
+            </div>
+          </div>
+        </Section>
+        <Section title="Bank Details" onAdd={openBank} addTitle="Add Bank">
+          {hasBank ? (
+            <>
+              <DetailRow label="Bank Name" value={pickDetail(merchant, 'bankName')} />
+              <DetailRow label="Branch Name" value={pickDetail(merchant, 'branchName', 'bankBranch')} />
+              <DetailRow label="Account Number" value={pickDetail(merchant, 'accountNumber', 'bankAccountNumber')} />
+              <DetailRow label="IFSC / SWIFT" value={pickDetail(merchant, 'ifscCode', 'ifsc', 'swift')} />
+              <DetailRow label="Card Number" value={pickDetail(merchant, 'cardNumber')} />
+              <DetailRow label="VPA" value={pickDetail(merchant, 'vpa', 'vpaId')} last />
+            </>
+          ) : (
+            <Empty>No Bank Data Available</Empty>
+          )}
+        </Section>
+      </div>
+
+      <Drawer title="Update Business Details" merchantName={merchantName} merchantId={userId} open={drawer === 'business'} onClose={() => setDrawer('')}>
+        <form onSubmit={save}>
+          <Field label="Business Name" required>
+            <input value={business.businessName} onChange={(e) => setBusiness((prev) => ({ ...prev, businessName: e.target.value }))} placeholder="Enter business name" style={fieldStyle} required />
+          </Field>
+          <Field label="Registration No" required>
+            <input value={business.registrationNo} onChange={(e) => setBusiness((prev) => ({ ...prev, registrationNo: e.target.value }))} placeholder="Enter Company Registration" style={fieldStyle} required />
+          </Field>
+          <Field label="Email ID" required>
+            <input type="email" value={business.emailId} onChange={(e) => setBusiness((prev) => ({ ...prev, emailId: e.target.value }))} placeholder="Enter Company Email ID" style={fieldStyle} required />
+          </Field>
+          <Field label="Company Contact Number" required>
+            <input value={business.contactNumber} onChange={(e) => setBusiness((prev) => ({ ...prev, contactNumber: e.target.value }))} placeholder="Enter Company Contact Number" style={fieldStyle} required />
+          </Field>
+          <Field label="Website URL" required>
+            <input value={business.website} onChange={(e) => setBusiness((prev) => ({ ...prev, website: e.target.value }))} placeholder="Enter Website URL" style={fieldStyle} required />
+          </Field>
+          <Field label="Address Detail" required>
+            <textarea
+              value={business.addressDetails}
+              onChange={(e) => setBusiness((prev) => ({ ...prev, addressDetails: e.target.value }))}
+              placeholder="Enter full Address"
+              required
+              style={{ ...fieldStyle, height: 88, padding: '10px 12px', resize: 'vertical' }}
+            />
+          </Field>
+          <Field label="PAN/SSN" required>
+            <input value={business.panSsn} onChange={(e) => setBusiness((prev) => ({ ...prev, panSsn: e.target.value }))} placeholder="Enter PAN / SSN" style={fieldStyle} required />
+          </Field>
+          <Field label="GST/VAT" required>
+            <input value={business.gstVat} onChange={(e) => setBusiness((prev) => ({ ...prev, gstVat: e.target.value }))} placeholder="Enter GST / VAT" style={fieldStyle} required />
+          </Field>
+          <Field label="Integration Fee">
+            <input type="number" min="0" step="0.01" value={business.integrationFee} onChange={(e) => setBusiness((prev) => ({ ...prev, integrationFee: e.target.value }))} style={fieldStyle} />
+          </Field>
+          <Field label="Web Transfer Fee">
+            <input type="number" min="0" step="0.01" value={business.webTransferFee} onChange={(e) => setBusiness((prev) => ({ ...prev, webTransferFee: e.target.value }))} style={fieldStyle} />
+          </Field>
+          <Field label="Settlement Fee">
+            <input type="number" min="0" step="0.01" value={business.settlementFee} onChange={(e) => setBusiness((prev) => ({ ...prev, settlementFee: e.target.value }))} style={fieldStyle} />
+          </Field>
+          <Field label="Min Settlement Fee">
+            <input type="number" min="0" step="0.01" value={business.minSettlementFee} onChange={(e) => setBusiness((prev) => ({ ...prev, minSettlementFee: e.target.value }))} style={fieldStyle} />
+          </Field>
+          <DrawerActions saving={saving} submitLabel="Update" onClose={() => setDrawer('')} />
+        </form>
+      </Drawer>
+
+      <Drawer title="Add Bank" merchantName={merchantName} merchantId={userId} open={drawer === 'bank'} onClose={() => setDrawer('')}>
+        <form onSubmit={save}>
+          <Field label="Bank Name" required>
+            <input value={bank.bankName} onChange={(e) => setBank((prev) => ({ ...prev, bankName: e.target.value }))} placeholder="Enter bank name" style={fieldStyle} required />
+          </Field>
+          <Field label="Branch Name" required>
+            <input value={bank.branchName} onChange={(e) => setBank((prev) => ({ ...prev, branchName: e.target.value }))} placeholder="Enter branch name" style={fieldStyle} required />
+          </Field>
+          <Field label="Account Number" required>
+            <input value={bank.accountNumber} onChange={(e) => setBank((prev) => ({ ...prev, accountNumber: e.target.value }))} placeholder="Enter account number" style={fieldStyle} required />
+          </Field>
+          <Field label="IFSC Code" required>
+            <input value={bank.ifscCode} onChange={(e) => setBank((prev) => ({ ...prev, ifscCode: e.target.value }))} placeholder="Enter IFSC code" style={fieldStyle} required />
+          </Field>
+          <Field label="Card Number">
+            <input value={bank.cardNumber} onChange={(e) => setBank((prev) => ({ ...prev, cardNumber: e.target.value }))} placeholder="Enter card number" style={fieldStyle} />
+          </Field>
+          <Field label="VPA" required>
+            <input value={bank.vpa} onChange={(e) => setBank((prev) => ({ ...prev, vpa: e.target.value }))} placeholder="Enter VPA" style={fieldStyle} required />
+          </Field>
+          <DrawerActions saving={saving} onClose={() => setDrawer('')} />
         </form>
       </Drawer>
     </>

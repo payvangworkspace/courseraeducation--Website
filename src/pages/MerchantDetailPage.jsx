@@ -21,6 +21,7 @@ import {
 import { merchantApi, unwrapList, walletApi } from '../api';
 import {
   AggregatorPanel,
+  BusinessPanel,
   CurrencyPanel,
   DocumentsPanel,
   FeesPanel,
@@ -302,8 +303,8 @@ export default function MerchantDetailPage() {
     pickFirst(wallet.currency, merged.currency, 'INR')
   );
 
-  const loadProfile = async () => {
-    setLoading(true);
+  const loadProfile = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError('');
     try {
       const [merchantRes, personalRes, accountRes, walletRes] = await Promise.allSettled([
@@ -523,41 +524,7 @@ export default function MerchantDetailPage() {
     }
 
     if (activeTab === 'business') {
-      return (
-        <div style={{ display: 'grid', gap: 20 }}>
-          <div style={{ border: '1px solid rgba(122,31,43,.1)', borderRadius: 16, padding: 20 }}>
-            <h3 style={{ margin: '0 0 12px', color: '#7A1F2B', fontSize: 15, fontWeight: 800 }}>Business Details</h3>
-            <div className="merchant-business-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 28px' }}>
-              <div>
-                <InfoRow label="Business Name" value={businessName} />
-                <InfoRow label="Registration No" value={dash(pickFirst(merged.registrationNo, merged.registrationNumber))} />
-                <InfoRow label="Email ID" value={email} />
-                <InfoRow label="Phone" value={phone} />
-                <InfoRow label="Business Type" value={dash(merged.businessType)} />
-              </div>
-              <div>
-                <InfoRow label="Address" value={dash(pickFirst(merged.addressDetails, merged.address))} />
-                <InfoRow label="Website" value={dash(merged.website)} />
-                <InfoRow label="PAN / SSN" value={dash(pickFirst(merged.panSsn, merged.panSSN))} />
-                <InfoRow label="GST / VAT" value={dash(pickFirst(merged.gstVat, merged.gstVAT))} />
-                <InfoRow label="Business Sub Type" value={dash(pickFirst(merged.businessSubType, merged.subIndustry))} />
-              </div>
-            </div>
-          </div>
-          <div style={{ border: '1px solid rgba(122,31,43,.1)', borderRadius: 16, padding: 20 }}>
-            <h3 style={{ margin: '0 0 12px', color: '#7A1F2B', fontSize: 15, fontWeight: 800 }}>Bank Details</h3>
-            {Object.keys(account || {}).length > 1 ? (
-              <>
-                <InfoRow label="Bank Name" value={dash(account.bankName)} />
-                <InfoRow label="Account Number" value={dash(pickFirst(account.accountNumber, account.bankAccountNumber))} />
-                <InfoRow label="IFSC / SWIFT" value={dash(pickFirst(account.ifsc, account.swift, account.ifscCode))} />
-              </>
-            ) : (
-              <p style={{ color: '#9E8984', fontSize: 12.5 }}>No bank data available.</p>
-            )}
-          </div>
-        </div>
-      );
+      return <BusinessPanel userId={userId} merchantName={displayName} merchant={merged} onUpdated={() => loadProfile({ silent: true })} />;
     }
 
     if (activeTab === 'payin') {
@@ -602,7 +569,7 @@ export default function MerchantDetailPage() {
     }
 
     if (activeTab === 'webhooks') {
-      return <WebhooksPanel userId={userId} merchantName={displayName} merchant={merged} onUpdated={loadProfile} />;
+      return <WebhooksPanel userId={userId} merchantName={displayName} merchant={merged} onUpdated={() => loadProfile({ silent: true })} />;
     }
 
     if (activeTab === 'settlement') {

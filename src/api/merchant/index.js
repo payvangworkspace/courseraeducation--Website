@@ -82,8 +82,14 @@ export const merchantApi = {
   getAccountDetails: (userId, options = {}) =>
     apiClient.get(MERCHANT_ENDPOINTS.ACCOUNT_DETAILS(userId), undefined, options),
 
-  updateDetails: (body, options = {}) =>
-    apiClient.put(MERCHANT_ENDPOINTS.UPDATE_DETAILS, body, options),
+  updateDetails: (body, options = {}) => {
+    const payload = {};
+    Object.entries(body || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      payload[key] = String(value);
+    });
+    return apiClient.put(MERCHANT_ENDPOINTS.UPDATE_DETAILS, payload, options);
+  },
 
   // Status toggles: Swagger declares path param only, NO request body.
   // The endpoint flips the current server-side value; caller must refetch.
