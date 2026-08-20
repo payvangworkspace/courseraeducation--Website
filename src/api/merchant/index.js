@@ -1,11 +1,15 @@
 import { apiClient } from "../client/apiClient";
 
+function encodeUserId(userId) {
+  return encodeURIComponent(String(userId || ""));
+}
+
 /** user-controller (merchant) + user-account-controller + user-document-controller */
 export const MERCHANT_ENDPOINTS = {
   CREATE: "/user/merchant",
   LIST: "/user/merchant/list",
   ALL: "/user/merchant/all",
-  BY_ID: (userId) => `/user/merchant/${userId}`,
+  BY_ID: (userId) => `/user/merchant/${encodeUserId(userId)}`,
   CREATE_ADMIN: "/user/admin",
   CREATE_VIA_ADMIN: "/user/UserCreationViaAdmin",
   ALL_USERS: "/user/all",
@@ -14,26 +18,26 @@ export const MERCHANT_ENDPOINTS = {
   TEST: "/user/test",
 
   // Account
-  PERSONAL_DETAILS: (userId) => `/user/personalDetails/${userId}`,
-  ACCOUNT_DETAILS: (userId) => `/user/accountDetails/${userId}`,
+  PERSONAL_DETAILS: (userId) => `/user/personalDetails/${encodeUserId(userId)}`,
+  ACCOUNT_DETAILS: (userId) => `/user/accountDetails/${encodeUserId(userId)}`,
   UPDATE_DETAILS: "/user/updateDetails",
-  VERIFY_USER: (userId) => `/user/verifyUser/${userId}`,
-  STATUS: (userId) => `/user/status/${userId}`,
-  PAYIN_STATUS: (userId) => `/user/payinstatus/${userId}`,
-  PAYOUT_STATUS: (userId) => `/user/payoutstatus/${userId}`,
-  PAYOUT_STATUS_VIA_APP: (userId) => `/user/payoutStatusViaApplication/${userId}`,
-  PAYIN_GST_STATUS: (userId) => `/user/payinGststatus/${userId}`,
-  PAYOUT_GST_STATUS: (userId) => `/user/payoutGststatus/${userId}`,
-  PAYOUT_FEE_RETURN_STATUS: (userId) => `/user/payoutFeeReturnStatus/${userId}`,
-  AUTH_STATUS: (userId) => `/user/authStatus/${userId}`,
+  VERIFY_USER: (userId) => `/user/verifyUser/${encodeUserId(userId)}`,
+  STATUS: (userId) => `/user/status/${encodeUserId(userId)}`,
+  PAYIN_STATUS: (userId) => `/user/payinstatus/${encodeUserId(userId)}`,
+  PAYOUT_STATUS: (userId) => `/user/payoutstatus/${encodeUserId(userId)}`,
+  PAYOUT_STATUS_VIA_APP: (userId) => `/user/payoutStatusViaApplication/${encodeUserId(userId)}`,
+  PAYIN_GST_STATUS: (userId) => `/user/payinGststatus/${encodeUserId(userId)}`,
+  PAYOUT_GST_STATUS: (userId) => `/user/payoutGststatus/${encodeUserId(userId)}`,
+  PAYOUT_FEE_RETURN_STATUS: (userId) => `/user/payoutFeeReturnStatus/${encodeUserId(userId)}`,
+  AUTH_STATUS: (userId) => `/user/authStatus/${encodeUserId(userId)}`,
   SHORT_CODE: (userId, shortCode) =>
-    `/user/UpdateMerchantShortCode/${userId}/ShortCode/${shortCode}`,
+    `/user/UpdateMerchantShortCode/${encodeUserId(userId)}/ShortCode/${encodeURIComponent(String(shortCode || ""))}`,
 
   // Documents
   DOCUMENTS: "/user/document",
-  DOCUMENTS_BY_USER: (userId) => `/user/document/${userId}`,
-  DOCUMENT_FILE: (documentId) => `/user/document/file/${documentId}`,
-  VERIFY_DOCUMENT: (documentId) => `/user/document/verify/${documentId}`,
+  DOCUMENTS_BY_USER: (userId) => `/user/document/${encodeUserId(userId)}`,
+  DOCUMENT_FILE: (documentId) => `/user/document/file/${encodeURIComponent(String(documentId || ""))}`,
+  VERIFY_DOCUMENT: (documentId) => `/user/document/verify/${encodeURIComponent(String(documentId || ""))}`,
   REJECT_DOCUMENT: "/user/document/reject",
 
   // Activity
@@ -88,6 +92,18 @@ export const merchantApi = {
       if (value === undefined || value === null) return;
       payload[key] = String(value);
     });
+    const username =
+      payload.username ||
+      payload.userName ||
+      payload.userId ||
+      payload.emailId ||
+      payload.email ||
+      "";
+    if (username) {
+      if (!payload.username) payload.username = username;
+      if (!payload.userName) payload.userName = username;
+      if (!payload.userId) payload.userId = username;
+    }
     return apiClient.put(MERCHANT_ENDPOINTS.UPDATE_DETAILS, payload, options);
   },
 

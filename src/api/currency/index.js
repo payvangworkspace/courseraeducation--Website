@@ -1,15 +1,20 @@
 import { apiClient, unwrapList } from "../client/apiClient";
+import { merchantApi } from "../merchant";
+
+function encodeId(value) {
+  return encodeURIComponent(String(value || ""));
+}
 
 /** currency-controller */
 export const CURRENCY_ENDPOINTS = {
   ADD: "/currency",
   UPDATE: "/currency",
   ALL: "/currency/all",
-  BY_ID: (currencyId) => `/currency/${currencyId}`,
+  BY_ID: (currencyId) => `/currency/${encodeId(currencyId)}`,
   MAPPING: "/currency/mapping",
-  MAPPING_BY_MERCHANT: (merchantId) => `/currency/mapping/${merchantId}`,
+  MAPPING_BY_MERCHANT: (merchantId) => `/currency/mapping/${encodeId(merchantId)}`,
   REMOVE_MAPPING: (merchantId, currencyId) =>
-    `/currency/mapping/${merchantId}/${currencyId}`,
+    `/currency/mapping/${encodeId(merchantId)}/${encodeId(currencyId)}`,
 };
 
 /** Live API caps each page around this size even when a larger `size` is sent. */
@@ -62,6 +67,55 @@ function fetchCurrencyPage(body = {}, options = {}) {
     },
     options
   );
+}
+
+export function isBrokenMappingRef(err) {
+  const status = Number(err?.status);
+  const message = String(err?.message || err?.data?.message || err?.data?.errors || err?.data?.error || "");
+  return (
+    status === 500 ||
+    /getCurrencyCode\(\)|LocationCountry|getCountryCode\(\)|because "c" is null|username should not be empty|unrecognized field|json parse error/i.test(message)
+  );
+}
+
+function mappingField(source) {
+  if (!source || typeof source !== "object") return undefined;
+  return source.currencies ?? source.currencyCodes ?? source.currencyMapping ?? source.mappedCurrencies;
+}
+
+export function parseMappedCurrencies(source) {
+  if (!source) return [];
+  if (Array.isArray(source)) return source;
+  if (Array.isArray(source.data)) return source.data;
+  const nested =
+    source.data && typeof source.data === "object" && !Array.isArray(source.data)
+      ? source.data
+      : {};
+  const raw = mappingField(source) ?? mappingField(nested);
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string" && raw.trim()) {
+    return raw.split(/[,|;]/).map((part) => part.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+const CACHE_PREFIX = "currency-mapping:";
+
+export function readCurrencyMappingCache(userId) {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(CACHE_PREFIX + userId) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeCurrencyMappingCache(userId, currencies) {
+  try {
+    sessionStorage.setItem(CACHE_PREFIX + userId, JSON.stringify(currencies || []));
+  } catch {
+    /* ignore quota / private mode */
+  }
 }
 
 export const currencyApi = {
@@ -156,14 +210,60 @@ export const currencyApi = {
   deleteCurrency: (currencyId, options = {}) =>
     apiClient.delete(CURRENCY_ENDPOINTS.BY_ID(currencyId), options),
 
-  addCurrencyMapping: (body, options = {}) =>
-    apiClient.post(CURRENCY_ENDPOINTS.MAPPING, body, options),
+  addCurrencyMapping: async (body, options = {}) => {
+    const userId = body?.userId;
+    const currencies = Array.isArray(body?.currencies) ? body.currencies : [];
+    try {
+      return await apiClient.post(
+        CURRENCY_ENDPOINTS.MAPPING,
+        { userId, currencies },
+        options
+      );
+    } catch (err) {
+      if (!isBrokenMappingRef(err) && ![400, 404].includes(Number(err?.status))) throw err;
+      return currencyApi.saveFallbackCurrencies(userId, currencies, options);
+    }
+  },
 
-  getCurrencyMapping: (merchantId, options = {}) =>
-    apiClient.get(CURRENCY_ENDPOINTS.MAPPING_BY_MERCHANT(merchantId), undefined, options),
+  getCurrencyMapping: async (merchantId, options = {}) => {
+    try {
+      return await apiClient.get(
+        CURRENCY_ENDPOINTS.MAPPING_BY_MERCHANT(merchantId),
+        undefined,
+        options
+      );
+    } catch (err) {
+      if (isBrokenMappingRef(err) || [400, 404].includes(Number(err?.status))) {
+        return { currencies: [], fallback: true };
+      }
+      throw err;
+    }
+  },
 
-  removeCurrencyMapping: (merchantId, currencyId, options = {}) =>
-    apiClient.delete(CURRENCY_ENDPOINTS.REMOVE_MAPPING(merchantId, currencyId), options),
+  removeCurrencyMapping: async (merchantId, currencyId, remaining = [], options = {}) => {
+    try {
+      return await apiClient.delete(
+        CURRENCY_ENDPOINTS.REMOVE_MAPPING(merchantId, currencyId),
+        options
+      );
+    } catch (err) {
+      if (!isBrokenMappingRef(err) && Number(err?.status) !== 404) throw err;
+      return currencyApi.saveFallbackCurrencies(merchantId, remaining, options);
+    }
+  },
+
+  saveFallbackCurrencies: (userId, currencies = [], options = {}) => {
+    const codes = (Array.isArray(currencies) ? currencies : [currencies])
+      .map((item) => {
+        if (item && typeof item === "object") return item.currencyCode || item.currencyId;
+        return item;
+      })
+      .filter(Boolean);
+    return merchantApi.updateDetails(
+      { userId, username: userId, userName: userId, currencies: codes.join(",") },
+      options
+    );
+  },
 };
 
 export default currencyApi;

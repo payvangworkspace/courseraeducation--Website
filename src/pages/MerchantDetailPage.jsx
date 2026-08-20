@@ -22,6 +22,7 @@ import { merchantApi, unwrapList, walletApi } from '../api';
 import {
   AggregatorPanel,
   BusinessPanel,
+  CountryPanel,
   CurrencyPanel,
   DocumentsPanel,
   FeesPanel,
@@ -63,11 +64,20 @@ function pickFirst(...values) {
   return '';
 }
 
-function unwrapObject(data) {
-  if (!data || typeof data !== 'object') return {};
-  if (Array.isArray(data)) return data[0] && typeof data[0] === 'object' ? data[0] : {};
-  const nested = data.data || data.result || data.user || data.merchant || data.details;
-  if (nested && typeof nested === 'object' && !Array.isArray(nested)) return { ...data, ...nested };
+function unwrapObject(data, depth = 0) {
+  if (!data || typeof data !== 'object' || depth > 4) return {};
+  if (Array.isArray(data)) {
+    return data[0] && typeof data[0] === 'object' ? unwrapObject(data[0], depth + 1) : {};
+  }
+  const nested =
+    (data.data && typeof data.data === 'object' && !Array.isArray(data.data) && data.data) ||
+    (data.result && typeof data.result === 'object' && !Array.isArray(data.result) && data.result) ||
+    (data.user && typeof data.user === 'object' && !Array.isArray(data.user) && data.user) ||
+    (data.merchant && typeof data.merchant === 'object' && !Array.isArray(data.merchant) && data.merchant) ||
+    (data.details && typeof data.details === 'object' && !Array.isArray(data.details) && data.details) ||
+    (data.payload && typeof data.payload === 'object' && !Array.isArray(data.payload) && data.payload) ||
+    (data.credentials && typeof data.credentials === 'object' && !Array.isArray(data.credentials) && data.credentials);
+  if (nested) return unwrapObject({ ...data, ...nested }, depth + 1);
   return data;
 }
 
@@ -111,6 +121,49 @@ function formatMoney(value, currency = 'INR') {
 function dash(value) {
   const raw = pickFirst(value);
   return raw === '' ? '—' : String(raw);
+}
+
+function normName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function findNamedValue(source, names, depth = 0) {
+  if (!source || typeof source !== 'object' || depth > 6) return '';
+  const wanted = names.map(normName);
+  const nodes = Array.isArray(source) ? source : [source];
+  for (const node of nodes) {
+    if (!node || typeof node !== 'object') continue;
+    if (!Array.isArray(node)) {
+      for (const [key, value] of Object.entries(node)) {
+        if (value === undefined || value === null || typeof value === 'object') continue;
+        const text = String(value).trim();
+        if (!text) continue;
+        if (wanted.includes(normName(key))) return text;
+      }
+    }
+    for (const value of Object.values(node)) {
+      if (value && typeof value === 'object') {
+        const found = findNamedValue(value, names, depth + 1);
+        if (found) return found;
+      }
+    }
+  }
+  return '';
+}
+
+const APP_ID_FIELDS = ['appId', 'merchantAppId', 'applicationId', 'appid', 'merchantappid'];
+const SECRET_FIELDS = ['appKey', 'secretKey', 'merchantSecretId', 'merchantsecretid', 'mysecretdev'];
+
+function mergePreferFilled(...objects) {
+  const out = {};
+  for (const obj of objects) {
+    if (!obj || typeof obj !== 'object') continue;
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === undefined || value === null || value === '') continue;
+      out[key] = value;
+    }
+  }
+  return out;
 }
 
 function Toggle({ checked, onChange, disabled, label }) {
@@ -215,7 +268,7 @@ function enableLabel(on) {
 function matchesMerchant(row, identifier) {
   const target = String(identifier || '').trim().toLowerCase();
   if (!target) return false;
-  return ['merchantId', 'userId', 'emailId', 'email', 'merchantEmail', 'userName']
+  return ['merchantId', 'userId', 'emailId', 'email', 'merchantEmail', 'userName', 'appId', 'merchantAppId']
     .map((key) => row?.[key])
     .filter((value) => value !== undefined && value !== null)
     .some((value) => String(value).trim().toLowerCase() === target);
@@ -290,8 +343,25 @@ export default function MerchantDetailPage() {
   const phone = dash(pickFirst(merged.contactNumber, merged.phone, merged.mobile, merged.phoneNumber, preview.contactNumber));
   const businessName = toTitleCase(pickFirst(merged.businessName, merged.companyName, preview.businessName)) || '—';
   const merchantCode = dash(pickFirst(merged.merchantCode, merged.shortCode, merged.merchantShortCode));
-  const appId = dash(pickFirst(merged.appId, merged.merchantAppId, merged.applicationId, merged.userId));
-  const secretKey = dash(pickFirst(merged.secretKey, merged.appKey, merged.merchantSecretId));
+  const appId = dash(
+    pickFirst(
+      findNamedValue(merged, APP_ID_FIELDS),
+      merged.appId,
+      merged.merchantAppId,
+      merged.userId,
+      userId
+    )
+  );
+  const secretKey = dash(
+    pickFirst(
+      merged.appKey,
+      merged.secretKey,
+      merged.merchantSecretId,
+      merged.merchantsecretid,
+      merged.mysecretdev,
+      findNamedValue(merged, SECRET_FIELDS)
+    )
+  );
   const registrationDate = formatDate(
     pickFirst(merged.createdDate, merged.registrationDate, merged.createdOn, merged.createdAt, preview.registrationDate)
   );
@@ -307,14 +377,29 @@ export default function MerchantDetailPage() {
     if (!silent) setLoading(true);
     setError('');
     try {
-      const [merchantRes, personalRes, accountRes, walletRes] = await Promise.allSettled([
+      const [merchantRes, personalRes, accountRes, walletRes, listRes, allRes, usersRes] = await Promise.allSettled([
         merchantApi.getMerchant(userId, ADMIN_OPTS),
         merchantApi.getPersonalDetails(userId, ADMIN_OPTS),
         merchantApi.getAccountDetails(userId, ADMIN_OPTS),
         resolveWallet(userId),
+        merchantApi.getAllMerchantList({ start: 0, size: 50, keyword: userId }, ADMIN_OPTS),
+        merchantApi.getAllMerchant({ start: 0, size: 50, keyword: userId }, ADMIN_OPTS),
+        merchantApi.getAllUsers({ start: 0, size: 50, keyword: userId }, ADMIN_OPTS),
       ]);
 
-      if (merchantRes.status === 'fulfilled') setMerchant(unwrapObject(merchantRes.value));
+      const matchIn = (res) =>
+        res.status === 'fulfilled'
+          ? unwrapList(res.value).find((row) => matchesMerchant(row, userId))
+          : null;
+
+      setMerchant(
+        mergePreferFilled(
+          unwrapObject(matchIn(usersRes)),
+          unwrapObject(matchIn(allRes)),
+          unwrapObject(matchIn(listRes)),
+          unwrapObject(merchantRes.status === 'fulfilled' ? merchantRes.value : {})
+        )
+      );
       if (personalRes.status === 'fulfilled') setPersonal(unwrapObject(personalRes.value));
       if (accountRes.status === 'fulfilled') setAccount(unwrapObject(accountRes.value));
       if (walletRes.status === 'fulfilled') setWallet(walletRes.value);
@@ -555,16 +640,12 @@ export default function MerchantDetailPage() {
 
     if (activeTab === 'country') {
       return (
-        <div style={{ display: 'grid', gap: 18 }}>
-          <InfoRow label="Country" value={dash(pickFirst(merged.country, merged.countryName, merged.countryCode))} />
-          <InfoRow label="State" value={dash(pickFirst(merged.state, merged.region))} />
-          <InfoRow label="City" value={dash(pickFirst(merged.city))} />
-          <InfoRow label="Address" value={dash(pickFirst(merged.addressDetails, merged.address, merged.streetAddress))} />
-          <InfoRow label="Postal Code" value={dash(pickFirst(merged.pincode, merged.postalCode, merged.zip))} />
-          <SwaggerGap title="Country Mapping">
-            Country mapping is read-only because the published Swagger specification contains no country mapping controller.
-          </SwaggerGap>
-        </div>
+        <CountryPanel
+          userId={userId}
+          merchantName={displayName}
+          merchant={merged}
+          onUpdated={() => loadProfile({ silent: true })}
+        />
       );
     }
 

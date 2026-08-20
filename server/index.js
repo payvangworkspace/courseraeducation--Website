@@ -35,6 +35,7 @@ let users = [
     verificationDate: m.registrationDate,
     merchantCode: m.id.replace('MCH-', ''),
     appId: `APP${m.id.replace(/\D/g, '')}20260818`,
+    appKey: `sec_${m.id.replace(/\D/g, '')}_live_key`,
     status: true,
     payinStatus: true,
     payoutStatus: true,
@@ -177,6 +178,19 @@ let currencyMappings = [
   { userId: 'MCH-1001', currencies: ['INR', 'USD'] },
   { userId: 'MCH-1002', currencies: ['INR', 'EUR', 'USD'] }
 ];
+
+const countries = [
+  { countryId: 'AF', countryCode: 'AF', countryName: 'Afghanistan' },
+  { countryId: 'AX', countryCode: 'AX', countryName: 'Aland Islands' },
+  { countryId: 'AL', countryCode: 'AL', countryName: 'Albania' },
+  { countryId: 'DZ', countryCode: 'DZ', countryName: 'Algeria' },
+  { countryId: 'IN', countryCode: 'IN', countryName: 'India' },
+  { countryId: 'AE', countryCode: 'AE', countryName: 'United Arab Emirates' },
+  { countryId: 'GB', countryCode: 'GB', countryName: 'United Kingdom' },
+  { countryId: 'US', countryCode: 'US', countryName: 'United States' }
+];
+
+let countryMappings = [];
 
 let payoutsList = [
   { payoutSettingsId: 'PSET-01', merchantId: 'MCH-1001', acquirerProfile: 'HDFC_DIRECT', minimumAmount: 100, maximumAmount: 500000, acquirerPriority: 1, status: true },
@@ -470,6 +484,7 @@ app.get('/user/personalDetails/:userId', (req, res) => {
     webTransferFee: user.webTransferFee || '0',
     settlementFee: user.settlementFee || '0',
     minSettlementFee: user.minSettlementFee || '0',
+    countries: user.countries || '',
   });
 });
 app.get('/user/document/:userId', (req, res) => res.json([{ documentId: 'DOC-901', name: 'PAN Card', status: 'VERIFIED' }]));
@@ -691,6 +706,45 @@ app.post('/currency/mapping', (req, res) => res.json({ message: 'Mapped' }));
 app.get('/currency/mapping/:merchantId', (req, res) => res.json(currencyMappings[0]));
 app.delete('/currency/mapping/:merchantId/:currencyId', (req, res) => res.json({ message: 'Removed' }));
 app.post('/currency/all', (req, res) => res.json(currencies));
+
+app.post('/country/all', (req, res) => {
+  const keyword = String(req.body?.keyword || '').trim().toLowerCase();
+  const list = keyword
+    ? countries.filter((country) =>
+        `${country.countryName} ${country.countryCode}`.toLowerCase().includes(keyword)
+      )
+    : countries;
+  res.json({ data: list, totalElement: list.length });
+});
+app.post('/country/mapping', (req, res) => {
+  const userId = String(req.body?.userId || '');
+  const mapped = Array.isArray(req.body?.countries) ? req.body.countries : [];
+  const existing = countryMappings.find((item) => item.userId === userId);
+  if (existing) existing.countries = mapped;
+  else countryMappings.push({ userId, countries: mapped });
+  const user = findUser(userId);
+  if (user) user.countries = mapped.join(',');
+  res.json({ message: 'Mapped' });
+});
+app.get('/country/mapping/:merchantId', (req, res) => {
+  const userId = decodeURIComponent(req.params.merchantId);
+  const mapping = countryMappings.find((item) => String(item.userId) === userId);
+  res.json(mapping || { userId, countries: [] });
+});
+app.delete('/country/mapping/:merchantId/:countryId', (req, res) => {
+  const userId = decodeURIComponent(req.params.merchantId);
+  const countryId = decodeURIComponent(req.params.countryId);
+  const mapping = countryMappings.find((item) => String(item.userId) === userId);
+  if (mapping) {
+    mapping.countries = (mapping.countries || []).filter((item) => {
+      const id = typeof item === 'object' ? item.countryId || item.countryCode : item;
+      return String(id) !== countryId;
+    });
+  }
+  const user = findUser(userId);
+  if (user && mapping) user.countries = (mapping.countries || []).join(',');
+  res.json({ message: 'Removed' });
+});
 
 app.post('/admin/keys/createIPKey', (req, res) => res.json(ipKeys[0]));
 app.post('/admin/keys/ListAllKeys', (req, res) => res.json(ipKeys));
