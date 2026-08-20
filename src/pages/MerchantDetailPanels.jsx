@@ -870,10 +870,9 @@ export function CurrencyPanel({ userId, merchantName }) {
   const load = async () => {
     setLoading(true);
     setError('');
-    const [mappingRes, allRes, personalRes] = await Promise.allSettled([
+    const [mappingRes, allRes] = await Promise.allSettled([
       currencyApi.getCurrencyMapping(userId, ADMIN_OPTS),
       currencyApi.getAllCurrencies({}, ADMIN_OPTS),
-      merchantApi.getPersonalDetails(userId, ADMIN_OPTS),
     ]);
     const currencies = allRes.status === 'fulfilled' ? rows(allRes.value) : [];
     setAll(currencies);
@@ -888,16 +887,7 @@ export function CurrencyPanel({ userId, merchantName }) {
         })()
       : [];
     if (!mappingKnown) {
-      for (const source of [
-        readCurrencyMappingCache(userId),
-        personalRes.status === 'fulfilled' ? personalRes.value : null,
-      ]) {
-        const parsed = parseMappedCurrencies(source);
-        if (parsed.length) {
-          raw = parsed;
-          break;
-        }
-      }
+      raw = parseMappedCurrencies(readCurrencyMappingCache(userId));
     }
     const resolved = raw.map((item) => resolveCurrency(item, currencies));
     setMapped(resolved);
@@ -937,7 +927,11 @@ export function CurrencyPanel({ userId, merchantName }) {
       setDrawer(false);
       setSelected('');
       await currencyApi.addCurrencyMapping(
-        { userId, currencies: nextIds },
+        {
+          userId,
+          currencies: nextIds,
+          codes: nextMapped.map((item) => item.currencyCode).filter(Boolean),
+        },
         ADMIN_OPTS
       );
     } catch (err) {
@@ -958,7 +952,7 @@ export function CurrencyPanel({ userId, merchantName }) {
       await currencyApi.removeCurrencyMapping(
         userId,
         id,
-        remaining.map((item) => item.currencyCode || item.currencyId),
+        remaining,
         ADMIN_OPTS
       );
     } catch (err) {
@@ -1049,11 +1043,9 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
   const load = async () => {
     setLoading(true);
     setError('');
-    const [mappingRes, allRes, personalRes, accountRes] = await Promise.allSettled([
+    const [mappingRes, allRes] = await Promise.allSettled([
       countryApi.getCountryMapping(userId, ADMIN_OPTS),
       countryApi.getAllCountries({}, ADMIN_OPTS),
-      merchantApi.getPersonalDetails(userId, ADMIN_OPTS),
-      merchantApi.getAccountDetails(userId, ADMIN_OPTS),
     ]);
     const catalog =
       allRes.status === 'fulfilled' && allRes.value?.data?.length
@@ -1068,12 +1060,7 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
     );
     let raw = mappingKnown ? mappingRows : [];
     if (!mappingKnown) {
-      for (const source of [
-        readCountryMappingCache(userId),
-        personalRes.status === 'fulfilled' ? personalRes.value : null,
-        accountRes.status === 'fulfilled' ? accountRes.value : null,
-        merchant,
-      ]) {
+      for (const source of [readCountryMappingCache(userId), merchant]) {
         const parsed = parseMappedCountries(source);
         if (parsed.length) {
           raw = parsed;
@@ -1105,18 +1092,25 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
     setSaving(true);
     setError('');
     try {
-      const nextIds = [...new Set([...mappedIds, selected])];
-      await countryApi.addCountryMapping({ userId, countries: nextIds }, ADMIN_OPTS);
-      writeCountryMappingCache(
-        userId,
-        [...mapped, resolveCountry(selected, all)].filter(Boolean)
+      const nextMapped = [
+        ...mapped,
+        resolveCountry(selected, all),
+      ].filter((item, index, list) =>
+        list.findIndex((row) => String(row.countryId || row.countryCode) === String(item.countryId || item.countryCode)) === index
       );
+      writeCountryMappingCache(userId, nextMapped);
+      setMapped(nextMapped);
       setDrawer(false);
       setSelected('');
-      await load();
-      await onUpdated?.();
+      await countryApi.addCountryMapping(
+        { userId, countries: nextMapped },
+        ADMIN_OPTS
+      );
     } catch (err) {
-      setError(err.message || 'Unable to map country.');
+      const message = String(err?.message || '');
+      if (!/LocationCountry|getCountryCode\(\)|because "c" is null/i.test(message)) {
+        setError(err.message || 'Unable to map country.');
+      }
     } finally {
       setSaving(false);
     }
@@ -1133,11 +1127,9 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
       await countryApi.removeCountryMapping(
         userId,
         id,
-        remaining.map((item) => item.countryCode || item.countryId),
+        remaining,
         ADMIN_OPTS
       );
-      await load();
-      await onUpdated?.();
     } catch (err) {
       setMapped(remaining);
       writeCountryMappingCache(userId, remaining);

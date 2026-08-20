@@ -4,6 +4,11 @@ function encodeUserId(userId) {
   return encodeURIComponent(String(userId || ""));
 }
 
+function toDetailValue(value) {
+  if (Array.isArray(value)) return value.filter((item) => item !== undefined && item !== null && item !== "").join(",");
+  return String(value);
+}
+
 /** user-controller (merchant) + user-account-controller + user-document-controller */
 export const MERCHANT_ENDPOINTS = {
   CREATE: "/user/merchant",
@@ -86,24 +91,30 @@ export const merchantApi = {
   getAccountDetails: (userId, options = {}) =>
     apiClient.get(MERCHANT_ENDPOINTS.ACCOUNT_DETAILS(userId), undefined, options),
 
+  /** Swagger user-account-controller: PUT /user/updateDetails (operationId newAddress), Map<string,string>. */
   updateDetails: (body, options = {}) => {
     const payload = {};
     Object.entries(body || {}).forEach(([key, value]) => {
-      if (value === undefined || value === null) return;
-      payload[key] = String(value);
+      if (value === undefined || value === null || value === "") return;
+      if (key === "currencies" || key === "currencyCodes" || key === "mappedCurrencies") return;
+      payload[key] = toDetailValue(value);
     });
-    const username =
+    const username = String(
       payload.username ||
-      payload.userName ||
-      payload.userId ||
-      payload.emailId ||
-      payload.email ||
-      "";
-    if (username) {
-      if (!payload.username) payload.username = username;
-      if (!payload.userName) payload.userName = username;
-      if (!payload.userId) payload.userId = username;
+        payload.userName ||
+        payload.userId ||
+        payload.emailId ||
+        payload.email ||
+        ""
+    ).trim();
+    if (!username) {
+      const error = new Error("Username should not be empty");
+      error.status = 400;
+      return Promise.reject(error);
     }
+    payload.userId = username;
+    payload.username = username;
+    payload.userName = username;
     return apiClient.put(MERCHANT_ENDPOINTS.UPDATE_DETAILS, payload, options);
   },
 
