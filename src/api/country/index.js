@@ -1,14 +1,12 @@
 import { apiClient } from "../client/apiClient";
-import { merchantApi } from "../merchant";
 import { isoCountries } from "../../data/isoCountries";
 
 function encodeId(value) {
   return encodeURIComponent(String(value || ""));
 }
 
-/** Mirrors currency-controller. Live Swagger currently has no country paths. */
 export const COUNTRY_ENDPOINTS = {
-  ALL: "/country/all",
+  ALL: "/location/country/all",
   MAPPING: "/country/mapping",
   MAPPING_BY_MERCHANT: (merchantId) => `/country/mapping/${encodeId(merchantId)}`,
   REMOVE_MAPPING: (merchantId, countryId) =>
@@ -37,12 +35,17 @@ export function isBrokenCountryRef(err) {
 }
 
 function mappingIds(countries = []) {
-  return (Array.isArray(countries) ? countries : [countries])
-    .map((item) => {
-      if (item && typeof item === "object") return item.countryId || item.countryCode || item.id;
-      return item;
-    })
-    .filter(Boolean);
+  return [
+    ...new Set(
+      (Array.isArray(countries) ? countries : [countries])
+        .map((item) => {
+          if (item && typeof item === "object") return item.countryId || item.id || "";
+          return item;
+        })
+        .map((value) => String(value || "").trim())
+        .filter(isMongoObjectId)
+    ),
+  ];
 }
 
 export function normalizeCountry(item) {
@@ -212,46 +215,66 @@ export function writeCountryMappingCache(userId, countries) {
   }
 }
 
-export const countryApi = {
-  getAllCountries: async () => {
-    try {
-      const data = await fetchPublicCountries();
-      if (data.length) return { data, totalElement: data.length };
-    } catch {
-      /* ISO list is always available offline */
-    }
-    return isoCatalog();
-  },
+const COUNTRY_PAGE_SIZE = 25;
 
-  addCountryMapping: async (body, options = {}) => {
-    const list = Array.isArray(body?.countries) ? body.countries : [];
-    const ids = mappingIds(list);
-    const names = list
-      .map((item) => (item && typeof item === "object" ? item.countryName || item.name : ""))
-      .filter(Boolean);
-    const codes = ids.filter((id) => !isMongoObjectId(id));
-    const mongoIds = ids.filter(isMongoObjectId);
-    if (mongoIds.length) {
+function reportedTotal(res) {
+  if (!res || typeof res !== "object" || Array.isArray(res)) return NaN;
+  for (const value of [res.totalElement, res.totalElements, res.total, res.data?.totalElement]) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return NaN;
+}
+
+export const countryApi = {
+  getAllCountries: async (body = {}, options = {}) => {
+    const seen = new Set();
+    const items = [];
+    let total = NaN;
+    const take = (res) => {
+      const extra = reportedTotal(res);
+      if (Number.isFinite(extra)) total = extra;
+      const list = parseMappedCountries(res).map(normalizeCountry);
+      let added = 0;
+      for (const item of list) {
+        if (!isMongoObjectId(item.countryId) || seen.has(item.countryId)) continue;
+        seen.add(item.countryId);
+        items.push(item);
+        added += 1;
+      }
+      return { list, added };
+    };
+
+    try {
+      for (let page = 0; page < 40; page += 1) {
+        const res = await apiClient.post(
+          COUNTRY_ENDPOINTS.ALL,
+          { start: page, size: COUNTRY_PAGE_SIZE, keyword: body.keyword ?? "" },
+          options
+        );
+        const { list, added } = take(res);
+        if (!list.length || added === 0) break;
+        if (Number.isFinite(total) && items.length >= total) break;
+        if (list.length < COUNTRY_PAGE_SIZE) break;
+      }
+    } catch {
       try {
-        await apiClient.post(COUNTRY_ENDPOINTS.MAPPING, { userId: body?.userId, countries: mongoIds }, options);
-      } catch (err) {
-        if (!isCountryApiUnavailable(err) && !isBrokenCountryRef(err) && Number(err?.status) !== 500) {
-          throw err;
-        }
+        take(await apiClient.get(COUNTRY_ENDPOINTS.ALL, undefined, options));
+      } catch {
+        /* catalog empty */
       }
     }
-    const countryName = names[names.length - 1] || names[0] || "";
-    const countryCode = codes[codes.length - 1] || codes[0] || "";
-    return merchantApi.updateDetails(
-      {
-        userId: body?.userId,
-        username: body?.userId,
-        userName: body?.userId,
-        ...(countryName ? { country: countryName, countryName } : {}),
-        ...(countryCode ? { countryCode, countries: codes.join(",") } : {}),
-      },
-      options
-    );
+
+    const data = sortCountries(items);
+    return { data, totalElement: Number.isFinite(total) ? total : data.length };
+  },
+
+  addCountryMapping: (body, options = {}) => {
+    const countries = mappingIds(body?.countries);
+    if (!body?.userId || !countries.length) {
+      return Promise.reject(new Error("Country id is required."));
+    }
+    return apiClient.post(COUNTRY_ENDPOINTS.MAPPING, { userId: body.userId, countries }, options);
   },
 
   getCountryMapping: async (merchantId, options = {}) => {
@@ -267,7 +290,7 @@ export const countryApi = {
         isBrokenCountryRef(err) ||
         Number(err?.status) === 500
       ) {
-        return { countries: [], fallback: true };
+        return { data: [], countries: [], fallback: true };
       }
       throw err;
     }
@@ -276,7 +299,7 @@ export const countryApi = {
   removeCountryMapping: async (merchantId, countryId, remaining = [], options = {}) => {
     if (isMongoObjectId(countryId)) {
       try {
-        await apiClient.delete(
+        return await apiClient.delete(
           COUNTRY_ENDPOINTS.REMOVE_MAPPING(merchantId, countryId),
           options
         );
@@ -286,20 +309,7 @@ export const countryApi = {
         }
       }
     }
-    const codes = mappingIds(remaining).filter((id) => !isMongoObjectId(id));
-    const names = remaining
-      .map((item) => (item && typeof item === "object" ? item.countryName || item.name : ""))
-      .filter(Boolean);
-    return merchantApi.updateDetails(
-      {
-        userId: merchantId,
-        username: merchantId,
-        userName: merchantId,
-        ...(names[0] ? { country: names[0], countryName: names[0] } : {}),
-        ...(codes.length ? { countryCode: codes[0], countries: codes.join(",") } : {}),
-      },
-      options
-    );
+    return countryApi.addCountryMapping({ userId: merchantId, countries: remaining }, options);
   },
 };
 

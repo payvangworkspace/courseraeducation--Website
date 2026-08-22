@@ -1047,27 +1047,16 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
       countryApi.getCountryMapping(userId, ADMIN_OPTS),
       countryApi.getAllCountries({}, ADMIN_OPTS),
     ]);
-    const catalog =
+    const catalog = (
       allRes.status === 'fulfilled' && allRes.value?.data?.length
         ? allRes.value.data.map(normalizeCountry)
-        : isoCountries();
+        : []
+    ).filter((item) => isMongoObjectId(item.countryId));
     setAll(catalog);
 
     const mappingValue = mappingRes.status === 'fulfilled' ? mappingRes.value : null;
-    const mappingRows = mappingValue && mappingValue.fallback !== true ? parseMappedCountries(mappingValue) : [];
-    const mappingKnown = mappingRows.some((item) =>
-      isMongoObjectId(item && typeof item === 'object' ? item.countryId || item.id : item)
-    );
-    let raw = mappingKnown ? mappingRows : [];
-    if (!mappingKnown) {
-      for (const source of [readCountryMappingCache(userId), merchant]) {
-        const parsed = parseMappedCountries(source);
-        if (parsed.length) {
-          raw = parsed;
-          break;
-        }
-      }
-    }
+    const mappingKnown = Boolean(mappingValue) && mappingValue.fallback !== true;
+    const raw = mappingKnown ? parseMappedCountries(mappingValue) : [];
     const resolved = raw.map((item) => resolveCountry(item, catalog));
     setMapped(resolved);
     writeCountryMappingCache(userId, resolved);
@@ -1082,35 +1071,34 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const mappedIds = useMemo(
-    () => mapped.map((item) => String(item?.countryId || item?.countryCode || '')).filter(Boolean),
+    () => mapped.map((item) => String(item?.countryId || '')).filter(isMongoObjectId),
     [mapped]
   );
 
   const add = async (event) => {
     event.preventDefault();
-    if (!selected) return;
+    if (!isMongoObjectId(selected)) {
+      setError('Select a country from the list.');
+      return;
+    }
+    const added = resolveCountry(selected, all);
     setSaving(true);
     setError('');
     try {
       const nextMapped = [
         ...mapped,
-        resolveCountry(selected, all),
+        added,
       ].filter((item, index, list) =>
-        list.findIndex((row) => String(row.countryId || row.countryCode) === String(item.countryId || item.countryCode)) === index
+        list.findIndex((row) => String(row.countryId) === String(item.countryId)) === index
       );
+      const countries = [...new Set([...mappedIds, selected])];
+      await countryApi.addCountryMapping({ userId, countries }, ADMIN_OPTS);
       writeCountryMappingCache(userId, nextMapped);
       setMapped(nextMapped);
       setDrawer(false);
       setSelected('');
-      await countryApi.addCountryMapping(
-        { userId, countries: nextMapped },
-        ADMIN_OPTS
-      );
     } catch (err) {
-      const message = String(err?.message || '');
-      if (!/LocationCountry|getCountryCode\(\)|because "c" is null/i.test(message)) {
-        setError(err.message || 'Unable to map country.');
-      }
+      setError(err.message || 'Unable to map country.');
     } finally {
       setSaving(false);
     }
@@ -1168,7 +1156,7 @@ export function CountryPanel({ userId, merchantName, merchant = {}, onUpdated })
         <form onSubmit={add}>
           <Field label="Country" required>
             <CountryPicker
-              items={all.filter((item) => !mappedIds.includes(String(item.countryId || item.countryCode)))}
+              items={all.filter((item) => isMongoObjectId(item.countryId) && !mappedIds.includes(String(item.countryId)))}
               value={selected}
               onChange={setSelected}
               disabled={saving}

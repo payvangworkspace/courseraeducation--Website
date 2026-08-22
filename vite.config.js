@@ -27,6 +27,7 @@ export default defineConfig({
       '/wallet': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
       '/currency': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
       '/country': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
+      '/location': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
       '/admin': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
       '/GetEmailMasterList': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
       '/SaveEmailMaster': { target: 'https://api.courseraeducation.com', changeOrigin: true, secure: false },
